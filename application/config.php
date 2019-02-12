@@ -15,7 +15,7 @@ return [
     // +----------------------------------------------------------------------
 
     // 应用调试模式
-    'app_debug'              => false,
+    'app_debug'              => true,
     // 应用Trace
     'app_trace'              => false,
     // 应用模式状态
@@ -239,5 +239,15 @@ return [
         'type'      => 'bootstrap',
         'var_page'  => 'page',
         'list_rows' => 15,
+    ],
+
+    // auth配置
+    'auth'  => [
+        'auth_on'           => 1, // 权限开关
+        'auth_type'         => 1, // 认证方式，1为实时认证；2为登录认证。
+        'auth_group'        => 'auth_group', // 用户组数据不带前缀表名
+        'auth_group_access' => 'auth_group_access', // 用户-用户组关系不带前缀表
+        'auth_rule'         => 'auth_rule', // 权限规则不带前缀表
+        'auth_user'         => 'member', // 用户信息不带前缀表
     ],
 ];

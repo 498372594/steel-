@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--引入使用的css和js-->
+    {include file="common/base" /}
+    {include file="common/left" /}
+    {load href="/static/common/js/particles/css/normalize.css" /}
+    {load href="/static/common/js/particles/css/default.css" /}
+    {load href="/static/common/js/particles/css/style.css" /}
+</head>
+<body>
+<div id="particles-js" style="position: relative"></div>
+<div class="middle-box text-center loginscreen animated fadeInDown" style="position:absolute;float: left;top: 0;left: 0;right: 0;bottom: 0;margin: auto;">
+    <div>
+        <div>
+            <h1 class="logo-name">Hi</h1>
+        </div>
+        <h2 style="color: #fff;">欢迎使用【{$sysName}】</h2>
+        <form class="m-t" role="form" action="/admin/login/login" method="post">
+            <div class="form-group">
+                <input class="form-control" placeholder="用户名" name="account" data-rule="required;">
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-control" placeholder="密码" name="password" data-rule="required;">
+            </div>
+            <div class="form-group">
+                <input type="code" name="captcha" class="form-control" placeholder="验证码" data-rule="required;">
+            </div>
+
+            <div class="form-group">
+                <div><img src="{:captcha_src()}" alt="captcha" onclick="this.src=this.src+'?'+Math.random()"/></div>
+            </div>
+            <button type="submit" class="btn btn-primary block full-width m-b">登 录</button>
+        </form>
+    </div>
+</div>
+{load href="/static/common/js/particles/js/particles.min.js" /}
+{load href="/static/common/js/particles/js/app.js" /}
+<script>
+    particlesJS('particles-js', {
+        particles: {
+            color: '#fff',
+            shape: 'circle', // "circle", "edge" or "triangle"
+            opacity: 1,
+            size: 4,
+            size_random: true,
+            nb: 150,
+            line_linked: {
+                enable_auto: true,
+                distance: 100,
+                color: '#fff',
+                opacity: 1,
+                width: 1,
+                condensed_mode: {
+                    enable: false,
+                    rotateX: 600,
+                    rotateY: 600
+                }
+            },
+            anim: {
+                enable: true,
+                speed: 1
+            }
+        },
+        interactivity: {
+            enable: true,
+            mouse: {
+                distance: 250
+            },
+            detect_on: 'canvas', // "canvas" or "window"
+            mode: 'grab',
+            line_linked: {
+                opacity: .5
+            },
+            events: {
+                onclick: {
+                    enable: true,
+                    mode: 'push', // "push" or "remove" (particles)
+                    nb: 4
+                }
+            }
+        },
+        /* Retina Display Support */
+        retina_detect: true
+    });
+</script>
+</body>
+</html>
