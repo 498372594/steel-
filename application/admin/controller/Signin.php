@@ -2,6 +2,7 @@
 namespace app\admin\controller;
 
 use think\auth\Auth;
+use think\Session;
 
 class Signin extends Base {
 
@@ -12,16 +13,19 @@ class Signin extends Base {
             die("<script>window.parent.location.href = '/admin/login/index';</script>");
         }
         // 是否拥有访问权限
-        if(!$this->auth()) {
+        if(!$this->authCheck()) {
             $this->error("无权限访问！");
         }
+        // 登录账号信息输出到模板
+        $this->assign("account", Session::get("uinfo", "admin"));
     }
 
     /**
      * 验证是否登录
+     * @return bool
      */
     protected function isLogin() {
-        $uid = session("uid");
+        $uid = Session::get("uid", "admin");
         if (!$uid) {
             return false;
         }
@@ -30,13 +34,14 @@ class Signin extends Base {
 
     /**
      * 权限检测
+     * @return bool
      */
-    protected function auth()
+    protected function authCheck()
     {
         $controller = request()->controller();
         $action     = request()->action();
         $auth = new Auth();
-        if (!$auth->check(strtolower($controller.'/'.$action), session('uid'))) {
+        if (!$auth->check(strtolower($controller.'/'.$action), Session::get('uid', "admin"))) {
             return false;
         }
         return true;

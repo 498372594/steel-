@@ -1,6 +1,9 @@
 <?php
 namespace app\admin\controller;
 
+use think\Loader;
+use think\Url;
+
 /**
  * Class Login
  * 登录控制器
@@ -23,16 +26,17 @@ class Login extends Base {
         if (request()->isPost()) {
             $captcha = input("captcha");
             if (captcha_check($captcha)) {
-                // 登录记录
-                $log = [];
-                $log['ip'] = get_real_client_ip();
-                $log['port'] = $_SERVER["SERVER_PORT"];
-                $log['browser'] = $_SERVER['HTTP_USER_AGENT'];
-                $log['user'] = input("account");
-                $log['createTime'] = date('Y-m-d H:i:s');
+                $account  = input("account");
+                $password = input("password");
 
+                $ret = Loader::model('User')->login($account, $password);
 
-
+                if (1 == $ret['code']) {
+                    // 登录成功
+                    $this->redirect(Url::build('admin/index/index'));
+                } else {
+                    $this->error($ret['msg']);
+                }
 
             } else {
                 $this->error("图片验证码输入错误！");

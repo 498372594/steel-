@@ -11,8 +11,14 @@ use think\Controller;
  */
 class Base extends Controller {
 
+    public function __construct()
+    {
+        parent::__construct();
+        $this->assign("sysName", "桥通天下");
+    }
+
     public function _initialize()
     {
-        $this->assign("sysName", "桥通天下");
+
     }
 }
