@@ -2,13 +2,15 @@
 namespace app\admin\controller;
 
 use think\Loader;
+use think\Session;
 use think\Url;
 
 /**
  * Class Login
  * 登录控制器
  */
-class Login extends Base {
+class Login extends Base
+{
 
     /**
      *  登录页面
@@ -44,5 +46,15 @@ class Login extends Base {
         } else {
             $this->error("请求方式错误！");
         }
+    }
+
+    /**
+     * 退出登录
+     */
+    public function logOut()
+    {
+        Session::set("uid", NULL, "admin");
+        Session::set('uinfo', NULL, 'admin');
+        $this->success("退出成功！", Url::build('/admin/login/index'));
     }
 }

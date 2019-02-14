@@ -1,14 +1,17 @@
 <?php
 namespace app\admin\controller;
 
-use think\Session;
-
-class Index extends Signin {
+class Index extends Signin
+{
 
     public function index()
     {
-//        Session::set("uid", null, 'admin');die;
-        $this->assign("roleList", $this->getRoleList());
+        $this->assign("roleList", $this->getMenu());
+        return $this->fetch();
+    }
+
+    public function main()
+    {
         return $this->fetch();
     }
 }

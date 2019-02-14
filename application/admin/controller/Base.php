@@ -9,7 +9,8 @@ use think\Controller;
  * @package app\admin\controller
  * 基类控制器
  */
-class Base extends Controller {
+class Base extends Controller
+{
 
     public function __construct()
     {

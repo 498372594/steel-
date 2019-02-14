@@ -6,7 +6,8 @@ use think\Config;
 use think\Db;
 use think\Session;
 
-class User extends Base {
+class User extends Base
+{
 
     /**
      * 用户登录
@@ -70,7 +71,8 @@ class User extends Base {
             // 最近登录失败时间
             Session::set("last_login_fail", time(), "admin");
             // 累计连续登录失败次数（登录成功会清零）
-            if (false != ($times = Session::get("login_fail_times", "admin"))) {
+            $times = Session::get("login_fail_times", "admin");
+            if ($times) {
                 Session::set("login_fail_times", $times+1, "admin");
             } else {
                 Session::set("login_fail_times", 1, "admin");

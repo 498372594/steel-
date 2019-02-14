@@ -255,4 +255,7 @@ return [
     'login_fail_times' => 10,
     // 登录失败解冻时间(h)
     'login_fail_unblock' => 1,
+
+    // 超级管理员
+    'supermanager' => [1],
 ];

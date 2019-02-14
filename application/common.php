@@ -36,7 +36,6 @@ if (!function_exists('get_real_client_ip'))
     }
 }
 
-
 if (!function_exists("info")) {
     /**
      * 信息返回
@@ -54,4 +53,94 @@ if (!function_exists("info")) {
         ];
         return $result;
     }
+}
+
+/**
+ * 获取下拉框，或者值
+ * 没有模板名称返回所有，有模板返回对应下拉框，有code返回对应名称
+ *
+ * @param string $module 模板名称
+ * @param string $code code
+ * @param bool $hasEmpty 是否包含空值
+ * @return array|mixed|null
+ */
+function getDropdownList($module = '', $code = '' , $hasEmpty = true)
+{
+    $dropdown = \think\Cache::get("dropdown");
+
+    // 如果缓存没有数据
+    if (empty($dropdown)) {
+        $dropdown = loadDropdown();
+    }
+
+    if (empty($dropdown)) {
+        return null;
+    }
+
+    if (empty($module)) {
+        return $dropdown;
+    }
+
+    // 如果没有code
+    if (empty($code)) {
+
+        // 是否包含空值
+        if($hasEmpty){
+
+            $dropdownList  = array("" => "");
+            $dropdownList = $dropdownList + $dropdown[$module];
+            return $dropdownList;
+        }else{
+            return $dropdown[$module];
+        }
+    } else {
+        if (empty($dropdown[$module])) {
+            return null;
+        } else {
+            return $dropdown[$module][$code];
+        }
+    }
+}
+
+/**
+ * 加载下拉框
+ */
+function loadDropdown()
+{
+    \think\Cache::set("dropdown", NULL);
+    $dropdown = selDropdown();
+    \think\Cache::set('dropdown', $dropdown, 0);
+    return $dropdown;
+}
+
+/**
+ * 检索下拉框
+ * @return array
+ */
+function selDropdown()
+{
+    $modules = \think\Db::name('dropdown')->field("module")->group("module")->select();
+    $moduleList = array();
+    for ($i = 0; $i < count($modules); $i++) {
+        $module = $modules[$i]['module'];
+        $configs = array();
+        $subModules = \think\Db::name('dropdown')->where(array('module' => $module))->order("sort asc")->select();
+        for ($j = 0; $j < count($subModules); $j++) {
+            $subModule = $subModules[$j];
+            $key = $subModule['code'];
+            $configs[$key] = $subModule['val'];
+        }
+        $moduleList[$module] = $configs;
+    }
+    return $moduleList;
+}
+
+/**
+ * 格式化的当前日期
+ *
+ * @return false|string
+ */
+function now_datetime()
+{
+    return date("Y-m-d H:i:s");
 }
