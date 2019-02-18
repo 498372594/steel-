@@ -1,6 +1,7 @@
 <?php
 namespace app\admin\controller;
 
+use app\admin\library\traits\Buildparams;
 use think\auth\Auth;
 use think\Config;
 use think\Db;
@@ -8,6 +9,8 @@ use think\Session;
 
 class Signin extends Base
 {
+    use Buildparams;
+
     /**
      * 无需权限认证部分
      * @var array

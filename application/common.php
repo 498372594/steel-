@@ -144,3 +144,60 @@ function now_datetime()
 {
     return date("Y-m-d H:i:s");
 }
+
+/**
+ * json返回
+ * @param $code
+ * @param $msg
+ * @param $data
+ * @return \think\response\Json
+ */
+function json_return ($code="", $msg="", $data="")
+{
+    return json(info($code, $msg, $data));
+}
+
+/**
+ * json成功返回
+ * @param int $code
+ * @param string $msg
+ * @param string $data
+ * @return \think\response\Json
+ */
+function json_suc ($code=0, $msg="操作成功！", $data="")
+{
+    return json(info($code, $msg, $data));
+}
+
+function json_err ($code=-1, $msg="操作失败！", $data="")
+{
+    return json(info($code, $msg, $data));
+}
+
+/**
+ * 树结构
+ * @param $arr
+ * @return array
+ */
+function convert_tree($arr){
+    $refer = array();
+    $tree = array();
+    foreach($arr as $k => $v){
+        $refer[$v['id']] = & $arr[$k]; //创建主键的数组引用
+    }
+    foreach($arr as $k => $v){
+        $pid = $v['pid'];  //获取当前分类的父级id
+        if($pid == 0){
+            $arr[$k]['lev'] = 0;
+            $tree[] = & $arr[$k];  //顶级栏目
+        }else{
+            if(isset($refer[$pid])){
+                $arr[$k]['lev'] = $refer[$pid]['lev'] + 1;
+                $arr[$k]['title'] = str_repeat('&nbsp;&nbsp;', $arr[$k]['lev']*5).'├'.$arr[$k]['title'];
+
+                $refer[$pid]['sub'][] = & $arr[$k]; //如果存在父级栏目，则添加进父级栏目的子栏目数组中
+            }
+        }
+    }
+    return $tree;
+}

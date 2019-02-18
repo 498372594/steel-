@@ -4,7 +4,7 @@
         <div class="col-xs-12">
             <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1 pull-left">
                 <div class="row">
-                    {include file='tpl/addBtn' url="/admin/admin/add" height="80%" width="50%"/}
+                    {include file='tpl/addBtn' url="/admin/admin/add" height="80%" width="30%"/}
                 </div>
             </div>
             <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1">
@@ -40,7 +40,13 @@
                 <td nowrap="nowrap">{$vo.id}</td>
                 <td nowrap="nowrap">{$vo.account}</td>
                 <td nowrap="nowrap">{$vo.name}</td>
-                <td nowrap="nowrap">{$vo.groupName}</td>
+                <td nowrap="nowrap">
+                    {notempty name="vo.groupName"}
+                        {$vo.groupName}
+                    {else /}
+                        未分配角色
+                    {/notempty}
+                </td>
                 <td nowrap="nowrap">{$vo.isDisable|getDropdownList="isDisable",###}</td>
                 <td nowrap="nowrap">{$vo.createTime}</td>
                 <td nowrap="nowrap">

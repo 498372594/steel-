@@ -258,4 +258,7 @@ return [
 
     // 超级管理员
     'supermanager' => [1],
+
+    // 默认分页大小
+    'page_size' => 15,
 ];
