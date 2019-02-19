@@ -31,7 +31,7 @@ class Authority extends Auth
             'status' => 1,
         );
         //读取用户组所有权限规则
-        $rules = Db::name($this->config['auth_rule'])->where($map)->field('id,name,title,status,isMenu,pid,faicon')->select();
+        $rules = Db::name($this->config['auth_rule'])->where($map)->field('id,name,title,status,pid,faicon')->select();
 
         return $rules;
     }

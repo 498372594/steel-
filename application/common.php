@@ -56,6 +56,30 @@ if (!function_exists("info")) {
 }
 
 /**
+ * 根据小时判断早上 中午 下午 傍晚 晚上
+ * @param  date $h [1-24]
+ * @return string
+ */
+function get_curr_time_section($h = ''){
+    date_default_timezone_set('Asia/Shanghai');
+
+    //如果没有传入参数，则取当前时间的小时
+    if (empty($h)) {
+        $h = date("H");
+    }
+
+    $str = '';
+
+    if($h<11) $str = "早上好";
+    else if($h<13) $str = "中午好";
+    else if($h<17) $str = "下午好";
+    else if($h<19) $str = "傍晚好";
+    else $str = "晚上好";
+
+    return $str;
+}
+
+/**
  * 获取下拉框，或者值
  * 没有模板名称返回所有，有模板返回对应下拉框，有code返回对应名称
  *
@@ -175,13 +199,13 @@ function json_err ($code=-1, $msg="操作失败！", $data="")
 }
 
 /**
- * 树结构
+ * 层级树结构
  * @param $arr
  * @return array
  */
 function convert_tree($arr){
-    $refer = array();
-    $tree = array();
+    $refer = [];
+    $tree  = [];
     foreach($arr as $k => $v){
         $refer[$v['id']] = & $arr[$k]; //创建主键的数组引用
     }
@@ -199,5 +223,43 @@ function convert_tree($arr){
             }
         }
     }
+    return $tree;
+}
+
+/**
+ * 树结构
+ * @param $arr
+ * @return array
+ */
+function convert_tree_withnolayer($arr){
+    $refer = [];
+    $tree  = [];
+    foreach($arr as $k => $v){
+        $refer[$v['id']] = & $arr[$k]; //创建主键的数组引用
+    }
+    foreach($arr as $k => $v){
+        $pid = $v['pid'];  //获取当前分类的父级id
+        if($pid == 0){
+            $arr[$k]['lev'] = 0;
+            $tree[] = & $arr[$k];  //顶级栏目
+        }else{
+            if(isset($refer[$pid])){
+                $lev = $refer[$pid]['lev'] + 1;
+                $arr[$k]['lev'] = $lev;
+                $arr[$k]['title'] = str_repeat('&nbsp;&nbsp;', $arr[$k]['lev']*5).'├'.$arr[$k]['title'];
+
+                if (2 == $lev) {
+//                    foreach($tree as $g=>$h) {
+//                        if ($h['id'] == $pid) {
+//                            array_splice($tree, $g+1, 0, [$arr[$k]]);
+//                        }
+//                    }
+                } else {
+                    $tree[] = & $arr[$k];
+                }
+            }
+        }
+    }
+
     return $tree;
 }

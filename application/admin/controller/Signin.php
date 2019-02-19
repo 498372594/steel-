@@ -32,8 +32,11 @@ class Signin extends Base
                 $this->error("无权限访问！");
             }
         }
-        // 登录账号信息输出到模板
-        $this->assign("account", Session::get("uinfo", "admin"));
+        // 登录账号信息输出到模板 get_curr_time_section
+        $this->assign([
+            "account" => Session::get("uinfo", "admin"),
+            "time_section" => get_curr_time_section()
+        ]);
     }
 
     /**
@@ -74,7 +77,7 @@ class Signin extends Base
     protected function getMenu ()
     {
         // 所有菜单
-        $menu = Db::name("authrule")->field('id,name,title,status,isMenu,pid,faicon')->select();
+        $menu = Db::name("authrule")->field('id,name,title,status,pid,faicon')->select();
         // 拥有权限菜单
         $auth = new Authority();
         $uid  = Session::get("uid", "admin");

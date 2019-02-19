@@ -2,6 +2,7 @@
 namespace app\admin\controller;
 
 use think\Db;
+use think\Exception;
 
 class Auth extends Right
 {
@@ -80,8 +81,54 @@ class Auth extends Right
     public function addRule()
     {
        if (request()->isAjax()) {
+           $pid   = (int)input("pid");
+           $title = trim(input("title"));
+           $name  = strtolower(trim(input("name")));
+           $faicon  = trim(input("faicon"));
+
+           if (0 > $pid)       return json_err(-1, "错误的父级ID！");
+           if (empty($title))  return json_err(-1, "请输入标题！");
+           if (empty($name))   return json_err(-1, "请输入菜单规则！");
+           if (empty($faicon)) return json_err(-1, "请选择图标！");
+
+           $data = [
+               "name"      => $name,
+               "title"     => $title,
+               "pid"       => $pid,
+               "faicon"    => $faicon,
+           ];
+
+           try {
+               $ret = Db::name("authrule")->insert($data);
+
+               if ($ret) {
+                   return json_suc(0, "添加成功！");
+               } else {
+                   return json_err(-1, "添加失败！");
+               }
+           } catch (Exception $e) {
+               return json_err(-1, $e->getMessage());
+           }
 
        } else {
+           // 规则列表
+           $rules = Db::name("authrule")->select();
+
+           // 这里不要第三层的规则
+           $rulesTree = convert_tree_withnolayer($rules);
+
+           $formatRule = [
+               "0" => "顶级"
+           ];
+           if ($rulesTree) {
+               foreach($rulesTree as $k=>$v) {
+                   $formatRule[$v['id']] = $v['title'];
+               }
+           }
+
+           $this->assign("lists", [
+               "rulelist" => $formatRule
+           ]);
            return $this->fetch('auth/auth/add');
        }
     }
@@ -103,6 +150,16 @@ class Auth extends Right
      */
     public function delRule()
     {
-        
+        if (request()->isAjax()) {
+            $id = (int)input("id");
+
+            $ret = Db::name("authrule")->delete($id);
+
+            if ($ret) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        }
     }
 }

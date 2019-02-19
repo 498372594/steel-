@@ -16,7 +16,7 @@
                     <div class="dropdown profile-element">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear">
-                                <span class="text-muted text-xs block">你好，{$account.account}<!--<b class="caret"></b>--></span>
+                                <span class="text-muted text-xs block">{$time_section}，{$account.account}  !<!--<b class="caret"></b>--></span>
                             </span>
                         </a>
                     </div>
@@ -46,7 +46,7 @@
                                 <ul class="nav nav-second-level collapse" aria-expanded="false">
                                     <li>
                                         <a class="J_menuItem" href="{:url($v['name'])}">
-                                            <i class="fa {$v.faicon}"></i>
+                                            <i class="{$v.faicon}"></i>
                                             <span>{$v.title}</span>
                                         </a>
                                     </li>
