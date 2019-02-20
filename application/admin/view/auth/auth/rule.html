@@ -39,7 +39,7 @@
                 <td nowrap="nowrap"><i class="{$vo.faicon}"></i></td>
                 <td nowrap="nowrap">
                     <!--编辑资料-->
-                    <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('/admin/auth/editRule, array(\'id\'=>$vo[\'id\']))}', '编辑','80%','50%')"></i>
+                    <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/auth/editRule\',[\'id\'=>$vo[\'id\']])}', '编辑','80%','80%')"></i>
                     <!--删除-->
                     <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmUpdate('/admin/auth/delRule','{$vo.id}','确定要删除吗？')"></i>
                 </td>
@@ -53,7 +53,7 @@
                         <td nowrap="nowrap"><i class="{$vo1.faicon}"></i></td>
                         <td nowrap="nowrap">
                             <!--编辑资料-->
-                            <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('/admin/auth/editRule, array(\'id\'=>$vo1[\'id\']))}', '编辑','80%','50%')"></i>
+                            <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/auth/editRule\',[\'id\'=>$vo1[\'id\']])}', '编辑','80%','80%')"></i>
                             <!--删除-->
                             <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmUpdate('/admin/auth/delRule','{$vo1.id}','确定要删除吗？')"></i>
                         </td>
@@ -67,7 +67,7 @@
                             <td nowrap="nowrap"><i class="{$vo2.faicon}"></i></td>
                             <td nowrap="nowrap">
                                 <!--编辑资料-->
-                                <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('/admin/auth/editRule, array(\'id\'=>$vo2[\'id\']))}', '编辑','80%','50%')"></i>
+                                <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/auth/editRule\',[\'id\'=>$vo2[\'id\']])}', '编辑','80%','80%')"></i>
                                 <!--删除-->
                                 <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmUpdate('/admin/auth/delRule','{$vo2.id}','确定要删除吗？')"></i>
                             </td>

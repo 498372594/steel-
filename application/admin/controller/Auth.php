@@ -112,25 +112,40 @@ class Auth extends Right
 
        } else {
            // 规则列表
-           $rules = Db::name("authrule")->select();
-
-           // 这里不要第三层的规则
-           $rulesTree = convert_tree_withnolayer($rules);
-
-           $formatRule = [
-               "0" => "顶级"
-           ];
-           if ($rulesTree) {
-               foreach($rulesTree as $k=>$v) {
-                   $formatRule[$v['id']] = $v['title'];
-               }
-           }
+           $formatRule = $this->getRuleList();
 
            $this->assign("lists", [
                "rulelist" => $formatRule
            ]);
            return $this->fetch('auth/auth/add');
        }
+    }
+
+    /**
+     * 获取格式化的权限规则列表
+     * @return array
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getRuleList()
+    {
+        // 规则列表
+        $rules = Db::name("authrule")->select();
+
+        // 这里不要第三层的规则
+        $rulesTree = convert_tree_withnolayer($rules);
+
+        $formatRule = [
+            "0" => "顶级"
+        ];
+        if ($rulesTree) {
+            foreach($rulesTree as $k=>$v) {
+                $formatRule[$v['id']] = $v['title'];
+            }
+        }
+
+        return $formatRule;
     }
 
     /**
@@ -141,6 +156,18 @@ class Auth extends Right
         if (request()->isAjax()) {
 
         } else {
+            $id = (int)input("id");
+            $ruleDetail = Db::name("authrule")->where("id", $id)->find();
+            if (!$ruleDetail) {
+                $this->error("数据不存在！");
+            }
+
+            $formatRule = $this->getRuleList();
+
+            $this->assign("lists", [
+                "rulelist" => $formatRule
+            ]);
+            $this->assign("data", $ruleDetail);
             return $this->fetch('auth/auth/edit');
         }
     }

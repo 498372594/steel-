@@ -31,12 +31,12 @@
                     {if condition="$vo['pid'] eq 0 && $vo['status'] eq 1"}
                         {if condition="$vo['name'] neq ''"}
                             <a class="J_menuItem" href="{:url($vo['name'])}">
-                                <i class="fa {$vo.faicon}"></i>
+                                <i class="{$vo.faicon}"></i>
                                 <span class="nav-label">{$vo.title}</span>
                             </a>
                         {else/}
                             <a href="#">
-                                <i class="fa {$vo.faicon}"></i>
+                                <i class="{$vo.faicon}"></i>
                                 <span class="nav-label">{$vo.title}</span>
                                 <span class="fa arrow"></span>
                             </a>
