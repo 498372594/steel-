@@ -1,0 +1,16 @@
+<div class="col-xs-12">
+	<div class="row">
+		<form class="form-horizontal" role="form" id="form" action="{:url('/admin/admin/edit')}">
+			<div class="form-group">
+				<input type="hidden" name="id" value="{$data.id}">
+				{include file="tpl/input" results="data" name="account" label="账号" value="account" attr='data-rule="required;"'/}
+				{include file="tpl/password" name="password" label="密码" value=""/}
+				{include file="tpl/input" results="data" name="name" label="昵称" value="name" attr='data-rule="required;"'/}
+				{include file="tpl/selectCol" name="group_id" results="data" label="角色" list="rolelist"/}
+			</div>
+			<div class="form-group" style="margin-top: 20px;">
+				{include file="tpl/button" label="保存"/}
+			</div>
+		</form>
+	</div>
+</div>

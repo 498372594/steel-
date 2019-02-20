@@ -3,6 +3,7 @@
 namespace app\admin\controller;
 
 use think\Db;
+use think\Exception;
 
 class Admin extends Right
 {
@@ -50,7 +51,7 @@ class Admin extends Right
                 return json_err(-1, "请填写密码！");
             }
             $name = trim(input("name"));
-            if (empty($password)) {
+            if (empty($name)) {
                 return json_err(-1, "请填写昵称！");
             }
 
@@ -62,14 +63,42 @@ class Admin extends Right
                 "createTime" => now_datetime()
             ];
 
+            $group_id = (int)input("group_id");
+
             // 添加管理员
-            $result = Db::name("admin")->insert($data);
-            if ($result) {
-                return json_suc(0, "添加成功！");
-            } else {
-                return json_err(-1, "添加失败！");
+            try {
+                Db::startTrans();
+                $result = Db::name("admin")->insert($data);
+                $ret = Db::name("authgroupaccess")->insert(["uid"=>Db::name('admin')->getLastInsID(), "group_id"=>$group_id]);
+
+                if ($result && $ret) {
+                    Db::commit();
+                    return json_suc(0, "添加成功！");
+                } else {
+                    Db::rollback();
+                    return json_err(-1, "添加失败！");
+                }
+            } catch (Exception $e) {
+                Db::rollback();
+                return json_err(-1, $e->getMessage());
             }
         } else {
+            $roles = Db::name("authgroup")->field("id,title")->select();
+            $roleArr = [""=>""];
+            if ($roles) {
+                foreach ($roles as $k=>$v) {
+                    $roleArr[$v['id']] = $v['title'];
+                }
+            } else {
+                $this->error("请添加角色！");
+            }
+
+
+            $this->assign([
+                "lists" => [
+                    "rolelist" => $roleArr
+                ]
+            ]);
             return $this->fetch();
         }
     }
@@ -80,11 +109,112 @@ class Admin extends Right
     public function edit()
     {
         if (request()->isAjax()) {
+            $id = (int)input("id");
+            //账号
+            $account = trim(input("account"));
+            //判断此账户是否存在
+            $isExists = Db::name("admin")->query("SELECT
+                                                        a.*, 
+                                                        agc.group_id,
+                                                        g.title
+                                                    FROM
+                                                        admin a
+                                                    LEFT JOIN authgroupaccess agc ON a.id = agc.uid
+                                                    LEFT JOIN authgroup g ON agc.group_id = g.id
+                                                    WHERE a.id!={$id} AND a.account='{$account}'");
+
+            if ($isExists) {
+                return json_err(-1, "该账户已存在！");
+            }
+
+            $admin = Db::name("admin")->query("SELECT
+            
+                                                        a.*, 
+                                                        agc.group_id,
+                                                        g.title
+                                                    FROM
+                                                        admin a
+                                                    LEFT JOIN authgroupaccess agc ON a.id = agc.uid
+                                                    LEFT JOIN authgroup g ON agc.group_id = g.id
+                                                    WHERE a.id={$id}");
+            $admin = $admin[0];
+
+            $name = trim(input("name"));
+            if (empty($name)) {
+                return json_err(-1, "请填写昵称！");
+            }
 
             $data = [
-                "title"
+                "account"    => $account,
+                "name"       => $name,
             ];
+
+            $password = trim(input("password"));
+            if (!empty($password)) {
+                $data['password'] = md5($password);
+            }
+
+            $group_id = (int)input("group_id");
+
+            try {
+                Db::startTrans();
+
+                $updateAdmin = Db::name("admin")->where("id", $id)->update($data);
+
+                if ($group_id) {
+                    if ($admin['group_id']) {
+                        $updateGroup = Db::name("authgroupaccess")->where("uid", $admin['id'])->update(["group_id"=>$group_id]);
+                    } else {
+                        $updateGroup = Db::name("authgroupaccess")->insert(["uid"=>$admin['id'],"group_id"=>$group_id]);
+                    }
+                } else {
+                    if ($admin['group_id']) {
+                        $updateGroup = Db::name("authgroupaccess")->where("uid", $admin['id'])->delete();
+                    }
+                }
+
+                if (false !== $updateAdmin && false !== $updateGroup) {
+                    Db::commit();
+                    return json_suc();
+                } else {
+                    Db::rollback();
+                    return json_err();
+                }
+            } catch (Exception $e) {
+                Db::rollback();
+                return json_err(-1, $e->getMessage());
+            }
+
         } else {
+            $id = (int)input("id");
+            $info = Db::name("admin")->query("SELECT
+                                                        a.*, 
+                                                        agc.group_id,
+                                                        g.title
+                                                    FROM
+                                                        admin a
+                                                    LEFT JOIN authgroupaccess agc ON a.id = agc.uid
+                                                    LEFT JOIN authgroup g ON agc.group_id = g.id
+                                                    WHERE a.id={$id}");
+
+            // 角色
+            $roles = Db::name("authgroup")->field("id,title")->select();
+            $roleArr = [""=>""];
+            if ($roles) {
+                foreach ($roles as $k=>$v) {
+                    $roleArr[$v['id']] = $v['title'];
+                }
+            } else {
+                $this->error("请添加角色！");
+            }
+
+
+            $this->assign([
+                "data" => $info[0],
+                "lists" => [
+                    "rolelist" => $roleArr
+                ]
+            ]);
             return $this->fetch();
         }
     }
