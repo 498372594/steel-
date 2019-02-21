@@ -26,6 +26,10 @@ class Signin extends Base
         if (!$this->isLogin()) {
             die("<script>window.parent.location.href = '/admin/login/index';</script>");
         }
+        // 账号是否被禁用
+        if (1 == Session::get("uinfo", "admin")['isDisable']) {
+            $this->error("该账号已被禁用！");
+        }
         // 是否拥有访问权限(超级管理员除外)
         if (!in_array(Session::get("uid", "admin"), Config::get("supermanager"))) {
             if (!$this->authCheck()) {

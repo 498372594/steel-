@@ -1,6 +1,7 @@
 <?php
 namespace app\admin\controller;
 
+use think\Config;
 use think\Db;
 use think\Exception;
 
@@ -11,9 +12,13 @@ class Auth extends Right
      */
     public function group()
     {
-        $groups = Db::name("authgroup")->select();
+        $groups = Db::name("authgroup")->paginate(Config::get('page_size'));
 
-        $this->assign("groups", $groups);
+        $pagelist = $groups->render();
+        $this->assign([
+            "groups" => $groups,
+            "pagelist" => $pagelist
+        ]);
         return $this->fetch('auth/group/group');
     }
 

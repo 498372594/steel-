@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 
+use think\Config;
 use think\Db;
 use think\Exception;
 
@@ -12,21 +13,17 @@ class Admin extends Right
      */
     public function index()
     {
-        $admins = Db::query("SELECT
-                                    t.id,
-                                    t.account,
-                                    t.name,
-                                    t.isDisable,
-                                    t.createTime,
-                                    CASE WHEN t.id = 1 
-                                    THEN '超级管理员'
-                                    ELSE g.title
-                                    END groupName
-                                FROM
-                                    admin t
-                                LEFT JOIN authgroupaccess a ON t.id = a.uid
-                                LEFT JOIN authgroup g ON a.group_id = g.id");
-        $this->assign("admins", $admins);
+        $admins = Db::table("admin t")
+            ->join("authgroupaccess a", "t.id = a.uid")
+            ->join("authgroup g", "a.group_id = g.id")
+            ->field("t.id,t.account,t.name,t.isDisable,t.createTime,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName")
+            ->paginate(Config::get('page_size'));
+
+        $pagelist = $admins->render();
+        $this->assign([
+            "admins" => $admins,
+            "pagelist" => $pagelist
+        ]);
         return $this->fetch();
     }
 
