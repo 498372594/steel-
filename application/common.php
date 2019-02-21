@@ -340,3 +340,13 @@ function selDropdown()
     }
     return $refer;
 }
+
+/**
+ * 手机号格式检测
+ * @param $str
+ * @return bool
+ */
+function isPhone($str)
+{
+    return (preg_match("/^1[3456789]\d{9}$/", $str)) ? true : false;
+}
