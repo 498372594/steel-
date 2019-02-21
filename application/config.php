@@ -144,8 +144,10 @@ return [
     // 视图输出字符串内容替换
     'view_replace_str'       => [],
     // 默认跳转页面对应的模板文件
-    'dispatch_success_tmpl'  => THINK_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
-    'dispatch_error_tmpl'    => THINK_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
+//    'dispatch_success_tmpl'  => THINK_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
+//    'dispatch_error_tmpl'    => THINK_PATH . 'tpl' . DS . 'dispatch_jump.tpl',
+    'dispatch_success_tmpl'  =>  APP_PATH . 'admin' . DS . 'view/common/dispatch_jump.tpl',
+    'dispatch_error_tmpl'    => APP_PATH . 'admin' . DS . 'view/common/dispatch_jump.tpl',
 
     // +----------------------------------------------------------------------
     // | 异常及错误设置
@@ -235,9 +237,10 @@ return [
 
     //分页配置
     'paginate'               => [
-        'type'      => 'bootstrap',
+//        'type'      => 'bootstrap',
+        'type'      => 'layui\Layui',
         'var_page'  => 'page',
-        'list_rows' => 15,
+        'list_rows' => 10,
     ],
 
     // auth配置
@@ -257,7 +260,4 @@ return [
 
     // 超级管理员
     'supermanager' => [1],
-
-    // 默认分页大小
-    'page_size' => 15,
 ];

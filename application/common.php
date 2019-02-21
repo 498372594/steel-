@@ -80,6 +80,194 @@ function get_curr_time_section($h = ''){
 }
 
 /**
+ * 格式化的当前日期
+ *
+ * @return false|string
+ */
+function now_datetime()
+{
+    return date("Y-m-d H:i:s");
+}
+
+/**
+ * json返回
+ * @param $code
+ * @param $msg
+ * @param $data
+ * @return \think\response\Json
+ */
+function json_return ($code="", $msg="", $data="")
+{
+    return json(info($code, $msg, $data));
+}
+
+/**
+ * json成功返回
+ * @param int $code
+ * @param string $msg
+ * @param string $data
+ * @return \think\response\Json
+ */
+function json_suc ($code=0, $msg="操作成功！", $data="")
+{
+    return json(info($code, $msg, $data));
+}
+
+/**
+ * json失败返回
+ * @param int $code
+ * @param string $msg
+ * @param string $data
+ * @return \think\response\Json
+ */
+function json_err ($code=-1, $msg="操作失败！", $data="")
+{
+    return json(info($code, $msg, $data));
+}
+
+/**
+ * 是否移动端访问
+ * @return bool
+ */
+function isMobile()
+{
+    if (isset ($_SERVER['HTTP_X_WAP_PROFILE']))
+    {
+        return true;
+    }
+    if (isset ($_SERVER['HTTP_VIA']))
+    {
+        return stristr($_SERVER['HTTP_VIA'], "wap") ? true : false;
+    }
+    if (isset ($_SERVER['HTTP_USER_AGENT']))
+    {
+        $clientkeywords = array ('nokia',
+            'sony',
+            'ericsson',
+            'mot',
+            'samsung',
+            'htc',
+            'sgh',
+            'lg',
+            'sharp',
+            'sie-',
+            'philips',
+            'panasonic',
+            'alcatel',
+            'lenovo',
+            'iphone',
+            'ipod',
+            'blackberry',
+            'meizu',
+            'android',
+            'netfront',
+            'symbian',
+            'ucweb',
+            'windowsce',
+            'palm',
+            'operamini',
+            'operamobi',
+            'openwave',
+            'nexusone',
+            'cldc',
+            'midp',
+            'wap',
+            'mobile'
+        );
+        if (preg_match("/(" . implode('|', $clientkeywords) . ")/i", strtolower($_SERVER['HTTP_USER_AGENT'])))
+        {
+            return true;
+        }
+    }
+    if (isset ($_SERVER['HTTP_ACCEPT']))
+    {
+        if ((strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') !== false) && (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') === false || (strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') < strpos($_SERVER['HTTP_ACCEPT'], 'text/html'))))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * 清除模版缓存 不删除 temp目录
+ */
+function clear_temp_cache() {
+    $temp_files = (array)glob(TEMP_PATH . DS . '/*.php');
+    array_map(function($v){ if(file_exists($v)) @unlink($v); }, $temp_files);
+    return true;
+}
+
+/**
+ * 重新加载配置缓存信息
+ */
+function loadCache ()
+{
+    $settings = \think\Db::name("setting")->select();
+    $refer = [];
+    if ($settings) {
+        foreach ($settings as $k=>$v) {
+            $refer[$v['module']][$v['code']] = $v['val'];
+        }
+    }
+    return $refer;
+}
+
+/**
+ * 配置缓存
+ * 加载系统配置并缓存
+ */
+function cacheSettings ()
+{
+    \think\Cache::set("settings", NULL);
+    $settings = loadCache();
+    \think\Cache::set("settings", $settings, 0);
+    return $settings;
+}
+
+/**
+ * 获取配置缓存信息
+ */
+function getSettings($module="", $code="")
+{
+    $settings = \think\Cache::get("settings");
+    if (empty($settings)) {
+        $settings = cacheSettings();
+    }
+
+    if (empty($settings)) {
+        return NULL;
+    }
+
+    if (empty($code)) {
+        if (array_key_exists($module, $settings)) {
+            return $settings[$module];
+        }
+    } else {
+        if (array_key_exists($module, $settings) && array_key_exists($code, $settings[$module])) {
+            return $settings[$module][$code];
+        } else {
+            return NULL;
+        }
+    }
+}
+
+/**
+ * 重新加载下拉表缓存信息
+ */
+function loadDropdownList ()
+{
+    $data = \think\Db::name("dropdown")->select();
+    $refer = [];
+    if ($data) {
+        foreach ($data as $k=>$v) {
+            $refer[$v['module']][$v['code']] = $v['val'];
+        }
+    }
+    return $refer;
+}
+
+/**
  * 获取下拉框，或者值
  * 没有模板名称返回所有，有模板返回对应下拉框，有code返回对应名称
  *
@@ -131,7 +319,7 @@ function getDropdownList($module = '', $code = '' , $hasEmpty = true)
  */
 function loadDropdown()
 {
-    \think\Cache::set("dropdown", NULL);
+    \think\Cache::set('dropdown',NULL);
     $dropdown = selDropdown();
     \think\Cache::set('dropdown', $dropdown, 0);
     return $dropdown;
@@ -143,136 +331,12 @@ function loadDropdown()
  */
 function selDropdown()
 {
-    $modules = \think\Db::name('dropdown')->field("module")->group("module")->select();
-    $moduleList = array();
-    for ($i = 0; $i < count($modules); $i++) {
-        $module = $modules[$i]['module'];
-        $configs = array();
-        $subModules = \think\Db::name('dropdown')->where(array('module' => $module))->order("sort asc")->select();
-        for ($j = 0; $j < count($subModules); $j++) {
-            $subModule = $subModules[$j];
-            $key = $subModule['code'];
-            $configs[$key] = $subModule['val'];
-        }
-        $moduleList[$module] = $configs;
-    }
-    return $moduleList;
-}
-
-/**
- * 格式化的当前日期
- *
- * @return false|string
- */
-function now_datetime()
-{
-    return date("Y-m-d H:i:s");
-}
-
-/**
- * json返回
- * @param $code
- * @param $msg
- * @param $data
- * @return \think\response\Json
- */
-function json_return ($code="", $msg="", $data="")
-{
-    return json(info($code, $msg, $data));
-}
-
-/**
- * json成功返回
- * @param int $code
- * @param string $msg
- * @param string $data
- * @return \think\response\Json
- */
-function json_suc ($code=0, $msg="操作成功！", $data="")
-{
-    return json(info($code, $msg, $data));
-}
-
-function json_err ($code=-1, $msg="操作失败！", $data="")
-{
-    return json(info($code, $msg, $data));
-}
-
-/**
- * 权限规则层级树结构
- * @param array $arr
- * @param bool $layer 层级结构
- * @param bool $third 是否要第三层权限
- * @return array
- */
-function convert_tree($arr=[], $layer=true, $third=true, $indent=true){
+    $data = \think\Db::name('dropdown')->select();
     $refer = [];
-    $tree  = [];
-    foreach($arr as $k => $v){
-        $arr[$k]['hasSub'] = 0;
-        $refer[$v['id']] = & $arr[$k]; //创建主键的数组引用
-    }
-    foreach($arr as $k => $v){
-        $pid = $v['pid'];  //获取当前分类的父级id
-        if($pid == 0){
-            $arr[$k]['lev'] = 0;
-            $tree[] = & $arr[$k];  //顶级栏目
-        }else{
-            if(isset($refer[$pid])){
-                $refer[$pid]['hasSub'] = 1;
-                $lev = $refer[$pid]['lev'] + 1;
-                $arr[$k]['lev'] = $lev;
-                if ($indent) {
-                    $arr[$k]['title'] = str_repeat('&nbsp;&nbsp;', $arr[$k]['lev']*5).'├'.$arr[$k]['title'];
-                }
-
-
-                if ($layer) {
-                    //有层级结构
-                    $refer[$pid]['sub'][] = & $arr[$k]; //如果存在父级栏目，则添加进父级栏目的子栏目数组中
-                } else {
-                    //无层级结构
-                    if (2 == $lev && $third) {
-                        // 含第三层
-                        foreach($tree as $g=>$h) {
-                            if ($h['id'] == $pid) {
-                                array_splice($tree, $g+1, 0, [$arr[$k]]);
-                            }
-                        }
-                    } else {
-                        $tree[] = & $arr[$k];
-                    }
-                }
-            }
+    if ($data) {
+        foreach ($data as $k=>$v) {
+            $refer[$v['module']][$v['code']] = $v['val'];
         }
     }
-    return $tree;
+    return $refer;
 }
-
-/**
- * 所有下级权限
- */
-function convert_tree_subs($id, $arr, $onlyId=true)
-{
-    $ret = [];
-    if ($id && $arr) {
-        $refer = [];
-        foreach($arr as $k => $v){
-            $refer[$v['id']] = & $arr[$k]; //创建主键的数组引用
-        }
-
-        foreach($arr as $k => $v){
-            $pid = $v['pid'];  //获取当前分类的父级id
-            if ($v['id'] == $id || $pid == $id || in_array($pid, $ret)) {
-                if ($onlyId) {
-                    $ret[] = $v['id'];
-                } else {
-                    $ret[] = $v;
-                }
-            }
-        }
-    }
-
-    return $ret;
-}
-

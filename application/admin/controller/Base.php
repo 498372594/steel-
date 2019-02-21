@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 
+use think\Config;
 use think\Controller;
 
 /**
@@ -11,15 +12,18 @@ use think\Controller;
  */
 class Base extends Controller
 {
+    protected $pageSize;
 
     public function __construct()
     {
         parent::__construct();
-        $this->assign("sysName", "桥通天下");
-    }
 
-    public function _initialize()
-    {
+        // 分页
+        $configPageSize = Config::get("pagenite.list_rows");
+        $this->pageSize = $configPageSize;
 
+        // 系统名称
+        $siteName = getSettings("site", "siteName");
+        $this->assign("sysName", $siteName);
     }
 }

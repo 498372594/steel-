@@ -1,7 +1,6 @@
 <?php
 namespace app\admin\controller;
 
-use think\Config;
 use think\Db;
 use think\Exception;
 
@@ -12,7 +11,7 @@ class Auth extends Right
      */
     public function group()
     {
-        $groups = Db::name("authgroup")->paginate(Config::get('page_size'));
+        $groups = Db::name("authgroup")->paginate($this->pageSize);
 
         $pagelist = $groups->render();
         $this->assign([
@@ -215,12 +214,11 @@ class Auth extends Right
        if (request()->isAjax()) {
            $pid   = (int)input("pid");
            $title = trim(input("title"));
-           $name  = strtolower(trim(input("name")));
+           $name  = strtolower(trim(input("name"))) ? strtolower(trim(input("name"))) : NULL;
            $faicon  = trim(input("faicon"));
 
            if (0 > $pid)       return json_err(-1, "错误的父级ID！");
            if (empty($title))  return json_err(-1, "请输入标题！");
-           if (empty($name))   return json_err(-1, "请输入菜单规则！");
            if (empty($faicon)) return json_err(-1, "请选择图标！");
 
            $data = [
@@ -289,12 +287,11 @@ class Auth extends Right
             $id      = (int)input("id");
             $pid     = (int)input("pid");
             $title   = trim(input("title"));
-            $name    = strtolower(trim(input("name")));
+            $name    = strtolower(trim(input("name"))) ? strtolower(trim(input("name"))) : NULL;
             $faicon  = trim(input("faicon"));
 
             if (0 > $pid)       return json_err(-1, "错误的父级ID！");
             if (empty($title))  return json_err(-1, "请输入标题！");
-            if (empty($name))   return json_err(-1, "请输入菜单规则！");
             if (empty($faicon)) return json_err(-1, "请选择图标！");
 
             $data = [

@@ -28,13 +28,15 @@ trait Backend
         $list = $this->model
             ->where($where)
             ->order($sort, $order)
-            ->pagenate($pageSize);
+            ->paginate($pageSize);
 
+        // 渲染页面
+        $pagelist = $list->render();
         $this->assign([
             'total' => $total,
-            'list' => $list
+            'list' => $list,
+            'pagelist'=>$pagelist
         ]);
-
         return $this->view->fetch();
     }
 
@@ -61,7 +63,7 @@ trait Backend
     /**
      * 删除
      */
-    public function del()
+    public function delete()
     {
         if (request()->isAjax()) {
             $this->request->filter('strip_tags', 'stripslashes');

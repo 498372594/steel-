@@ -2,7 +2,6 @@
 
 namespace app\admin\controller;
 
-use think\Config;
 use think\Db;
 use think\Exception;
 
@@ -17,7 +16,7 @@ class Admin extends Right
             ->join("authgroupaccess a", "t.id = a.uid")
             ->join("authgroup g", "a.group_id = g.id")
             ->field("t.id,t.account,t.name,t.isDisable,t.createTime,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName")
-            ->paginate(Config::get('page_size'));
+            ->paginate($this->pageSize);
 
         $pagelist = $admins->render();
         $this->assign([

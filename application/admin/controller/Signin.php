@@ -18,6 +18,7 @@ class Signin extends Base
     protected $unblock = [
         'index/index',
         'index/main',
+        'index/clearcachedata'
     ];
 
     public function _initialize()

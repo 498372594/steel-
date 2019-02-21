@@ -2,8 +2,6 @@
 
 namespace app\admin\library\traits;
 
-use think\Config;
-
 trait Buildparams
 {
     /**
@@ -15,7 +13,7 @@ trait Buildparams
         $where    = $this->buildWhere();
         $sort     = $this->request->get("sort", "id");
         $order    = $this->request->get("order", "DESC");
-        $pageSize = $this->request->get("pageSize", Config::get("page_size"));
+        $pageSize = $this->request->get("pageSize", $this->pageSize);
 
         return [$where, $sort, $order, $pageSize];
     }

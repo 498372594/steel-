@@ -16,7 +16,8 @@
                     <div class="dropdown profile-element">
                         <a data-toggle="dropdown" class="dropdown-toggle" href="#">
                             <span class="clear">
-                                <span class="text-muted text-xs block">{$time_section}，{$account.account}  !<!--<b class="caret"></b>--></span>
+                                <span class="text-muted text-xs block">{$time_section}，{$account.account}  !
+                                    <!--<b class="caret"></b>--></span>
                             </span>
                         </a>
                     </div>
@@ -29,30 +30,30 @@
                 {volist name="roleList" id="vo"}
                 <li>
                     {if condition="$vo['pid'] eq 0 && $vo['status'] eq 1"}
-                        {if condition="$vo['name'] neq ''"}
-                            <a class="J_menuItem" href="{:url($vo['name'])}">
-                                <i class="{$vo.faicon}"></i>
-                                <span class="nav-label">{$vo.title}</span>
+                    {if condition="$vo['name'] neq ''"}
+                    <a class="J_menuItem" href="{:url($vo['name'])}">
+                        <i class="{$vo.faicon}"></i>
+                        <span class="nav-label">{$vo.title}</span>
+                    </a>
+                    {else/}
+                    <a href="#">
+                        <i class="{$vo.faicon}"></i>
+                        <span class="nav-label">{$vo.title}</span>
+                        <span class="fa arrow"></span>
+                    </a>
+                    {/if}
+                    {volist name="roleList" id="v"}
+                    {if condition="$v['pid'] eq $vo['id'] && $v['status'] eq 1"}
+                    <ul class="nav nav-second-level collapse" aria-expanded="false">
+                        <li>
+                            <a class="J_menuItem" href="{:url($v['name'])}">
+                                <i class="{$v.faicon}"></i>
+                                <span>{$v.title}</span>
                             </a>
-                        {else/}
-                            <a href="#">
-                                <i class="{$vo.faicon}"></i>
-                                <span class="nav-label">{$vo.title}</span>
-                                <span class="fa arrow"></span>
-                            </a>
-                        {/if}
-                        {volist name="roleList" id="v"}
-                            {if condition="$v['pid'] eq $vo['id'] && $v['status'] eq 1"}
-                                <ul class="nav nav-second-level collapse" aria-expanded="false">
-                                    <li>
-                                        <a class="J_menuItem" href="{:url($v['name'])}">
-                                            <i class="{$v.faicon}"></i>
-                                            <span>{$v.title}</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            {/if}
-                        {/volist}
+                        </li>
+                    </ul>
+                    {/if}
+                    {/volist}
                     {/if}
                 </li>
                 {/volist}
@@ -66,6 +67,8 @@
             <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
                 <div class="navbar-header"><a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i
                         class="fa fa-bars"></i> </a>
+                    <a class="minimalize-styl-2 btn btn-primary " href="{:url('/admin/index/clearCacheData')}" style="float: right"><i
+                            class="fa fa-refresh"></i> </a>
                 </div>
             </nav>
         </div>
@@ -94,7 +97,8 @@
                     class="fa fa fa-sign-out"></i> 退出</a>
         </div>
         <div class="row J_mainContent" id="content-main">
-            <iframe class="J_iframe" name="iframemain" id="iframemain" width="100%" height="100%" src="{:url('/admin/index/main')}"
+            <iframe class="J_iframe" name="iframemain" id="iframemain" width="100%" height="100%"
+                    src="{:url('/admin/index/main')}"
                     frameborder="0" data-id="main" seamless></iframe>
         </div>
         <div class="footer">
