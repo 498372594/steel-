@@ -350,3 +350,50 @@ function isPhone($str)
 {
     return (preg_match("/^1[3456789]\d{9}$/", $str)) ? true : false;
 }
+
+/**
+ * @param $key
+ * @param $val
+ */
+function set($key, $val)
+{
+    // 获取token
+    $token = trim(input("token"));
+
+    // 如果没有token，应该是web登录
+    if (empty($token)) {
+        session($key, $val);
+    } else {
+        // 获取保持的数据
+        $session = cache($token);
+
+        // 如果没有数据
+        if ($session) $session = array();
+        $session[$key] = $val;
+
+        // 保存缓存
+        cache($token, $session);
+    }
+}
+
+/**
+ * @param $key
+ * @return mixed
+ */
+function get($key)
+{
+    // 获取token
+    $token = trim(input("token"));
+
+    // 如果没有token，应该是web登录
+    if (empty($token)) {
+        return session($key);
+    } else {
+        // 获取保持的数据
+        $session = cache($token);
+
+        // 如果没有数据
+        if ($session) $session = array();
+        return $session[$key];
+    }
+}

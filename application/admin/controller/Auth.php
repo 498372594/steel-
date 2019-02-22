@@ -325,11 +325,6 @@ class Auth extends Right
                 "rulelist" => $formatRule
             ]);
             $this->assign("data", $ruleDetail);
-            $this->assign([
-                "title" => $ruleDetail['title'],
-                "name" => $ruleDetail['name'],
-                "faicon" => $ruleDetail['faicon'],
-            ]);
             return $this->fetch('auth/auth/edit');
         }
     }

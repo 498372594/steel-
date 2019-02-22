@@ -4,6 +4,7 @@ namespace app\admin\controller;
 
 use think\Config;
 use think\Controller;
+use think\Session;
 
 /**
  * Class Base
@@ -19,7 +20,7 @@ class Base extends Controller
         parent::__construct();
 
         // 分页
-        $configPageSize = Config::get("pagenite.list_rows");
+        $configPageSize = Config::get("paginate.list_rows");
         $this->pageSize = $configPageSize;
 
         // 系统名称
