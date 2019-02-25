@@ -28,7 +28,6 @@ class Member extends Base
 
     // 表单-数据表字段映射
     public $map = [
-        [self::MTXT, "account1", "account"],
         [self::MTIME, "createtime", "createTime"]
     ];
 }

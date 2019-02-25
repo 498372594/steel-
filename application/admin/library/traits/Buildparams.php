@@ -57,17 +57,19 @@ trait Buildparams
 
             $keep = ["sort", "order", "pageSize"];
 
-            $aliasName = $this->aliasName;
+            $aliasName = $this->aliasName.".";
 
             foreach ($request as $m=>$n) {
                 if (!in_array($m, $keep)) {
                     if ('' !== $n) {
+                        $oldKey = $m;
+                        $m = $this->preprocessing($m);
                         if (array_key_exists($m, $map)) {
-                            //TODO
-                            /*$type = $map[$m]['type'];
+                            $type = isset($map[$m]['type'])?$map[$m]['type']:'';
                             $field = $m;
                             $mapField = $map[$m]['mapField'];
                             $qureyField = $aliasName.$mapField;
+
                             switch ($type) {
                                 case "Text":
                                     if (array_key_exists($m, $request)) {
@@ -77,27 +79,56 @@ trait Buildparams
                                             $where .= " AND {$qureyField} LIKE '%{$n}%'";
                                         }
                                     }
+                                    break;
                                 case "Number":
                                     $where .= " AND {$qureyField} = {$n}";
+                                    break;
                                 case "Time":
-                                    $timeStart = array_key_exists($field."Start", $request)?$mapField:null;
-                                    $timeEnd   = array_key_exists($field."End", $request)?$mapField:null;
-
-                                    if ($timeStart || $timeEnd) {
-                                        if ($timeStart) $where .= " AND {$timeStart} >= {$n}";
-                                        if ($timeEnd) $where .= " AND {$timeEnd} <= {$n}";
+                                    $timeStart = '';
+                                    $timeEnd   = '';
+                                    if (false !== strstr($oldKey, "Start") && array_key_exists($field."Start", $request) && $n) {
+                                        $timeStart = $qureyField;
+                                    } else if (false !== strstr($oldKey, "End") && array_key_exists($field."End", $request) && $n) {
+                                        $timeEnd = $qureyField;
                                     }
+                                    if ($timeStart || $timeEnd) {
+                                        if ($timeStart) $where .= " AND {$timeStart} >= '{$n}'";
+                                        if ($timeEnd) $where .= " AND {$timeEnd} <= '{$n}'";
+                                    }
+                                    break;
                                 default:
-                            }*/
-                        }
-                    } else {
-                        if (in_array($m, $this->model->getTableFields()) && !empty($n)) {
-                            $where .= " AND {$key} = '{$n}'";
+
+                                    break;
+                            }
+                        } else {
+                            if (in_array($oldKey, $this->model->getTableFields())) {
+                                $where .= " AND {$oldKey} LIKE '%{$n}%'";
+                            }
                         }
                     }
                 }
             }
         }
         return $where;
+    }
+
+
+    /**
+     * 参数与处理
+     * 将带有特殊后缀的处理一下
+     * Preprocessing
+     */
+    protected function preprocessing($str="")
+    {
+        $special = ["Start", "End"];
+        foreach ($special as $v) {
+            if (false !== strstr($str, $v)) {
+                $ret = substr($str,0,strpos($str, $v));
+                return $ret;
+            } else {
+                $ret = $str;
+            }
+        }
+        return $ret;
     }
 }

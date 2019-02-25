@@ -6,7 +6,7 @@ trait InitMod
 {
     protected $className=null;
     protected $model = null;
-    protected $aliasName = "t.";
+    protected $aliasName = "t";
     public function _initialize()
     {
         parent::_initialize();

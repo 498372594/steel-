@@ -13,7 +13,7 @@ trait IndexPlugin
         $request = $this->request->post();
 
         $className = strtoupper($this->className);
-        if (isset($request['p'])) {
+        if (isset($_REQUEST['page'])) {
             list($where, $sort, $order, $pageSize) = [get($className."_PARAMS_WHERE"), get($className."_PARAMS_SORT"),  get($className."_PARAMS_ORDER"), get($className."_PARAMS_PAGESIZE")];
         } else {
             list($where, $sort, $order, $pageSize) = $this->buildparams($request);
@@ -24,18 +24,12 @@ trait IndexPlugin
             set($className."_PARAMS_PAGESIZE", $pageSize);
         }
 
-        $total = $this->model->where($where)->count();
+        $total = $this->model->alias($this->aliasName)->where($where)->count();
 
         $list = $this->searchList($this->model, $where, $sort, $order, $pageSize);
 
         // 附加数据
         $this->indexAttach();
-
-        set($className."_PARAMS_REQUEST", NULL);
-        set($className."_PARAMS_WHERE", NULL);
-        set($className."_PARAMS_SORT", NULL);
-        set($className."_PARAMS_ORDER", NULL);
-        set($className."_PARAMS_PAGESIZE", NULL);
 
         // 渲染页面
         $pagelist = $list->render();
@@ -60,7 +54,7 @@ trait IndexPlugin
      */
     protected function searchList($model, $where, $sort, $order, $pageSize)
     {
-        $data = $model->alias("t")->where($where)->order($sort, $order)->paginate($pageSize);
+        $data = $model->alias($this->aliasName)->where($where)->order($sort, $order)->paginate($pageSize);
         return $data;
     }
 }
