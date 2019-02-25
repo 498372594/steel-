@@ -50,7 +50,7 @@ class Member extends Right
     protected function editAttach()
     {
         $id = input("id");
-        if (empty($id)) return json_err();
+        if (empty($id))  throw new Exception("未知的id！");
 
         $data = Db::table("member m")
             ->field("m.id,m.nickName,m.account,p.account parent")

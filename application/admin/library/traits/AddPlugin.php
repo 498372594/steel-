@@ -60,6 +60,6 @@ trait AddPlugin
      */
     protected function afterAddValidate($data)
     {
-
+        return $data;
     }
 }
