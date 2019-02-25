@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50553
 File Encoding         : 65001
 
-Date: 2019-02-22 19:31:11
+Date: 2019-02-25 15:09:11
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -51,7 +51,7 @@ CREATE TABLE `adminloginlog` (
   `status` tinyint(1) unsigned DEFAULT '0' COMMENT '是否成功登录  0-未成功 1-成功登录',
   `createTime` datetime DEFAULT NULL COMMENT '登录时间',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8 COMMENT='后台登录记录';
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8 COMMENT='后台登录记录';
 
 -- ----------------------------
 -- Records of adminloginlog
@@ -86,6 +86,7 @@ INSERT INTO `adminloginlog` VALUES ('27', 'admin', '127.0.0.1', '80', 'Mozilla/5
 INSERT INTO `adminloginlog` VALUES ('28', 'admin', '127.0.0.1', '80', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36', '登录成功！', '1', '2019-02-22 08:41:02');
 INSERT INTO `adminloginlog` VALUES ('29', 'admin', '127.0.0.1', '80', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36', '登录成功！', '1', '2019-02-22 10:11:38');
 INSERT INTO `adminloginlog` VALUES ('30', 'admin', '127.0.0.1', '80', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36', '登录成功！', '1', '2019-02-22 10:12:14');
+INSERT INTO `adminloginlog` VALUES ('31', 'admin', '127.0.0.1', '80', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36', '登录成功！', '1', '2019-02-25 08:40:01');
 
 -- ----------------------------
 -- Table structure for authgroup
