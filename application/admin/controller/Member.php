@@ -91,4 +91,38 @@ class Member extends Right
         $data['createTime'] = now_datetime();
         return $data;
     }
+
+    /**
+     * 禁用
+     */
+    public function disable()
+    {
+        if (request()->isPost()) {
+            $id = input('id');
+
+            $ret = Db::name("member")->where("id", $id)->update(["isDisable"=>1]);
+            if (false !== $ret) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        }
+    }
+
+    /**
+     * 放行
+     */
+    public function enable()
+    {
+        if (request()->isPost()) {
+            $id = input('id');
+
+            $ret = Db::name("member")->where("id", $id)->update(["isDisable"=>2]);
+            if (false !== $ret) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        }
+    }
 }
