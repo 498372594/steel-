@@ -16,11 +16,6 @@ use think\console\Input\Argument;
  */
 class Create extends Command
 {
-    public function __construct($name = null)
-    {
-        parent::AUTH('admin|owner')->expect(['index']);
-    }
-
     protected function configure()
     {
         $this->setName('create')->setDescription('创建后台控制器组件')->addOption('view',
