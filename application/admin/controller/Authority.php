@@ -1,7 +1,7 @@
 <?php
 namespace app\admin\controller;
 
-use think\auth\Auth;
+use think\Auth;
 use think\Db;
 
 class Authority extends Auth
