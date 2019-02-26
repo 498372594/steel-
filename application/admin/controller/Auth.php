@@ -11,7 +11,7 @@ class Auth extends Right
      */
     public function group()
     {
-        $groups = Db::name("authgroup")->paginate($this->pageSize);
+        $groups = Db::table("authgroup")->paginate($this->pageSize);
 
         $pagelist = $groups->render();
         $this->assign([
@@ -73,7 +73,7 @@ class Auth extends Right
                 "title" => $title,
                 "rules" => $ruleStr
             ];
-            $ret = Db::name("authgroup")->insert($data);
+            $ret = Db::table("authgroup")->insert($data);
 
             if ($ret) {
                 return json_suc();
@@ -81,7 +81,7 @@ class Auth extends Right
                 return json_err();
             }
         } else {
-            $rules = Db::name("authrule")->select();
+            $rules = Db::table("authrule")->select();
             $convertRule = convert_tree($rules, false, true, false);
 
             $ret = [];
@@ -123,7 +123,7 @@ class Auth extends Right
                 "title" => $title,
             ];
 
-            $info = Db::name("authgroup")->where("id", $id)->find();
+            $info = Db::table("authgroup")->where("id", $id)->find();
             $ruleStr = $this->formatRules();
 
             if ($ruleStr || $info['rules'] != $ruleStr) {
@@ -131,7 +131,7 @@ class Auth extends Right
             }
 
 
-            $ret = Db::name("authgroup")->where("id", $id)->update($data);
+            $ret = Db::table("authgroup")->where("id", $id)->update($data);
 
             if (false !== $ret) {
                 return json_suc();
@@ -140,10 +140,10 @@ class Auth extends Right
             }
         } else {
             $id = (int)input("id");
-            $info = Db::name("authgroup")->where("id", $id)->find();
+            $info = Db::table("authgroup")->where("id", $id)->find();
             $granted = explode(',', $info['rules']);
 
-            $rules = Db::name("authrule")->select();
+            $rules = Db::table("authrule")->select();
             $convertRule = convert_tree($rules, false, true, false);
 
             $ret = [];
@@ -183,7 +183,7 @@ class Auth extends Right
             $id = (int)input("id");
 
             if ($id) {
-                $ret = Db::name("authgroup")->delete($id);
+                $ret = Db::table("authgroup")->delete($id);
 
                 if ($ret) {
                     return json_suc();
@@ -199,7 +199,7 @@ class Auth extends Right
      */
     public function rule()
     {
-        $rules = Db::name("authrule")->select();
+        $rules = Db::table("authrule")->select();
         $formatRule = convert_tree($rules);
 
         $this->assign("rules", $formatRule);
@@ -229,7 +229,7 @@ class Auth extends Right
            ];
 
            try {
-               $ret = Db::name("authrule")->insert($data);
+               $ret = Db::table("authrule")->insert($data);
 
                if ($ret) {
                    return json_suc(0, "添加成功！");
@@ -261,7 +261,7 @@ class Auth extends Right
     public function getRuleList()
     {
         // 规则列表
-        $rules = Db::name("authrule")->select();
+        $rules = Db::table("authrule")->select();
 
         // 这里不要第三层的规则
         $rulesTree = convert_tree($rules, false, false);
@@ -302,7 +302,7 @@ class Auth extends Right
             ];
 
             try {
-                $ret = Db::name("authrule")->where("id", $id)->update($data);
+                $ret = Db::table("authrule")->where("id", $id)->update($data);
 
                 if (false !== $ret) {
                     return json_suc(0, "更新成功！");
@@ -314,7 +314,7 @@ class Auth extends Right
             }
         } else {
             $id = (int)input("id");
-            $ruleDetail = Db::name("authrule")->where("id", $id)->find();
+            $ruleDetail = Db::table("authrule")->where("id", $id)->find();
             if (!$ruleDetail) {
                 $this->error("数据不存在！");
             }
@@ -340,11 +340,11 @@ class Auth extends Right
                 return json_err(-1, "未知的ID！");
             }
 
-            $rules = Db::name("authrule")->select();
+            $rules = Db::table("authrule")->select();
             $convertRule = convert_tree_subs($id, $rules);
 
             if ($convertRule) {
-                $ret = Db::name("authrule")->delete($convertRule);
+                $ret = Db::table("authrule")->delete($convertRule);
                 if ($ret) {
                     return json_suc();
                 } else {

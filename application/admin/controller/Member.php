@@ -27,7 +27,7 @@ class Member extends Right
     protected function afterAddValidate($data)
     {
         if ($data['parent']) {
-            $parentInfo = Db::name("member")->where("account", $data['parent'])->find();
+            $parentInfo = Db::table("member")->where("account", $data['parent'])->find();
             if (!$parentInfo) {
                 throw new Exception("推荐人不存在！");
             }
@@ -66,7 +66,7 @@ class Member extends Right
     protected function beforeEditValidate($data)
     {
         if ($data['parent']) {
-            $parentInfo = Db::name("member")->where("account", $data['parent'])->find();
+            $parentInfo = Db::table("member")->where("account", $data['parent'])->find();
             if (!$parentInfo) {
                 throw new Exception("推荐人不存在！");
             }
@@ -100,7 +100,7 @@ class Member extends Right
         if (request()->isPost()) {
             $id = input('id');
 
-            $ret = Db::name("member")->where("id", $id)->update(["isDisable"=>1]);
+            $ret = Db::table("member")->where("id", $id)->update(["isDisable"=>1]);
             if (false !== $ret) {
                 return json_suc();
             } else {
@@ -117,7 +117,7 @@ class Member extends Right
         if (request()->isPost()) {
             $id = input('id');
 
-            $ret = Db::name("member")->where("id", $id)->update(["isDisable"=>2]);
+            $ret = Db::table("member")->where("id", $id)->update(["isDisable"=>2]);
             if (false !== $ret) {
                 return json_suc();
             } else {

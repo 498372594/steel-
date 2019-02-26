@@ -203,7 +203,7 @@ function clear_temp_cache() {
  */
 function loadCache ()
 {
-    $settings = \think\Db::name("setting")->select();
+    $settings = \think\Db::table("setting")->select();
     $refer = [];
     if ($settings) {
         foreach ($settings as $k=>$v) {
@@ -257,7 +257,7 @@ function getSettings($module="", $code="")
  */
 function loadDropdownList ()
 {
-    $data = \think\Db::name("dropdown")->select();
+    $data = \think\Db::table("dropdown")->select();
     $refer = [];
     if ($data) {
         foreach ($data as $k=>$v) {
@@ -331,7 +331,7 @@ function loadDropdown()
  */
 function selDropdown()
 {
-    $data = \think\Db::name('dropdown')->select();
+    $data = \think\Db::table('dropdown')->select();
     $refer = [];
     if ($data) {
         foreach ($data as $k=>$v) {

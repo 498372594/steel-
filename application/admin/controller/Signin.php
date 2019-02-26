@@ -82,7 +82,7 @@ class Signin extends Base
     protected function getMenu ()
     {
         // 所有菜单
-        $menu = Db::name("authrule")->field('id,name,title,status,pid,faicon')->select();
+        $menu = Db::table("authrule")->field('id,name,title,status,pid,faicon')->select();
         // 拥有权限菜单
         $auth = new Authority();
         $uid  = Session::get("uid", "admin");

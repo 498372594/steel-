@@ -43,7 +43,7 @@ class User extends Base
         $log['status'] = 0;
 
         // 登录
-        $admin = Db::name("admin")
+        $admin = Db::table("admin")
             ->where("account", $account)
             ->find();
 
@@ -80,7 +80,7 @@ class User extends Base
         }
 
         $log['note'] = $msg;
-        $insertLog = Db::name("adminloginlog")->insert($log);
+        $insertLog = Db::table("adminloginlog")->insert($log);
         if (!$insertLog) {
             $code = -1;
             $msg  = "登录日志写入失败！";
