@@ -41,7 +41,6 @@
                 <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/company/edit\',[\'id\'=>$vo[\'id\']])}', '编辑','80%','50%')"></i>
                 <!--删除-->
                 <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmUpdate('/admin/company/delete','{$vo.id}','确定要删除吗？')"></i>
-                {/if}
             </td>
         </tr>
         {/volist}
