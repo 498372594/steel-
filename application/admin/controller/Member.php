@@ -53,7 +53,7 @@ class Member extends Right
         if (empty($id))  throw new Exception("未知的id！");
 
         $data = Db::table("member m")
-            ->field("m.id,m.nickName,m.account,p.account parent")
+            ->field("m.id,m.nickname,m.account,p.account parent")
             ->join("member p", "m.parentId=p.id")
             ->where("m.id", $id)
             ->find();

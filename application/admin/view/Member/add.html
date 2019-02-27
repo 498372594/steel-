@@ -2,7 +2,7 @@
 	<div class="row">
 		<form class="form-horizontal" role="form" id="form" action="{:url('/admin/member/add')}">
 			<div class="form-group">
-				{include file="tpl/input" results="data" name="nickName" label="昵称" value="" attr='data-rule="required;"'/}
+				{include file="tpl/input" results="data" name="nickname" label="昵称" value="" attr='data-rule="required;"'/}
 				{include file="tpl/input" results="data" name="account" label="账号" value="" attr='data-rule="required;"'/}
 				{include file="tpl/password" name="password" label="密码" value="" attr='data-rule="required;"'/}
 				{include file="tpl/input" results="data" name="parent" label="推荐人" value="" attr='data-rule="required;"'/}

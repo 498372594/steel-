@@ -34,8 +34,6 @@
             <th nowrap="nowrap">ID</th>
             <th nowrap="nowrap">账号</th>
             <th nowrap="nowrap">昵称</th>
-            <th nowrap="nowrap">余额</th>
-            <th nowrap="nowrap">是否禁用</th>
             <th nowrap="nowrap">创建日期</th>
             <th nowrap="nowrap">操作</th>
         </tr>
@@ -45,13 +43,11 @@
             <tr>
                 <td nowrap="nowrap">{$vo.id}</td>
                 <td nowrap="nowrap">{$vo.account}</td>
-                <td nowrap="nowrap">{$vo.nickName}</td>
-                <td nowrap="nowrap">{$vo.balance}</td>
-                <td nowrap="nowrap">{$vo.isDisable|getDropdownList="isDisable",###}</td>
-                <td nowrap="nowrap">{$vo.createTime}</td>
+                <td nowrap="nowrap">{$vo.nickname}</td>
+                <td nowrap="nowrap">{$vo.createtime}</td>
                 <td nowrap="nowrap">
                     <!-- 启用、禁用 -->
-                    {eq name="vo.isDisable" value="1"}
+                    {eq name="vo.isdisable" value="1"}
                         <i class="fa fa-play qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="启用" onclick="confirmUpdate('/admin/member/enable','{$vo.id}','确定要启用吗？')"></i>
                     {else/}
                         <i class="fa fa-stop qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="禁用" onclick="confirmUpdate('/admin/member/disable','{$vo.id}','确定要禁用吗？')"></i>

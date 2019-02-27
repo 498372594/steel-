@@ -21,6 +21,6 @@ class Company extends Base
 
     // 表单-数据表字段映射
     public $map = [
-       
+        [self::MTIME, "createtime", "create_time"]
     ];
 }

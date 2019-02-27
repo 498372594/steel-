@@ -3,7 +3,7 @@
 		<form class="form-horizontal" role="form" id="form" action="{:url('/admin/member/edit')}">
 			<div class="form-group">
 				<input type="hidden" name="id" value="{$data.id}">
-				{include file="tpl/input" results="data" name="nickName" label="昵称" value="nickName" attr='data-rule="required;"'/}
+				{include file="tpl/input" results="data" name="nickname" label="昵称" value="nickName" attr='data-rule="required;"'/}
 				{include file="tpl/input" results="data" name="account" label="账号" value="account" attr='data-rule="required;"'/}
 				{include file="tpl/password" name="password" label="密码" value="" attr=''/}
 				{include file="tpl/input" results="data" name="parent" label="推荐人" value="parent" attr='data-rule="required;"'/}
