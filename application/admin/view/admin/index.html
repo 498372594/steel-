@@ -48,7 +48,7 @@
                     {/notempty}
                 </td>
                 <td nowrap="nowrap">{$vo.isDisable|getDropdownList="isDisable",###}</td>
-                <td nowrap="nowrap">{$vo.createTime}</td>
+                <td nowrap="nowrap">{$vo.create_time}</td>
                 <td nowrap="nowrap">
                     <!-- 自己不能操作自己 -->
                     {if condition="($vo['id'] eq $account['id']) && (1 neq $account['id'])"}

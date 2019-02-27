@@ -40,7 +40,7 @@ class Member extends Right
             $data['password'] = md5($data["password"]);
         }
 
-        $data['createTime'] = now_datetime();
+        $data['create_time'] = now_datetime();
         return $data;
     }
 
@@ -88,7 +88,7 @@ class Member extends Right
             unset($data['password']);
         }
 
-        $data['createTime'] = now_datetime();
+        $data['create_time'] = now_datetime();
         return $data;
     }
 

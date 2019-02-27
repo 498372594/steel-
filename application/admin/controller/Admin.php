@@ -15,7 +15,7 @@ class Admin extends Right
         $admins = Db::table("admin t")
             ->join("authgroupaccess a", "t.id = a.uid")
             ->join("authgroup g", "a.group_id = g.id")
-            ->field("t.id,t.account,t.name,t.isDisable,t.createTime,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName")
+            ->field("t.id,t.account,t.name,t.isDisable,t.create_time,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName")
             ->paginate($this->pageSize);
 
         $pagelist = $admins->render();
@@ -56,7 +56,7 @@ class Admin extends Right
                 "password"   => md5($password),
                 "name"       => $name,
                 "isDisable"  => 2,
-                "createTime" => now_datetime()
+                "create_time" => now_datetime()
             ];
 
             $group_id = (int)input("group_id");
