@@ -29,8 +29,9 @@ class Create extends Command
     protected function execute(Input $input, Output $output)
     {
         $controllerName = $input->getArgument('controllerName');
-        $catalog = __DIR__."/../controller/";
-        $fileName = $catalog.$controllerName.'.php';
+        $controllerPath = __DIR__."/../controller/";
+        $modelPath = __DIR__."/../model/";
+        $fileName = $controllerPath.$controllerName.'.php';
         if(file_exists($fileName)){//文件是否存在
             $output->writeln('File already exist');
         }else{
@@ -49,7 +50,39 @@ class {$controllerName} extends Right
 
 }
 CODE;
-            file_put_contents($fileName,$code);
+
+            $model_code = <<<MODELCODE
+<?php
+
+namespace app\admin\model;
+
+class {$controllerName} extends Base
+{
+    // 验证规则
+    public \$rules = [
+        
+    ];
+
+    // 验证错误信息
+    public \$msg = [
+        
+    ];
+
+    // 场景
+    public \$scene = [
+        
+    ];
+
+    // 表单-数据表字段映射
+    public \$map = [
+       
+    ];
+}
+
+MODELCODE;
+
+            file_put_contents($fileName,$code);//创建控制器
+            file_put_contents($modelPath.$controllerName.'.php',$model_code);//创建model
             if($input->getOption('view') == 1){//创建视图
                 $viewPath = __DIR__."/../view/{$controllerName}/";
                 if(!file_exists($viewPath)){
