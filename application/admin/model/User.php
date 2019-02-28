@@ -48,7 +48,7 @@ class User extends Base
             ->find();
 
         if ($admin) {
-            if (1 == $admin['isDisable']) {
+            if (1 == $admin['isdisable']) {
                 $msg = "该账号已被禁用！";
             } else {
                 if ($admin['password'] == md5($password)) {

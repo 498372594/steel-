@@ -24,7 +24,7 @@ CREATE TABLE `admin` (
   `account` varchar(255) DEFAULT NULL COMMENT '账号',
   `password` varchar(255) DEFAULT NULL COMMENT '密码',
   `name` varchar(64) DEFAULT NULL COMMENT '名称',
-  `isDisable` tinyint(1) unsigned DEFAULT '2' COMMENT '是否禁用',
+  `isdisable` tinyint(1) unsigned DEFAULT '2' COMMENT '是否禁用',
   `createTime` datetime DEFAULT NULL COMMENT '创建日期',
   PRIMARY KEY (`id`),
   UNIQUE KEY `accountUnique` (`account`)
@@ -185,8 +185,8 @@ CREATE TABLE `dropdown` (
 -- ----------------------------
 -- Records of dropdown
 -- ----------------------------
-INSERT INTO `dropdown` VALUES ('1', 'isDisable', '是否禁用', '1', '禁用', '2');
-INSERT INTO `dropdown` VALUES ('2', 'isDisable', '是否禁用', '2', '启用', '1');
+INSERT INTO `dropdown` VALUES ('1', 'isdisable', '是否禁用', '1', '禁用', '2');
+INSERT INTO `dropdown` VALUES ('2', 'isdisable', '是否禁用', '2', '启用', '1');
 INSERT INTO `dropdown` VALUES ('3', 'isDelete', '是否删除', '1', '已删除', '1');
 INSERT INTO `dropdown` VALUES ('4', 'isDelete', '是否删除', '2', '未删除', '2');
 INSERT INTO `dropdown` VALUES ('5', 'pageSize', '每页条数', '10', '10', '1');
@@ -210,7 +210,7 @@ CREATE TABLE `member` (
   `password` varchar(64) DEFAULT NULL COMMENT '登录密码',
   `parentId` int(20) unsigned DEFAULT NULL COMMENT '推荐人',
   `balance` decimal(20,2) unsigned DEFAULT '0.00' COMMENT '余额',
-  `isDisable` int(11) DEFAULT '2' COMMENT '是否禁用  1：禁用  2：正常',
+  `isdisable` int(11) DEFAULT '2' COMMENT '是否禁用  1：禁用  2：正常',
   `createTime` datetime DEFAULT NULL COMMENT '创建时间',
   `updateTime` datetime DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),

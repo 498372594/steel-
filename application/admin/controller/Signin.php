@@ -28,7 +28,7 @@ class Signin extends Base
             die("<script>window.parent.location.href = '/admin/login/index';</script>");
         }
         // 账号是否被禁用
-        if (1 == Session::get("uinfo", "admin")['isDisable']) {
+        if (1 == Session::get("uinfo", "admin")['isdisable']) {
             $this->error("该账号已被禁用！");
         }
         // 是否拥有访问权限(超级管理员除外)

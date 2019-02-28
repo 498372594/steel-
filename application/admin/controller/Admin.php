@@ -15,7 +15,7 @@ class Admin extends Right
         $admins = Db::table("admin t")
             ->join("authgroupaccess a", "t.id = a.uid")
             ->join("authgroup g", "a.group_id = g.id")
-            ->field("t.id,t.account,t.name,t.isDisable,t.createtime,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName")
+            ->field("t.id,t.account,t.name,t.isdisable,t.createtime,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName")
             ->paginate($this->pageSize);
 
         $pagelist = $admins->render();
@@ -55,7 +55,7 @@ class Admin extends Right
                 "account"    => $account,
                 "password"   => md5($password),
                 "name"       => $name,
-                "isDisable"  => 2,
+                "isdisable"  => 2,
                 "createtime" => now_datetime()
             ];
 
@@ -244,7 +244,7 @@ class Admin extends Right
         if (request()->isPost()) {
             $id = input('id');
 
-            $ret = Db::table("admin")->where("id", $id)->update(["isDisable"=>2]);
+            $ret = Db::table("admin")->where("id", $id)->update(["isdisable"=>2]);
             if (false !== $ret) {
                 return json_suc();
             } else {
@@ -261,7 +261,7 @@ class Admin extends Right
         if (request()->isPost()) {
             $id = input('id');
 
-            $ret = Db::table("admin")->where("id", $id)->update(["isDisable"=>1]);
+            $ret = Db::table("admin")->where("id", $id)->update(["isdisable"=>1]);
             if (false !== $ret) {
                 return json_suc();
             } else {

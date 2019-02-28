@@ -25771,13 +25771,13 @@ UE.ui = baidu.editor.ui = {};
         },
         Stateful_onMouseEnter: function (evt, el){
             this.target=el;
-            if (!this.isDisabled() || this.alwalysHoverable) {
+            if (!this.isdisabled() || this.alwalysHoverable) {
                 this.addState('hover');
                 this.fireEvent('over');
             }
         },
         Stateful_onMouseLeave: function (evt, el){
-            if (!this.isDisabled() || this.alwalysHoverable) {
+            if (!this.isdisabled() || this.alwalysHoverable) {
                 this.removeState('hover');
                 this.removeState('active');
                 this.fireEvent('out');
@@ -25796,12 +25796,12 @@ UE.ui = baidu.editor.ui = {};
             }
         },
         Stateful_onMouseDown: function (evt, el){
-            if (!this.isDisabled()) {
+            if (!this.isdisabled()) {
                 this.addState('active');
             }
         },
         Stateful_onMouseUp: function (evt, el){
-            if (!this.isDisabled()) {
+            if (!this.isdisabled()) {
                 this.removeState('active');
             }
         },
@@ -25830,13 +25830,13 @@ UE.ui = baidu.editor.ui = {};
             return this.hasState('checked');
         },
         setChecked: function (checked){
-            if (!this.isDisabled() && checked) {
+            if (!this.isdisabled() && checked) {
                 this.addState('checked');
             } else {
                 this.removeState('checked');
             }
         },
-        isDisabled: function (){
+        isdisabled: function (){
             return this.hasState('disabled');
         },
         setDisabled: function (disabled){
@@ -25910,7 +25910,7 @@ UE.ui = baidu.editor.ui = {};
             }
         },
         _onClick: function (){
-            if (!this.isDisabled()) {
+            if (!this.isdisabled()) {
                 this.fireEvent('click');
             }
         },
@@ -25999,12 +25999,12 @@ UE.ui = baidu.editor.ui = {};
             this.popup.showAnchorRect(rect);
         },
         _onArrowClick: function (event, el){
-            if (!this.isDisabled()) {
+            if (!this.isdisabled()) {
                 this.showPopup();
             }
         },
         _onButtonClick: function (){
-            if (!this.isDisabled()) {
+            if (!this.isdisabled()) {
                 this.fireEvent('buttonclick');
             }
         }
@@ -26760,7 +26760,7 @@ UE.ui = baidu.editor.ui = {};
         },
         delayShowSubMenu:function () {
             var me = this;
-            if (!me.isDisabled()) {
+            if (!me.isdisabled()) {
                 me.addState('opened');
                 clearTimeout(me._showingTimer);
                 clearTimeout(me._closingTimer);
@@ -26772,7 +26772,7 @@ UE.ui = baidu.editor.ui = {};
         },
         delayHideSubMenu:function () {
             var me = this;
-            if (!me.isDisabled()) {
+            if (!me.isdisabled()) {
                 me.removeState('opened');
                 clearTimeout(me._showingTimer);
                 if (!me._closingTimer) {

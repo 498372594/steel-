@@ -47,7 +47,7 @@
                         未分配角色
                     {/notempty}
                 </td>
-                <td nowrap="nowrap">{$vo.isdisable|getDropdownList="isDisable",###}</td>
+                <td nowrap="nowrap">{$vo.isdisable|getDropdownList="isdisable",###}</td>
                 <td nowrap="nowrap">{$vo.createtime}</td>
                 <td nowrap="nowrap">
                     <!-- 自己不能操作自己 -->
@@ -55,7 +55,7 @@
                         <span class="label label-danger">禁止操作</span>
                     {else /}
                         <!-- 启用、禁用 -->
-                        {eq name="vo.isDisable" value="1"}
+                        {eq name="vo.isdisable" value="1"}
                             <i class="fa fa-play qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="启用" onclick="confirmUpdate('/admin/admin/enable','{$vo.id}','确定要启用吗？')"></i>
                         {else/}
                             <i class="fa fa-stop qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="禁用" onclick="confirmUpdate('/admin/admin/disable','{$vo.id}','确定要禁用吗？')"></i>

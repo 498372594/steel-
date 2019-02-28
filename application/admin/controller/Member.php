@@ -16,7 +16,7 @@ class Member extends Right
     protected function indexAttach()
     {
         $this->assign("lists", [
-            "isDisable" => getDropdownList("isDisable"),
+            "isdisable" => getDropdownList("isdisable"),
             "pageSize"  => getDropdownList("pageSize")
         ]);
     }
@@ -100,7 +100,7 @@ class Member extends Right
         if (request()->isPost()) {
             $id = input('id');
 
-            $ret = Db::table("member")->where("id", $id)->update(["isDisable"=>1]);
+            $ret = Db::table("member")->where("id", $id)->update(["isdisable"=>1]);
             if (false !== $ret) {
                 return json_suc();
             } else {
@@ -117,7 +117,7 @@ class Member extends Right
         if (request()->isPost()) {
             $id = input('id');
 
-            $ret = Db::table("member")->where("id", $id)->update(["isDisable"=>2]);
+            $ret = Db::table("member")->where("id", $id)->update(["isdisable"=>2]);
             if (false !== $ret) {
                 return json_suc();
             } else {
