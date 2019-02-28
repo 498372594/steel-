@@ -31,7 +31,7 @@ class Company extends Right
                 throw new Exception("手机号码格式有误！");
             }
         }
-        $data['create_time'] = now_datetime();
+        $data['createtime'] = now_datetime();
         return $data;
     }
 

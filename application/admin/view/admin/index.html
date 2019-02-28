@@ -28,6 +28,7 @@
             <th nowrap="nowrap">ID</th>
             <th nowrap="nowrap">账号</th>
             <th nowrap="nowrap">昵称</th>
+            <th nowrap="nowrap">所属企业</th>
             <th nowrap="nowrap">角色</th>
             <th nowrap="nowrap">是否禁用</th>
             <th nowrap="nowrap">创建日期</th>
@@ -40,6 +41,7 @@
                 <td nowrap="nowrap">{$vo.id}</td>
                 <td nowrap="nowrap">{$vo.account}</td>
                 <td nowrap="nowrap">{$vo.name}</td>
+                <td nowrap="nowrap">{$vo.company}</td>
                 <td nowrap="nowrap">
                     {notempty name="vo.groupName"}
                         {$vo.groupName}

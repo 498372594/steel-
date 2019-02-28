@@ -84,7 +84,8 @@ MODELCODE;
             file_put_contents($fileName,$code);//创建控制器
             file_put_contents($modelPath.$controllerName.'.php',$model_code);//创建model
             if($input->getOption('view') == 1){//创建视图
-                $viewPath = __DIR__."/../view/{$controllerName}/";
+                $viewDirName = strtolower($controllerName);
+                $viewPath = __DIR__."/../view/{$viewDirName}/";
                 if(!file_exists($viewPath)){
                     mkdir($viewPath);
                     foreach (['add.html','edit.html','index.html'] as $k => $v){

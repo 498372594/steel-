@@ -15,7 +15,8 @@ class Admin extends Right
         $admins = Db::table("admin t")
             ->join("authgroupaccess a", "t.id = a.uid")
             ->join("authgroup g", "a.group_id = g.id")
-            ->field("t.id,t.account,t.name,t.isdisable,t.createtime,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName")
+            ->join('company c','c.id = t.companyid','left')
+            ->field("t.id,t.account,t.name,t.isdisable,t.createtime,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName,c.name company")
             ->paginate($this->pageSize);
 
         $pagelist = $admins->render();
@@ -32,14 +33,24 @@ class Admin extends Right
     public function add()
     {
         if (request()->isPost()) {
+
             //账号
             $account = trim(input("account"));
             //判断此账户是否存在
             $admin = Db::table("admin")
                 ->where("account", $account)
                 ->find();
+
             if ($admin) {
                 return json_err(-1, "该账户已存在！");
+            }
+            $company_id = (int)input("company_id");//企业id
+            if(!$company_id){
+                return json_err(-1, "参数有误！");
+            }
+            //判断企业是否存在
+            if(!Db::table('company')->find($company_id)){
+                return json_err(-1, "企业不存在！");
             }
 
             $password = trim(input("password"));
@@ -56,11 +67,19 @@ class Admin extends Right
                 "password"   => md5($password),
                 "name"       => $name,
                 "isdisable"  => 2,
-                "createtime" => now_datetime()
+                "createtime" => now_datetime(),
+                'companyid'  => $company_id
             ];
 
             $group_id = (int)input("group_id");
 
+            $adminRole = Db::table('authgroup')->where(['id' => $group_id,'title' => '管理员'])->find();
+            if($adminRole){
+                if(Db::table('admin')->alias('a')->where(['a.companyid' => $company_id])->join('authgroupaccess aga',"aga.uid = a.id and aga.group_id = {$group_id}")->find()){
+                    //当前企业是否存在管理员
+                    return json_err(-1, "每个企业仅能创建一个管理员！");
+                }
+            }
             // 添加管理员
             try {
                 Db::startTrans();
@@ -80,6 +99,7 @@ class Admin extends Right
             }
         } else {
             $roles = Db::table("authgroup")->field("id,title")->select();
+            $companies = Db::table('company')->field('id,name')->select();
             $roleArr = [""=>""];
             if ($roles) {
                 foreach ($roles as $k=>$v) {
@@ -88,11 +108,19 @@ class Admin extends Right
             } else {
                 $this->error("请添加角色！");
             }
-
+            $companyArr = [""=>""];
+            if(!empty($companies)){
+                foreach ($companies as $k => $v){
+                    $companyArr[$v['id']] = $v['name'];
+                }
+            }else{
+                $this->error("请添加企业！");
+            }
 
             $this->assign([
                 "lists" => [
-                    "rolelist" => $roleArr
+                    "rolelist" => $roleArr,
+                    'companyList' => $companyArr
                 ]
             ]);
             return $this->fetch();
