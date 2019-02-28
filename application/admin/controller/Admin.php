@@ -99,7 +99,6 @@ class Admin extends Right
             }
         } else {
             $roles = Db::table("authgroup")->field("id,title")->select();
-            $companies = Db::table('company')->field('id,name')->select();
             $roleArr = [""=>""];
             if ($roles) {
                 foreach ($roles as $k=>$v) {
@@ -108,6 +107,7 @@ class Admin extends Right
             } else {
                 $this->error("请添加角色！");
             }
+            $companies = Db::table('company')->field('id,name')->select();
             $companyArr = [""=>""];
             if(!empty($companies)){
                 foreach ($companies as $k => $v){
@@ -232,11 +232,21 @@ class Admin extends Right
                 $this->error("请添加角色！");
             }
 
+            $companies = Db::table('company')->field('id,name')->select();
+            $companyArr = [""=>""];
+            if(!empty($companies)){
+                foreach ($companies as $k => $v){
+                    $companyArr[$v['id']] = $v['name'];
+                }
+            }else{
+                $this->error("请添加企业！");
+            }
 
             $this->assign([
                 "data" => $info[0],
                 "lists" => [
-                    "rolelist" => $roleArr
+                    "rolelist" => $roleArr,
+                    'companyList' => $companyArr
                 ]
             ]);
             return $this->fetch();
