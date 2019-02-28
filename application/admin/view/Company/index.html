@@ -26,7 +26,8 @@
         <thead>
         <tr>
             <th nowrap="nowrap">ID</th>
-
+            <th nowrap="nowrap">企业名称</th>
+            <th nowrap="nowrap">联系方式</th>
             <th nowrap="nowrap">创建日期</th>
             <th nowrap="nowrap">操作</th>
         </tr>
@@ -35,6 +36,8 @@
         {volist name="list" id="vo"}
         <tr>
             <td nowrap="nowrap">{$vo.id}</td>
+            <td nowrap="nowrap">{$vo.name}</td>
+            <td nowrap="nowrap">{$vo.phone}</td>
             <td nowrap="nowrap">{$vo.create_time}</td>
             <td nowrap="nowrap">
                 <!--编辑资料-->
