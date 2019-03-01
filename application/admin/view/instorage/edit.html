@@ -1,0 +1,23 @@
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/instorage/add')}">
+            <div class="form-group">
+                {include file="tpl/input" results="data" name="name" label="产品名称" value="name" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="storage_name" label="仓库" value="storage_name" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="class" label="型号" value="class" attr='data-rule="required;"'/}
+                <!--{include file="tpl/input" results="data" name="specification" label="规格" value="" attr='data-rule="required;"'/}-->
+                {include file="tpl/input" results="data" name="length" label="长度" value="length" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="unit" label="每件支数" value="unit" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="number" label="件数" value="number" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="weight" label="公斤数" value="weight" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="heavy" label="吨数" value="heavy" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="price" label="单价" value="price" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="buyer" label="购货单位" value="buyer" attr='data-rule="required;"'/}
+
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                {include file="tpl/button" label="保存"/}
+            </div>
+        </form>
+    </div>
+</div>
