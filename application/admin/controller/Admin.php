@@ -151,6 +151,15 @@ class Admin extends Right
                 return json_err(-1, "该账户已存在！");
             }
 
+            $company_id = (int)input("companyid");//企业id
+            if(!$company_id){
+                return json_err(-1, "参数有误！");
+            }
+            //判断企业是否存在
+            if(!Db::table('company')->find($company_id)){
+                return json_err(-1, "企业不存在！");
+            }
+
             $admin = Db::table("admin")->query("SELECT
             
                                                         a.*, 
@@ -171,6 +180,7 @@ class Admin extends Right
             $data = [
                 "account"    => $account,
                 "name"       => $name,
+                'companyid'  => $company_id
             ];
 
             $password = trim(input("password"));
@@ -179,6 +189,14 @@ class Admin extends Right
             }
 
             $group_id = (int)input("group_id");
+
+            $adminRole = Db::table('authgroup')->where(['id' => $group_id,'title' => '管理员'])->find();
+            if($adminRole){
+                if(Db::table('admin')->alias('a')->where(['a.companyid' => $company_id])->join('authgroupaccess aga',"aga.uid = a.id and aga.group_id = {$group_id}")->find()){
+                    //当前企业是否存在管理员
+                    return json_err(-1, "每个企业仅能创建一个管理员！");
+                }
+            }
 
             try {
                 Db::startTrans();
