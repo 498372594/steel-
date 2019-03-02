@@ -18,7 +18,7 @@ class Company extends Right
     protected function filter()
     {
         return [
-            'id' => 2
+            'id' => [2]
         ];
     }
 

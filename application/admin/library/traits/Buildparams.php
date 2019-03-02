@@ -49,7 +49,7 @@ trait Buildparams
         if(!empty($filter)){
             foreach ($filter as $k => $v){
                 if(is_array($v)){
-                    $symbol = $v[1]?:'=';
+                    $symbol = isset($v[1])?$v[1]:'=';
                     $val = $v[0];
                 }else{
                     $symbol = '=';
