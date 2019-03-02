@@ -8,4 +8,12 @@ namespace app\admin\library\traits;
 trait Backend
 {
     use InitMod,IndexPlugin,AddPlugin,EditPlugin,DeletePlugin;
+
+    /**
+     * @return array
+     */
+    public function filter()
+    {
+        return [];
+    }
 }

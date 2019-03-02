@@ -5,10 +5,22 @@ namespace app\admin\controller;
 use app\admin\library\traits\Backend;
 use think\Db;
 use think\Exception;
+use think\Session;
 
 class Company extends Right
 {
     use Backend;
+
+    /**
+     * 过滤器，要过滤的字段
+     * @return array
+     */
+    protected function filter()
+    {
+        return [
+            'id' => 2
+        ];
+    }
 
     /**
      * 添加 验证前处理
@@ -24,11 +36,6 @@ class Company extends Right
         if ($data['name']) {
             if (Db::table("company")->where("name", $data['name'])->find()) {
                 throw new Exception("公司名称已存在！");
-            }
-        }
-        if ($data['phone']){
-            if(!isPhone($data['phone'])){
-                throw new Exception("手机号码格式有误！");
             }
         }
         $data['createtime'] = now_datetime();
@@ -65,11 +72,6 @@ class Company extends Right
         if ($data['name']) {
             if (Db::table("company")->where("name", $data['name'])->find()) {
                 throw new Exception("公司名称已存在！");
-            }
-        }
-        if ($data['phone']){
-            if(!isPhone($data['phone'])){
-                throw new Exception("手机号码格式有误！");
             }
         }
         return $data;

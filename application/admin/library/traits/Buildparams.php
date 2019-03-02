@@ -41,7 +41,24 @@ trait Buildparams
      */
     protected function buildWhere($request=null)
     {
+        $company_id = $this->getCompanyId();
         $where = "1=1";
+
+        $filter = $this->filter();
+
+        if(!empty($filter)){
+            foreach ($filter as $k => $v){
+                if(is_array($v)){
+                    $symbol = $v[1]?:'=';
+                    $val = $v[0];
+                }else{
+                    $symbol = '=';
+                    $val = $v;
+                }
+                $where .= " AND {$k} {$symbol} {$val}";
+            }
+        }
+
         if ($request) {
             $map = [];
             if ($this->model->map) {

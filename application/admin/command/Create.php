@@ -58,6 +58,8 @@ namespace app\admin\model;
 
 class {$controllerName} extends Base
 {
+    protected \$autoWriteTimestamp = 'datetime';
+
     // 验证规则
     public \$rules = [
         
