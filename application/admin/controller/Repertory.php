@@ -12,6 +12,17 @@ class Repertory extends Right
     use Backend;
 
     /**
+     * 过滤器，要过滤的字段
+     * @return array
+     */
+    protected function filter()
+    {
+        return [
+            'companyid' => $this->getCompanyId()
+        ];
+    }
+
+    /**
      * 添加 验证前处理
      * @param $data
      * @return mixed
@@ -24,7 +35,7 @@ class Repertory extends Right
     {
         $company_id = $this->getCompanyId();
         if ($data['name']) {
-            if (Db::table("repertory")->where("companyid = {$company_id} and name = {$data['name']}")->find()) {
+            if (Db::table("repertory")->where("companyid = {$company_id} and name = '{$data['name']}'")->find()) {
                 throw new Exception("仓库已经存在，避免重复添加！");
             }
         }
@@ -61,7 +72,7 @@ class Repertory extends Right
     {
         $company_id = $this->getCompanyId();
         if ($data['name']) {
-            if (Db::table("repertory")->where("companyid = {$company_id} and name = {$data['name']}")->find()) {
+            if (Db::table("repertory")->where("companyid = {$company_id} and name = '{$data['name']}'")->find()) {
                 throw new Exception("仓库名称已存在！");
             }
         }

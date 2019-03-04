@@ -41,9 +41,7 @@ trait Buildparams
      */
     protected function buildWhere($request=null)
     {
-        $company_id = $this->getCompanyId();
         $where = "1=1";
-
         $filter = $this->filter();
 
         if(!empty($filter)){

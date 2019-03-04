@@ -12,17 +12,6 @@ class Company extends Right
     use Backend;
 
     /**
-     * 过滤器，要过滤的字段
-     * @return array
-     */
-    protected function filter()
-    {
-        return [
-            'id' => [2]
-        ];
-    }
-
-    /**
      * 添加 验证前处理
      * @param $data
      * @return mixed
