@@ -96,4 +96,31 @@ class Signin extends Base
             return $ruleList;
         }
     }
+
+    /**
+     * 当前登录用户id
+     * @return mixed
+     */
+    public function getAccountId()
+    {
+        return Session::get('uid','admin');
+    }
+
+    /**
+     * 当前登录用户数据
+     * @return mixed
+     */
+    public function getAccount()
+    {
+        return Session::get('uinfo','admin');
+    }
+
+    /**
+     * 当前登录用户所属公司的id
+     * @return mixed
+     */
+    public function getCompanyId()
+    {
+        return Session::get('uinfo','admin')['companyid'];
+    }
 }

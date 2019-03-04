@@ -1,1 +1,12 @@
-参考member视图
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/repertory/add')}">
+            <div class="form-group">
+                {include file="tpl/input" results="data" name="name" label="仓库名称" value="" attr='data-rule="required;"'/}
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                {include file="tpl/button" label="保存"/}
+            </div>
+        </form>
+    </div>
+</div>

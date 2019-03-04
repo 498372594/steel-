@@ -5,6 +5,7 @@ namespace app\admin\controller;
 use app\admin\library\traits\Backend;
 use think\Db;
 use think\Exception;
+use think\Session;
 
 class Company extends Right
 {
@@ -24,11 +25,6 @@ class Company extends Right
         if ($data['name']) {
             if (Db::table("company")->where("name", $data['name'])->find()) {
                 throw new Exception("公司名称已存在！");
-            }
-        }
-        if ($data['phone']){
-            if(!isPhone($data['phone'])){
-                throw new Exception("手机号码格式有误！");
             }
         }
         $data['createtime'] = now_datetime();
@@ -65,11 +61,6 @@ class Company extends Right
         if ($data['name']) {
             if (Db::table("company")->where("name", $data['name'])->find()) {
                 throw new Exception("公司名称已存在！");
-            }
-        }
-        if ($data['phone']){
-            if(!isPhone($data['phone'])){
-                throw new Exception("手机号码格式有误！");
             }
         }
         return $data;
