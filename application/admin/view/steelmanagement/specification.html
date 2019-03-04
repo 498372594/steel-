@@ -1,0 +1,39 @@
+<div class="table-responsive">
+    <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1 pull-left">
+        <div class="row">
+            {include file='tpl/addbtn1' url="/admin/steelmanagement/addspecification" height="80%" width="30%"/}
+        </div>
+    </div>
+    <table class="table table-bordered" style="margin-top:10px">
+        <thead>
+        <tr>
+            <th nowrap="nowrap">ID</th>
+            <th nowrap="nowrap">规格</th>
+            <th nowrap="nowrap">添加人</th>
+            <th nowrap="nowrap">创建日期</th>
+            <th nowrap="nowrap">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="list" id="vo"}
+        <tr>
+            <td nowrap="nowrap">{$vo.id}</td>
+            <td nowrap="nowrap">{$vo.specification}</td>
+            <td nowrap="nowrap">{$vo.add_name}</td>
+            <td nowrap="nowrap">{$vo.create_time}</td>
+            <td nowrap="nowrap">
+                <!-- 启用、禁用 -->
+
+                <!--编辑资料-->
+                <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/steelmanagement/addspecification\',[\'id\'=>$vo[\'id\']])}', '编辑','80%','50%')"></i>
+                <!--删除-->
+                <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmUpdate('/admin/steelmanagement/deletespecification','{$vo.id}','确定要删除吗？')"></i>
+            </td>
+        </tr>
+        {/volist}
+
+        </tbody>
+    </table>
+    <div style="float: right;"></div>
+</div>
+<script></script>

@@ -1,0 +1,19 @@
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/steelmanagement/addstorage')}">
+            <div class="form-group">
+                <input type="hidden" name="id" value="{$data.id}">
+                {include file="tpl/input" results="data" name="storage" label="仓库" value="storage" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="zjm" label="助记码" value="zjm" attr='data-rule=""'/}
+                {include file="tpl/input" results="data" name="sort" label="排名" value="sort" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="address" label="地址" value="address" attr='data-rule=""'/}
+                {include file="tpl/input" results="data" name="contacts" label="联系人" value="contacts" attr='data-rule=""'/}
+                {include file="tpl/input" results="data" name="phone" label="电话" value="phone" attr='data-rule=""'/}
+                {include file="tpl/input" results="data" name="fax" label="仓库传真" value="fax" attr='data-rule=""'/}
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                {include file="tpl/button" label="保存"/}
+            </div>
+        </form>
+    </div>
+</div>
