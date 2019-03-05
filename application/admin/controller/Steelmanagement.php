@@ -383,4 +383,106 @@ public function addoriginarea(){
             return json_suc();
         }
     }
+//    public function ceshi(){
+//        $list['value']=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("classname")->select();
+//        return json($list);
+//    }
+    public function product(){
+        $list=model("product")->alias("a")->join("classname b","a.classid=b.id","left")->field("a.*,b.classname")->where("a.companyid",Session::get("uinfo", "admin")['companyid'])->select();
+        $this->assign("list",$list);
+        return view();
+    }
+    public function addproduct(){
+        if(request()->post()){
+//            dump(request()->post());die;
+            if (empty(request()->post("id"))) {
+                $data['classid'] = request()->post("classid");
+                $data['productname'] = request()->post("productname");
+                if(!model("productname")->where("name" ,$data['productname'])->find()){
+                    $class['name'] = $data['productname'];
+                    $class['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                    $class['add_name'] = Session::get("uinfo", "admin")['name'];
+                    $class['add_id'] = Session::get("uid", "admin");
+                    model("productname")->save($class);
+                }
+                $data['texture'] = request()->post("texture");
+                if(!model("texture")->where("texturename" ,$data['texture'])->find()){
+                    $texture['texturename'] = $data['texture'];
+                    $texture['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                    $texture['add_name'] = Session::get("uinfo", "admin")['name'];
+                    $texture['add_id'] = Session::get("uid", "admin");
+                    model("texture")->save($texture);
+                }
+                $data['originarea'] = request()->post("originarea");
+                if(!model("originarea")->where("originarea" ,$data['originarea'])->find()){
+                    $orginarea['originarea'] = $data['originarea'];
+                    $orginarea['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                    $orginarea['add_name'] = Session::get("uinfo", "admin")['name'];
+                    $orginarea['add_id'] = Session::get("uid", "admin");
+                    model("originarea")->save($orginarea);
+                }
+                $data['specification'] = request()->post("specification");
+                if(!model("specification")->where("specification" ,$data['specification'])->find()){
+                    $specification['specification'] = $data['specification'];
+                    $specification['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                    $specification['add_name'] = Session::get("uinfo", "admin")['name'];
+                    $specification['add_id'] = Session::get("uid", "admin");
+                    model("specification")->save($specification);
+                }
+                $data['piece_weight'] = request()->post("piece_weight");
+                $data['length'] = request()->post("length");
+                $data['unit'] = request()->post("unit");
+                $data['pack_no'] = request()->post("pack_no");
+                $data['sort'] = request()->post("sort");
+                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("product")->save($data);
+            } else {
+                $id = request()->post("id");
+                $data['classid'] = request()->post("classid");
+                $data['productname'] = request()->post("productname");
+                $data['texture'] = request()->post("texture");
+                $data['originarea'] = request()->post("originarea");
+                $data['specification'] = request()->post("specification");
+                $data['piece_weight'] = request()->post("piece_weight");
+                $data['length'] = request()->post("length");
+                $data['unit'] = request()->post("unit");
+                $data['pack_no'] = request()->post("pack_no");
+                $data['sort'] = request()->post("sort");
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("product")->where("id", $id)->update($data);
+            }
+            if ($result) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        } else {
+            $id = request()->param("id");
+            $classlist=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("id,classname")->select();
+            $classArr = [""=>""];
+            if ($classlist) {
+                foreach ($classlist as $k=>$v) {
+                    $classArr[$v['id']] = $v['classname'];
+                }
+            } else {
+                $this->error("请添加类型！");
+            }
+            $this->assign([
+                "lists" => [
+                    "classlist" => $classArr
+                ]
+            ]);
+            if ($id) {
+                $info = model("product")->where("id", $id)->find();
+
+            } else {
+                $info = null;
+            }
+            $this->assign("data", $info);
+            return view();
+        }
+    }
 }
