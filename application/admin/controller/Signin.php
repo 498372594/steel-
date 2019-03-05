@@ -2,7 +2,7 @@
 namespace app\admin\controller;
 
 use app\admin\library\traits\Buildparams;
-use think\auth\Auth;
+use think\Auth;
 use think\Config;
 use think\Db;
 use think\Session;

@@ -1,0 +1,57 @@
+{include file="tpl/style"/}
+<div class="row">
+    <div class="col-sm-12">
+        <div class="tabs-container">
+            <ul class="nav nav-tabs">
+                <li class="stealclass active"><a data-toggle="tab" data-con="steelmanagement"> 钢品库</a></li>
+                <li class="stealclass"><a data-toggle="tab"  data-con="productname">品名</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="texture">材质</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="originarea">产地</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="specification">规格</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="storage">仓库</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="unit">数量单位</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="classname">类别</a></li>
+
+            </ul>
+            <div class="tab-content">
+                <div id="tab1" class="tab-pane active">
+
+                </div>
+                <div id="tab-2" class="tab-pane">
+                    <div class="panel-body">
+                        <strong>移动设备优先</strong>
+                        <p>在 Bootstrap 2 中，我们对框架中的某些关键部分增加了对移动设备友好的样式。而在 Bootstrap 3 中，我们重写了整个框架，使其一开始就是对移动设备友好的。这次不是简单的增加一些可选的针对移动设备的样式，而是直接融合进了框架的内核中。也就是说，Bootstrap 是移动设备优先的。针对移动设备的样式融合进了框架的每个角落，而不是增加一个额外的文件。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<p>不展示下拉菜单按钮。</p>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="input-group">
+            <input type="text" class="form-control" id="testNoBtn">
+            <div class="input-group-btn">
+                <button type="button" class="btn btn-white dropdown-toggle"
+                        data-toggle="dropdown">
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                </ul>
+            </div>
+            <!-- /btn-group -->
+        </div>
+    </div>
+</div>
+<script>
+    $(function(){
+        $(".stealclass").click(function(){
+            var classname=$(this).find("a").attr("data-con");
+            var url="/admin/steelmanagement/"+classname;
+            $.get(url,{},function(data) {
+                $("#tab1").html(data);
+            });
+        })
+    })
+</script>
