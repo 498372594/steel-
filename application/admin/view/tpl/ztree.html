@@ -52,6 +52,14 @@
         $("input[name=rules]").val(JSON.stringify(nodesChecked))
     }
 </script>
+<script>
+    $("document").ready(function () {
+        let isEdit = "{$isEdit??''}"
+        if (1 == isEdit) {
+            selectChecked()
+        }
+    });
+</script>
 <div class="form-group col-xs-12">
     <div class="row">
         {include file="tpl/label" label="[label]"}
@@ -66,6 +74,6 @@
                 </div>
             </div>
         </div>
-        <input type="hidden" name="rules" value="">
+        <input type="hidden" name="rules" value=''>
     </div>
 </div>

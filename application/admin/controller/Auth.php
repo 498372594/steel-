@@ -168,7 +168,8 @@ class Auth extends Right
                 "data"  => [
                     "title" => $info['title'],
                     "rules" => json_encode($ret, JSON_UNESCAPED_UNICODE)
-                ]
+                ],
+                "isEdit"=>1
             ]);
             return $this->fetch('auth/group/edit');
         }
@@ -211,44 +212,46 @@ class Auth extends Right
      */
     public function addRule()
     {
-       if (request()->isAjax()) {
-           $pid   = (int)input("pid");
-           $title = trim(input("title"));
-           $name  = strtolower(trim(input("name"))) ? strtolower(trim(input("name"))) : NULL;
-           $faicon  = trim(input("faicon"));
+        if (request()->isAjax()) {
+            $pid   = (int)input("pid");
+            $title = trim(input("title"));
+            $name  = strtolower(trim(input("name"))) ? strtolower(trim(input("name"))) : NULL;
+            $faicon  = trim(input("faicon"));
+            $sort = (int)(input("sort"));
 
-           if (0 > $pid)       return json_err(-1, "错误的父级ID！");
-           if (empty($title))  return json_err(-1, "请输入标题！");
-           if (empty($faicon)) return json_err(-1, "请选择图标！");
+            if (0 > $pid)       return json_err(-1, "错误的父级ID！");
+            if (empty($title))  return json_err(-1, "请输入标题！");
+            if (empty($faicon)) return json_err(-1, "请选择图标！");
 
-           $data = [
-               "name"      => $name,
-               "title"     => $title,
-               "pid"       => $pid,
-               "faicon"    => $faicon,
-           ];
+            $data = [
+                "name"      => $name,
+                "title"     => $title,
+                "pid"       => $pid,
+                "faicon"    => $faicon,
+                "sort"      => $sort,
+            ];
 
-           try {
-               $ret = Db::table("authrule")->insert($data);
+            try {
+                $ret = Db::table("authrule")->insert($data);
 
-               if ($ret) {
-                   return json_suc(0, "添加成功！");
-               } else {
-                   return json_err(-1, "添加失败！");
-               }
-           } catch (Exception $e) {
-               return json_err(-1, $e->getMessage());
-           }
+                if ($ret) {
+                    return json_suc(0, "添加成功！");
+                } else {
+                    return json_err(-1, "添加失败！");
+                }
+            } catch (Exception $e) {
+                return json_err(-1, $e->getMessage());
+            }
 
-       } else {
-           // 规则列表
-           $formatRule = $this->getRuleList();
+        } else {
+            // 规则列表
+            $formatRule = $this->getRuleList();
 
-           $this->assign("lists", [
-               "rulelist" => $formatRule
-           ]);
-           return $this->fetch('auth/auth/add');
-       }
+            $this->assign("lists", [
+                "rulelist" => $formatRule
+            ]);
+            return $this->fetch('auth/auth/add');
+        }
     }
 
     /**
@@ -289,6 +292,7 @@ class Auth extends Right
             $title   = trim(input("title"));
             $name    = strtolower(trim(input("name"))) ? strtolower(trim(input("name"))) : NULL;
             $faicon  = trim(input("faicon"));
+            $sort    = (int)(input("sort"));
 
             if (0 > $pid)       return json_err(-1, "错误的父级ID！");
             if (empty($title))  return json_err(-1, "请输入标题！");
@@ -299,6 +303,7 @@ class Auth extends Right
                 "title"     => $title,
                 "pid"       => $pid,
                 "faicon"    => $faicon,
+                "sort"      => $sort,
             ];
 
             try {

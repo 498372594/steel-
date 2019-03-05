@@ -17,7 +17,7 @@ class Member extends Right
     {
         $this->assign("lists", [
             "isdisable" => getDropdownList("isdisable"),
-            "pageSize"  => getDropdownList("pageSize")
+            "pageSize"  => getDropdownList("pageSize"),
         ]);
     }
 
