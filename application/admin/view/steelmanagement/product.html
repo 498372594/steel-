@@ -45,7 +45,7 @@
                 <!--编辑资料-->
                 <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/steelmanagement/addproduct\',[\'id\'=>$vo[\'id\']])}', '编辑','80%','50%')"></i>
                 <!--删除-->
-                <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmUpdate('/admin/steelmanagement/deleteproduct','{$vo.id}','确定要删除吗？')"></i>
+                <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除"onclick="confirmDelete('/admin/steelmanagement/delete','{$vo.id}','product','确定要删除吗？')"></i>
             </td>
         </tr>
         {/volist}

@@ -50,7 +50,22 @@ function confirmUpdate(url , id , message){
         });
     }
 }
-
+function confirmDelete(url , id ,model, message){
+    var htm=$(event.currentTarget).parent().parent();
+    // 如果有数据
+    if(message){
+       var index=layer.confirm(message , {btn: ['确认','取消']},function(){
+            ajaxPost(url ,{id:id,model:model},function(data){
+                htm.remove();
+            });
+           layer.close(index);
+        });
+    }else{
+        ajaxPost(url ,{id:id},function(){
+            window.location.reload(true);
+        });
+    }
+}
 // 弹出确认信息，并更新数据
 function confirmUpdates(url , ids , message){
 

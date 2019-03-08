@@ -1,0 +1,50 @@
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/steelmanagement/addfaxi')}">
+            <div class="form-group">
+                <input type="hidden" name="id" value="{$data.id}">
+                <div class="form-group col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <div class="row text-right">
+                                <label class="control-label qg-control-label">罚息方式</label>
+                            </div>
+                        </div>
+                        <div class="col-xs-9">
+                            <select class="form-control" id="fxfs" name="fxfs">
+                                <option value="" >请选择</option>
+                                <option value="1" {if condition="$data.fxfs==1"}selected{/if}>重量</option>
+                                <option value="2" {if condition="$data.fxfs==2"}selected{/if}>金额</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <div class="row text-right">
+                                <label class="control-label qg-control-label">罚息对象</label>
+                            </div>
+                        </div>
+                        <div class="col-xs-9">
+                            <select class="form-control" id="fxdx" name="fxdx">
+                                <option value="" >请选择</option>
+                                <option value="1" {if condition="$data.fxdx==1"}selected{/if}>业务员</option>
+                                <option value="2" {if condition="$data.fxdx==2"}selected{/if}>客户</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                {include file="tpl/input" results="data" name="fxgz" label="罚息规则" value="fxgz" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="fxxz" label="罚息细则" value="fxxz" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="qjts" label="起计天数" value="qjts" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="zjts" label="止计天数" value="zjts" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="jsgs" label="计算公式" value="jsgs" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="zjts" label="描述" value="zjts" /}
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                {include file="tpl/button" label="保存"/}
+            </div>
+        </form>
+    </div>
+</div>

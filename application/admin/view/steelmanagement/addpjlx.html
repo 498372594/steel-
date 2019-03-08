@@ -1,0 +1,17 @@
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/steelmanagement/addpjlx')}">
+            <div class="form-group">
+                <input type="hidden" name="id" value="{$data.id}">
+                {include file="tpl/input" results="data" name="pjlx" label="票据类型" value="pjlx" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="zjm" label="编码" value="zjm" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="second_name" label="别名" value="second_name" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="tax_rate" label="税率（%）" value="tax_rate" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="sort" label="排名" value="sort"/}
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                {include file="tpl/button" label="保存"/}
+            </div>
+        </form>
+    </div>
+</div>

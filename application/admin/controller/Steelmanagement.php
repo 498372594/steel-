@@ -710,4 +710,284 @@ class Steelmanagement extends Right
             return json_suc();
         }
     }
+    public function financeset(){
+        return view();
+    }
+
+    public function addbank()
+    {
+        if (request()->post()) {
+            if (empty(request()->post("id"))) {
+                $data['zjm'] = request()->post("zjm");
+                $data['name'] = request()->post("name");
+                $data['banktype_id'] = request()->post("banktype_id");
+                $data['kaihuhang'] = request()->post("kaihuhang");
+                $data['bank'] = request()->post("bank");
+                $data['sort'] = request()->post("sort");
+                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("bank")->save($data);
+            } else {
+                $id = request()->post("id");
+                $data['zjm'] = request()->post("zjm");
+                $data['name'] = request()->post("name");
+                $data['banktype_id'] = request()->post("banktype_id");
+                $data['kaihuhang'] = request()->post("kaihuhang");
+                $data['bank'] = request()->post("bank");
+                $data['sort'] = request()->post("sort");
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("bank")->where("id", $id)->update($data);
+            }
+            if ($result) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        } else {
+            $id = request()->param("id");
+            if ($id) {
+                $info = model("bank")->where("id", $id)->find();
+
+            } else {
+                $info = null;
+            }
+            $this->assign("type", $type);
+            $this->assign("data", $info);
+            return view();
+        }
+    }
+
+    public function delete()
+    {   $model=request()->param('model');
+        $pk = model("$model")->getPk();
+        $ids = $this->request->param($pk);
+        $where[$pk] = ["in", $ids];
+        if (false === model("$model")->where($where)->delete()) {
+            return json_err();
+        } else {
+            return json_suc();
+        }
+    }
+    public function bindex(){
+        $model=request()->param('model');
+        $list = model("$model")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $this->assign("list", $list);
+        return view("$model");
+    }
+    public function addfaxi()
+    {
+        if (request()->post()) {
+            if (empty(request()->post("id"))) {
+                $data['fxfs'] = request()->post("fxfs");
+                $data['fxdx'] = request()->post("fxdx");
+                $data['fxgz'] = request()->post("fxgz");
+                $data['fxxz'] = request()->post("fxxz");
+                $data['qjts'] = request()->post("qjts");
+                $data['jsgs'] = request()->post("jsgs");
+                $data['zjts'] = request()->post("zjts");
+                $data['description'] = request()->post("description");
+                $data['sort'] = request()->post("sort");
+                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("faxi")->save($data);
+            } else {
+                $id = request()->post("id");
+                $data['fxfs'] = request()->post("fxfs");
+                $data['fxdx'] = request()->post("fxdx");
+                $data['fxgz'] = request()->post("fxgz");
+                $data['fxxz'] = request()->post("fxxz");
+                $data['qjts'] = request()->post("qjts");
+                $data['jsgs'] = request()->post("jsgs");
+                $data['zjts'] = request()->post("zjts");
+                $data['description'] = request()->post("description");
+                $data['sort'] = request()->post("sort");
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("faxi")->where("id", $id)->update($data);
+            }
+            if ($result) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        } else {
+            $id = request()->param("id");
+            if ($id) {
+                $info = model("faxi")->where("id", $id)->find();
+
+            } else {
+                $info = null;
+            }
+            $this->assign("data", $info);
+            return view();
+        }
+    }
+    public function addsalesmansetting()
+    {
+        if (request()->post()) {
+            if (empty(request()->post("id"))) {
+                $data['guizename'] = request()->post("guizename");
+                $data['zljs'] = request()->post("zljs");
+                $data['weight_start'] = request()->post("weight_start");
+                $data['weight_end'] = request()->post("weight_end");
+                $data['ticheng_price'] = request()->post("ticheng_price");
+                $data['huikuanxishu'] = request()->post("huikuanxishu");
+                $data['jsgs'] = request()->post("jsgs");
+                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("faxi")->save($data);
+            } else {
+                $id = request()->post("id");
+                $data['guizename'] = request()->post("guizename");
+                $data['zljs'] = request()->post("zljs");
+                $data['weight_start'] = request()->post("weight_start");
+                $data['weight_end'] = request()->post("weight_end");
+                $data['ticheng_price'] = request()->post("ticheng_price");
+                $data['huikuanxishu'] = request()->post("huikuanxishu");
+                $data['jsgs'] = request()->post("jsgs");
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("faxi")->where("id", $id)->update($data);
+            }
+            if ($result) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        } else {
+            $id = request()->param("id");
+            if ($id) {
+                $info = model("faxi")->where("id", $id)->find();
+
+            } else {
+                $info = null;
+            }
+            $this->assign("data", $info);
+            return view();
+        }
+    }
+    public function addjiesuanfangshi()
+    {
+        if (request()->post()) {
+            if (empty(request()->post("id"))) {
+                $data['jiesuanfangshi'] = request()->post("jiesuanfangshi");
+                $data['sort'] = request()->post("sort");
+                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("jiesuanfangshi")->save($data);
+            } else {
+                $id = request()->post("id");
+                $data['jiesuanfangshi'] = request()->post("jiesuanfangshi");
+                $data['sort'] = request()->post("sort");
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("jiesuanfangshi")->where("id", $id)->update($data);
+            }
+            if ($result) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        } else {
+            $id = request()->param("id");
+            if ($id) {
+                $info = model("jiesuanfangshi")->where("id", $id)->find();
+
+            } else {
+                $info = null;
+            }
+            $this->assign("data", $info);
+            return view();
+        }
+    }
+    public function addpjlx()
+    {
+        if (request()->post()) {
+            if (empty(request()->post("id"))) {
+                $data['pjlx'] = request()->post("pjlx");
+                $data['tax_rate'] = request()->post("tax_rate");
+                $data['second_name'] = request()->post("second_name");
+                $data['sort'] = request()->post("sort");
+                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("pjlx")->save($data);
+            } else {
+                $id = request()->post("id");
+                $data['pjlx'] = request()->post("pjlx");
+                $data['tax_rate'] = request()->post("tax_rate");
+                $data['second_name'] = request()->post("second_name");
+                $data['sort'] = request()->post("sort");
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("pjlx")->where("id", $id)->update($data);
+            }
+            if ($result) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        } else {
+            $id = request()->param("id");
+            if ($id) {
+                $info = model("pjlx")->where("id", $id)->find();
+            } else {
+                $info = null;
+            }
+            $this->assign("data", $info);
+            return view();
+        }
+    }
+    public function addpaymenttype()
+    {
+        if (request()->post()) {
+            if (empty(request()->post("id"))) {
+                $data['name'] = request()->post("name");
+                $data['type'] =request()->post("type1");
+                $data['class'] = request()->post("class");
+                $data['sort'] = request()->post("sort");
+                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("paymenttype")->save($data);
+            } else {
+                $id = request()->post("id");
+                $data['name'] = request()->post("name");
+                $data['type'] = request()->post("type");
+                $data['class'] = request()->post("class");
+                $data['sort'] = request()->post("sort");
+                $data['add_name'] = Session::get("uinfo", "admin")['name'];
+                $data['add_id'] = Session::get("uid", "admin");
+                $result = model("paymenttype")->where("id", $id)->update($data);
+            }
+            if ($result) {
+                return json_suc();
+            } else {
+                return json_err();
+            }
+        } else {
+            $id = request()->param("id");
+            $type = request()->param("type");
+            if ($id) {
+                $info = model("paymenttype")->where(array("id"=>$id))->find();
+            } else {
+                $info = null;
+            }
+            $this->assign("data", $info);
+            $this->assign("type", $type);
+            return view();
+        }
+    }
+    public function paymenttype(){
+        $type=request()->param("type");
+        $list = model("paymenttype")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'type'=>$type))->select();
+        $this->assign("list", $list);
+        $this->assign("type", $type);
+        return view();
+    }
 }
