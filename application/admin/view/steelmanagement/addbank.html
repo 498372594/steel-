@@ -1,0 +1,32 @@
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/steelmanagement/addbank')}">
+            <div class="form-group">
+                <input type="hidden" name="id" value="{$data.id}">
+                {include file="tpl/input" results="data" name="zjm" label="编码" value="zjm"/}
+                <div class="form-group col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <div class="row text-right">
+                                <label class="control-label qg-control-label">账户类型</label>
+                            </div>
+                        </div>
+                        <div class="col-xs-9">
+                            <select class="form-control" id="banktype_id" name="banktype_id">
+                                <option value="1" selected="">个人</option>
+                                <option value="2" selected="">对公</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                {include file="tpl/input" results="data" name="name" label="账户名称" value="name" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="kaihuhang" label="开户行" value="kaihuhang" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="bank" label="账户" value="bank" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="sort" label="排名" value="sort" attr='data-rule="required;"'/}
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                {include file="tpl/button" label="保存"/}
+            </div>
+        </form>
+    </div>
+</div>

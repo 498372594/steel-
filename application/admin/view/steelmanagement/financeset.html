@@ -1,0 +1,85 @@
+{include file="tpl/style"/}
+<div class="row">
+    <div class="col-sm-12">
+        <div class="tabs-container">
+            <ul class="nav nav-tabs">
+                <li class="stealclass active"><a data-toggle="tab" data-con="bank"> 银行账户</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="faxi">罚息设置</a></li>
+                <li class="stealclass"><a data-toggle="tab"  data-con="salesmansetting">业务员提成设置</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="jiesuanfangshi">结算方式</a></li>
+                <li class="stealclass"><a data-toggle="tab" data-con="pjlx">票据类型</a></li>
+                <li class="stealclass1"><a data-toggle="tab" data-con="paymenttype" type="1">收入类型</a></li>
+                <li class="stealclass1"><a data-toggle="tab" data-con="paymenttype" type="2">支出类型</a></li>
+
+
+            </ul>
+            <div class="tab-content">
+                <div id="tab1" class="tab-pane active">
+
+                </div>
+                <div id="tab-2" class="tab-pane">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--<p>不展示下拉菜单按钮。</p>-->
+<!--<div class="row">-->
+    <!--<div class="col-lg-3">-->
+        <!--<div class="input-group">-->
+            <!--<input type="text" class="form-control" id="testNoBtn">-->
+            <!--<div class="input-group-btn">-->
+                <!--<button type="button" class="btn btn-white dropdown-toggle"-->
+                        <!--data-toggle="dropdown">-->
+                    <!--<span class="caret"></span>-->
+                <!--</button>-->
+                <!--<ul class="dropdown-menu dropdown-menu-right" role="menu">-->
+                <!--</ul>-->
+            <!--</div>-->
+            <!--&lt;!&ndash; /btn-group &ndash;&gt;-->
+        <!--</div>-->
+    <!--</div>-->
+<!--</div>-->
+<script src="/static/admin/js/bootstrap-suggest.min.js"></script>
+<script>
+
+    $(function(){
+        var url="/admin/steelmanagement/bindex";
+        var classname="bank";
+        $.get(url,{model:classname},function(data) {
+            $("#tab1").html(data);
+        });
+        $(".stealclass").click(function(){
+            var classname=$(this).find("a").attr("data-con");
+            var type=$(this).find("a").attr("type");
+            var url="/admin/steelmanagement/bindex";
+            $.get(url,{model:classname,type:type},function(data) {
+                $("#tab1").html(data);
+            });
+        })
+        $(".stealclass1").click(function(){
+            var classname=$(this).find("a").attr("data-con");
+            var type=$(this).find("a").attr("type");
+            var url="/admin/steelmanagement/paymenttype";
+            $.get(url,{model:classname,type:type},function(data) {
+                $("#tab1").html(data);
+            });
+        })
+    })
+    // var testBsSuggest = $("#testNoBtn").bsSuggest({
+    //     // url: "/static/admin/js/data.json",
+    //     url: "{:url('steelmanagement/ceshi')}",
+    //     showBtn: false,
+    //     idField: 2,                    //每组数据的哪个字段作为 data-id，优先级高于 indexId 设置（推荐）
+    //     keyField: "classname",
+    //     listAlign: "left",
+    //     inputWarnColor: "white", //输入框内容不是下拉列表选择时的警告色
+    //
+    // }).on("onDataRequestSuccess", function (b, a) {
+    //     console.log("onDataRequestSuccess: ", a)
+    // }).on("onSetSelectValue", function (b, a) {
+    //     console.log("onSetSelectValue: ", a)
+    // }).on("onUnsetSelectValue", function (a) {
+    //     console.log("onUnsetSelectValue")
+    // });
+</script>

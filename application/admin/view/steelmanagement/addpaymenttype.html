@@ -1,0 +1,17 @@
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/steelmanagement/addpaymenttype')}">
+            <div class="form-group">
+                <input type="hidden" name="id" value="{$data.id}">
+                <input type="hidden" name="type" value="{$data.type}">
+                <input type="hidden" name="type1" value="{$type}">
+                {include file="tpl/input" results="data" name="name" label="类型名称" value="name" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="class" label="类别" value="class" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="sort" label="排名" value="sort"/}
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                {include file="tpl/button" label="保存"/}
+            </div>
+        </form>
+    </div>
+</div>

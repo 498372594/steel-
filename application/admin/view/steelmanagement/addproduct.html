@@ -1,0 +1,26 @@
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/steelmanagement/addproduct')}">
+            <div class="form-group">
+                <input type="hidden" name="id" value="{$data.id}">
+                {include file="tpl/selectCol" name="classid" results="data" label="类型" list="classlist"/}
+                {include file="tpl/input" results="data" name="productname" label="品名" value="productname" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="zjm" label="助记码" value="zjm" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="texture" label="材质" value="texture" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="originarea" label="产地" value="originarea" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="specification" label="规格" value="specification" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="piece_weight" label="单重（吨）" value="piece_weight" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="length" label="长度（米）" value="length" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="width" label="宽度（米）" value="width" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="unit" label="数量单位" value="unit" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="pack_no" label="包装数" value="pack_no" attr='data-rule="required;"'/}
+                {include file="tpl/input" results="data" name="number_alarm_val" label="数量预警值" value="number_alarm_val" /}
+                {include file="tpl/input" results="data" name="weight_alarm_val" label="重量预警值" value="weight_alarm_val" /}
+                {include file="tpl/input" results="data" name="sort" label="排名" value="sort" attr='data-rule="required;"'/}
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                {include file="tpl/button" label="保存"/}
+            </div>
+        </form>
+    </div>
+</div>

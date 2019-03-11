@@ -1,0 +1,45 @@
+<div class="table-responsive">
+    <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1 pull-left">
+        <div class="row">
+            {include file='tpl/addbtn1' url="/admin/steelmanagement/addbank" height="80%" width="30%"/}
+        </div>
+    </div>
+    <table class="table table-bordered" style="margin-top:10px">
+        <thead>
+        <tr>
+            <th nowrap="nowrap">ID</th>
+            <th nowrap="nowrap">账户类别</th>
+            <th nowrap="nowrap">账户名称</th>
+            <th nowrap="nowrap">开户行</th>
+            <th nowrap="nowrap">账号</th>
+            <th nowrap="nowrap">添加人</th>
+            <th nowrap="nowrap">创建日期</th>
+            <th nowrap="nowrap">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="list" id="vo"}
+        <tr>
+            <td nowrap="nowrap">{$vo.id}</td>
+            <td nowrap="nowrap">{if condition="$vo.banktype_id==1"}个人{else/}对公{/if}</td>
+            <td nowrap="nowrap">{$vo.name}</td>
+            <td nowrap="nowrap">{$vo.kaihuhang}</td>
+            <td nowrap="nowrap">{$vo.bank}</td>
+            <td nowrap="nowrap">{$vo.add_name}</td>
+            <td nowrap="nowrap">{$vo.create_time}</td>
+            <td nowrap="nowrap">
+                <!-- 启用、禁用 -->
+
+                <!--编辑资料-->
+                <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/steelmanagement/addbank\',[\'id\'=>$vo[\'id\']])}', '编辑','80%','50%')"></i>
+                <!--删除-->
+                <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" url="" onclick="confirmDelete('/admin/steelmanagement/delete','{$vo.id}','bank','确定要删除吗？')"></i>
+            </td>
+        </tr>
+        {/volist}
+
+        </tbody>
+    </table>
+    <div style="float: right;"></div>
+</div>
+<script></script>
