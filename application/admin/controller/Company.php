@@ -13,7 +13,7 @@ class Company extends Right
     public function index()
     {
         $data = CompanyModel::all();
-        return json($data);
+        return returnRes($data,'没有公司数据，请添加后重试');
     }
 
     /**
