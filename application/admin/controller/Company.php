@@ -5,6 +5,7 @@ namespace app\admin\controller;
 use app\admin\library\traits\Backend;
 use think\Db;
 use think\Exception;
+use think\Request;
 use think\Session;
 use app\admin\model\Company as CompanyModel;
 
@@ -13,7 +14,17 @@ class Company extends Right
     public function index()
     {
         $data = CompanyModel::all();
-        return returnRes($data,'没有公司数据，请添加后重试');
+        return returnRes($data,'没有公司数据，请添加后重试',$data);
+    }
+
+    public function add(Request $request)
+    {
+        if($request->isPost()){
+            $params = $request->param();
+            $company = new CompanyModel($params);
+            $res = $company->allowField(true)->save();
+        }
+
     }
 
     /**
