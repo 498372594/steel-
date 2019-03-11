@@ -6,10 +6,15 @@ use app\admin\library\traits\Backend;
 use think\Db;
 use think\Exception;
 use think\Session;
+use app\admin\model\Company as CompanyModel;
 
 class Company extends Right
 {
-    use Backend;
+    public function index()
+    {
+        $data = CompanyModel::all();
+        return json($data);
+    }
 
     /**
      * 添加 验证前处理

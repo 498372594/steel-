@@ -397,3 +397,25 @@ function get($key)
         return $session[$key];
     }
 }
+
+/**
+ * 通用返回结果
+ * @param $data @desc 数据
+ * @param $errors @desc 错误提示
+ * @return \think\response\Json
+ */
+function returnRes($data,$errors)
+{
+    if(!$data){
+        $res = [
+            'code' => 0,
+            'msg' => $errors
+        ];
+    }else{
+        $res = [
+            'code' => 1,
+            'data' => $data
+        ];
+    }
+    return json($res);
+}
