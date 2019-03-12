@@ -57,9 +57,7 @@ class Instorage extends Right
         return $data;
     }
 
-    /**
-     * 编辑 验证后处理
-     */
+
     protected function afterEditValidate($data)
     {
 

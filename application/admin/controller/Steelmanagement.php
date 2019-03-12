@@ -414,10 +414,10 @@ class Steelmanagement extends Right
             return json_suc();
         }
     }
-//    public function ceshi(){
-//        $list['value']=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("classname")->select();
-//        return json($list);
-//    }
+    public function ceshi(){
+        $list['value']=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("classname")->select();
+        return json($list);
+    }
     public function product()
     {
         $list = model("product")->alias("a")->join("classname b", "a.classid=b.id", "left")->field("a.*,b.classname")->where("a.companyid", Session::get("uinfo", "admin")['companyid'])->select();
@@ -753,7 +753,7 @@ class Steelmanagement extends Right
             } else {
                 $info = null;
             }
-            $this->assign("type", $type);
+//            $this->assign("type", $type);
             $this->assign("data", $info);
             return view();
         }
@@ -950,6 +950,13 @@ class Steelmanagement extends Right
                 $data['name'] = request()->post("name");
                 $data['type'] =request()->post("type1");
                 $data['class'] = request()->post("class");
+                if(!model("paymentclass")->where("name",$data['class'])->find()){
+                    $data1['name']=$data['class'];
+                    $data1['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                    $data1['add_name'] = Session::get("uinfo", "admin")['name'];
+                    $data1['add_id'] = Session::get("uid", "admin");
+                    model("paymentclass")->save($data1);
+                }
                 $data['sort'] = request()->post("sort");
                 $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
                 $data['add_name'] = Session::get("uinfo", "admin")['name'];
@@ -989,5 +996,9 @@ class Steelmanagement extends Right
         $this->assign("list", $list);
         $this->assign("type", $type);
         return view();
+    }
+    public function paymentclass(){
+        $list['value']=model("paymentclass")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("id,name")->select();
+        return json($list);
     }
 }

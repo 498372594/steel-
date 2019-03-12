@@ -404,7 +404,7 @@ function get($key)
  * @param $errors @desc 错误提示
  * @return \think\response\Json
  */
-function returnRes($data,$errors)
+function returnRes($data,$errors="")
 {
     if(!$data){
         $res = [
