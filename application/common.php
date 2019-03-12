@@ -400,13 +400,18 @@ function get($key)
 
 /**
  * 通用返回结果
- * @param $data @desc 数据
+ * @param $res @desc 判断依据
  * @param $errors @desc 错误提示
+ * @param $successData @desc 成功时要返回的数据，可选
  * @return \think\response\Json
  */
+<<<<<<< HEAD
 function returnRes($data,$errors="")
+=======
+function returnRes($res,$errors,$successData = '')
+>>>>>>> 83c374084deaf28e263afaf7e3387607e01c0829
 {
-    if(!$data){
+    if(!$res){
         $res = [
             'code' => 0,
             'msg' => $errors
@@ -414,8 +419,20 @@ function returnRes($data,$errors="")
     }else{
         $res = [
             'code' => 1,
-            'data' => $data
         ];
+        if($successData){
+            $res['data'] = $successData;
+        }
     }
     return json($res);
+}
+
+/**
+ * 错误返回
+ * @param $errors
+ * @return \think\response\Json
+ */
+function returnFail($errors)
+{
+    return json(['code' => 0, 'msg' => $errors]);
 }
