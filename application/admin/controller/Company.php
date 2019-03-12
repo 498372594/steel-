@@ -2,83 +2,70 @@
 
 namespace app\admin\controller;
 
-use app\admin\library\traits\Backend;
 use think\Db;
-use think\Exception;
 use think\Request;
-use think\Session;
 use app\admin\model\Company as CompanyModel;
 
 class Company extends Right
 {
+    /**
+     * 查
+     * @return \think\response\Json
+     * @throws \think\exception\DbException
+     */
     public function index()
     {
-        $data = CompanyModel::all();
-        return returnRes($data,'没有公司数据，请添加后重试',$data);
+        $data = CompanyModel::order('id desc')->paginate(10);
+        return returnRes($data->toArray()['data'],'没有公司数据，请添加后重试',$data);
     }
 
+    /**
+     * 增
+     * @param Request $request
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
     public function add(Request $request)
     {
         if($request->isPost()){
             $params = $request->param();
-            $company = new CompanyModel($params);
-            $res = $company->allowField(true)->save();
-        }
-
-    }
-
-    /**
-     * 添加 验证前处理
-     * @param $data
-     * @return mixed
-     * @throws Exception
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     */
-    protected function afterAddValidate($data)
-    {
-        if ($data['name']) {
-            if (Db::table("company")->where("name", $data['name'])->find()) {
-                throw new Exception("公司名称已存在！");
+            if(Db::table('company')->where(['name' => $params['name']])->find()){
+                return returnFail('企业名称不能重复');
+            }else{
+                $company = new CompanyModel($params);
+                $res = $company->allowField(true)->save();
+                return returnRes($res,'企业添加失败');
             }
         }
-        $data['createtime'] = now_datetime();
-        return $data;
     }
 
     /**
-     * 编辑附加数据
-     * @throws Exception
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * 改
+     * @param Request $request
+     * @return \think\response\Json
      */
-    protected function editAttach()
+    public function update(Request $request)
     {
-        $id = input("id");
-        if (empty($id))  throw new Exception("未知的id！");
-
-        $data = Db::table("company m")->where("m.id", $id)->find();
-        $this->assign("data", $data);
-    }
-
-    /**
-     * 编辑 验证前处理
-     * @param $data
-     * @return mixed
-     * @throws Exception
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     */
-    protected function beforeEditValidate($data)
-    {
-        if ($data['name']) {
-            if (Db::table("company")->where("name", $data['name'])->find()) {
-                throw new Exception("公司名称已存在！");
-            }
+        if($request->isPut()){
+            $params = $request->param();
+            $company = new CompanyModel();
+            $res = $company->allowField(true)->save($params,['id' => $params['id']]);
+            return returnRes($res,'企业数据编辑失败或数据没有修改');
         }
-        return $data;
+    }
+
+    /**
+     * 删
+     * @param Request $request
+     * @return \think\response\Json
+     */
+    public function delete(Request $request)
+    {
+        if($request->isPost()){
+            $res = CompanyModel::destroy($request->param('id'));
+            return returnRes($res,'企业数据删除失败');
+        }
     }
 }
