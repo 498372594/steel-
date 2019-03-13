@@ -14,7 +14,6 @@ trait AddPlugin
     {
         if (request()->isAjax()) {
             $this->request->filter('strip_tags', 'stripslashes');
-
             try {
                 $data = $this->request->post();
                 if ($data && array_key_exists("id", $data)) unset($data['id']);

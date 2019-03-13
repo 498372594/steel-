@@ -370,17 +370,18 @@ class Steelmanagement extends Right
     public function addclassname()
     {
         if (request()->post()) {
+            $data=request()->post();
             if (empty(request()->post("id"))) {
-                $data['classname'] = request()->post("classname");
-                $data['sort'] = request()->post("sort");
+//                $data['classname'] = request()->post("classname");
+//                $data['sort'] = request()->post("sort");
                 $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
                 $data['add_name'] = Session::get("uinfo", "admin")['name'];
                 $data['add_id'] = Session::get("uid", "admin");
                 $result = model("classname")->save($data);
             } else {
                 $id = request()->post("id");
-                $data['classname'] = request()->post("classname");
-                $data['sort'] = request()->post("sort");
+//                $data['classname'] = request()->post("classname");
+//                $data['sort'] = request()->post("sort");
                 $data['add_name'] = Session::get("uinfo", "admin")['name'];
                 $data['add_id'] = Session::get("uid", "admin");
                 $result = model("classname")->where("id", $id)->update($data);
@@ -414,10 +415,10 @@ class Steelmanagement extends Right
             return json_suc();
         }
     }
-    public function ceshi(){
-        $list['value']=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("classname")->select();
-        return json($list);
-    }
+//    public function ceshi(){
+//        $list['value']=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("classname")->select();
+//        return json($list);
+//    }
     public function product()
     {
         $list = model("product")->alias("a")->join("classname b", "a.classid=b.id", "left")->field("a.*,b.classname")->where("a.companyid", Session::get("uinfo", "admin")['companyid'])->select();

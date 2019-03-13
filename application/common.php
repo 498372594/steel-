@@ -405,11 +405,8 @@ function get($key)
  * @param $successData @desc 成功时要返回的数据，可选
  * @return \think\response\Json
  */
-<<<<<<< HEAD
-function returnRes($data,$errors="")
-=======
 function returnRes($res,$errors,$successData = '')
->>>>>>> 83c374084deaf28e263afaf7e3387607e01c0829
+
 {
     if(!$res){
         $res = [
