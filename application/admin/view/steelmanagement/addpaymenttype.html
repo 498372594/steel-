@@ -6,7 +6,32 @@
                 <input type="hidden" name="type" value="{$data.type}">
                 <input type="hidden" name="type1" value="{$type}">
                 {include file="tpl/input" results="data" name="name" label="类型名称" value="name" attr='data-rule="required;"'/}
-                {include file="tpl/input" results="data" name="class" label="类别" value="class" attr='data-rule="required;"'/}
+                <div class="form-group col-xs-12">
+
+                <div class="row">
+
+                    <div class="col-xs-3">
+                        <div class="row text-right">
+                            <label class="control-label qg-control-label">类型</label>
+                        </div>
+                    </div>
+                    <div class="col-xs-9">
+                        <div class="input-group">
+
+                            <input type="text" class="form-control" id="testNoBtn" name="class">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-white dropdown-toggle"
+                                        data-toggle="dropdown">
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                                </ul>
+                            </div>
+                            <!-- /btn-group -->
+                        </div>
+                    </div>
+                </div>
+                </div>
                 {include file="tpl/input" results="data" name="sort" label="排名" value="sort"/}
             </div>
             <div class="form-group" style="margin-top: 20px;">
@@ -15,3 +40,25 @@
         </form>
     </div>
 </div>
+<script src="/static/admin/js/bootstrap-suggest.min.js"></script>
+<script>
+
+
+    var testBsSuggest = $("#testNoBtn").bsSuggest({
+        // url: "/static/admin/js/data.json",
+        url: "{:url('steelmanagement/paymentclass')}",
+        showBtn: false,
+        idField: 2,                    //每组数据的哪个字段作为 data-id，优先级高于 indexId 设置（推荐）
+        keyField: "id,classname",
+        indexKey: 1,
+        listAlign: "left",
+        inputWarnColor: "white", //输入框内容不是下拉列表选择时的警告色
+
+    }).on("onDataRequestSuccess", function (b, a) {
+        console.log("onDataRequestSuccess: ", a)
+    }).on("onSetSelectValue", function (b, a) {
+        console.log("onSetSelectValue: ", a)
+    }).on("onUnsetSelectValue", function (a) {
+        console.log("onUnsetSelectValue")
+    });
+</script>

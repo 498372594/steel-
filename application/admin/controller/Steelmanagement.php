@@ -370,17 +370,18 @@ class Steelmanagement extends Right
     public function addclassname()
     {
         if (request()->post()) {
+            $data=request()->post();
             if (empty(request()->post("id"))) {
-                $data['classname'] = request()->post("classname");
-                $data['sort'] = request()->post("sort");
+//                $data['classname'] = request()->post("classname");
+//                $data['sort'] = request()->post("sort");
                 $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
                 $data['add_name'] = Session::get("uinfo", "admin")['name'];
                 $data['add_id'] = Session::get("uid", "admin");
                 $result = model("classname")->save($data);
             } else {
                 $id = request()->post("id");
-                $data['classname'] = request()->post("classname");
-                $data['sort'] = request()->post("sort");
+//                $data['classname'] = request()->post("classname");
+//                $data['sort'] = request()->post("sort");
                 $data['add_name'] = Session::get("uinfo", "admin")['name'];
                 $data['add_id'] = Session::get("uid", "admin");
                 $result = model("classname")->where("id", $id)->update($data);
@@ -753,7 +754,7 @@ class Steelmanagement extends Right
             } else {
                 $info = null;
             }
-            $this->assign("type", $type);
+//            $this->assign("type", $type);
             $this->assign("data", $info);
             return view();
         }
@@ -950,6 +951,13 @@ class Steelmanagement extends Right
                 $data['name'] = request()->post("name");
                 $data['type'] =request()->post("type1");
                 $data['class'] = request()->post("class");
+                if(!model("paymentclass")->where("name",$data['class'])->find()){
+                    $data1['name']=$data['class'];
+                    $data1['companyid'] = Session::get("uinfo", "admin")['companyid'];
+                    $data1['add_name'] = Session::get("uinfo", "admin")['name'];
+                    $data1['add_id'] = Session::get("uid", "admin");
+                    model("paymentclass")->save($data1);
+                }
                 $data['sort'] = request()->post("sort");
                 $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
                 $data['add_name'] = Session::get("uinfo", "admin")['name'];
@@ -989,5 +997,9 @@ class Steelmanagement extends Right
         $this->assign("list", $list);
         $this->assign("type", $type);
         return view();
+    }
+    public function paymentclass(){
+        $list['value']=model("paymentclass")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("id,name")->select();
+        return json($list);
     }
 }

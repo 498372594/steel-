@@ -406,6 +406,7 @@ function get($key)
  * @return \think\response\Json
  */
 function returnRes($res,$errors,$successData = '')
+
 {
     if(!$res){
         $res = [
