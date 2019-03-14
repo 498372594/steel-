@@ -2,7 +2,7 @@
 
 namespace app\admin\model;
 
-class Productname extends Base
+class Jianzhishu extends Base
 {
     protected $autoWriteTimestamp = 'datetime';
     // 验证规则
@@ -24,8 +24,4 @@ class Productname extends Base
     public $map = [
 
     ];
-    public function setClassnameAttr($data,$value){
-        $classname=model("classname")->where("id",$data['classid'])->value("classname");
-        return $classname;
-    }
 }
