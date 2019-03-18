@@ -34,7 +34,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("classname")->where("id", $id)->allowField(true)->update($data);
+                $result = model("classname")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -119,7 +119,7 @@ class Steelmanage extends Right
                 'companyid' => Session::get("uinfo", "admin")['companyid']
             );
         }
-        $list = model("specification")->where($where)->paginate(10);
+        $list = model("view_specification")->where($where)->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -165,6 +165,15 @@ class Steelmanage extends Right
         $digui = $this->productnamedigui($menulist);
         return $digui;
     }
+    public function getproduct()
+    {
+        $list = db("classname")->field("pid,id,classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $menutree = new Tree($list);
+        $menulist = $menutree->leaf();
+//        dump($menulist);
+        $digui = $this->productnamedigui($menulist);
+        return json($digui);
+    }
 
     public function productnamedigui($arr)
     {
@@ -197,7 +206,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("texture")->where("id", $id)->allowField(true)->update($data);
+                $result = model("texture")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -229,7 +238,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("jianzhishu")->where("id", $id)->allowField(true)->update($data);
+                $result = model("jianzhishu")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -272,7 +281,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("unit")->where("id", $id)->allowField(true)->update($data);
+                $result = model("unit")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -304,7 +313,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("jsfs")->where("id", $id)->allowField(true)->update($data);
+                $result = model("jsfs")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -336,7 +345,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("custom")->where("id", $id)->allowField(true)->update($data);
+                $result = model("custom")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -368,7 +377,8 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("storage")->where("id", $id)->allowField(true)->update($data);
+//                $result = model("storage")->allowField(true)->save($data,['id' => $id]);
+                $result = model("storage")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -400,7 +410,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("transportation")->where("id", $id)->allowField(true)->update($data);
+                $result = model("transportation")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -432,7 +442,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("bank")->where("id", $id)->allowField(true)->update($data);
+                $result = model("bank")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -464,7 +474,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("faxi")->where("id", $id)->allowField(true)->update($data);
+                $result = model("faxi")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -501,10 +511,9 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("faxi")->where("id", $id)->allowField(true)->update($data);
+                $result = model("faxi")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
-
         } else {
             $id = request()->param("id");
             if( $id ){
@@ -537,7 +546,7 @@ class Steelmanage extends Right
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
-                $result = model("jiesuanfangshi")->where("id", $id)->allowField(true)->update($data);
+                $result = model("jiesuanfangshi")->allowField(true)->save($data,['id' => $id]);
                 return returnRes($result, '修改失败');
             }
 
@@ -583,7 +592,6 @@ class Steelmanage extends Right
                 $result = model("paymenttype")->where("id", $id)->update($data);
                 return returnRes($result, '添加失败');
             }
-
         } else {
             $data['typelist'] = model("paymentclass")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'type'=>$type))->find();
             return returnRes($data, '无相关数据', $data);
