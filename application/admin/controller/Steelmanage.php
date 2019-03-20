@@ -29,6 +29,9 @@ class Steelmanage extends Right
             $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
             $data['add_name'] = Session::get("uinfo", "admin")['name'];
             $data['add_id'] = Session::get("uid", "admin");
+            if(Db::table('classname')->where(['classname' => $data['classname']])->find()){
+                return returnFail('该类已经存在');
+            }
             if (empty(request()->post("id"))) {
                 $result = model("classname")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -49,11 +52,24 @@ class Steelmanage extends Right
     public function delete()
     {
         $model = request()->param('tablename');
-        $pk = model("$model")->getPk();
-        $ids = $this->request->param($pk);
-        $where[$pk] = ["in", $ids];
-        $result = model("$model")->where($where)->delete();
-        return returnRes($result, '删除失败');
+        $ids = request()->param("id");
+        $where["id"] = ["in", $ids];
+        switch ($model){
+            case "classname":
+                $re=model("classname")->where("pid",$ids)->value("pid");
+                if($re){
+                    return returnFail('该类存在子分类');
+                }else{
+                    $result = model("$model")->where($where)->delete();
+                    return returnRes($result, '删除失败');
+                }
+                break;
+            default:
+                $result = model("$model")->where($where)->delete();
+                return returnRes($result, '删除失败');
+
+        }
+
     }
 
     public function productname()
@@ -188,6 +204,24 @@ class Steelmanage extends Right
         return $arr;
     }
 
+    /**根据类名获取产品信息
+     * @return \think\response\Json
+     * @throws \think\exception\DbException
+     */
+    public function getproductnamelist(){
+        $classid=request()->param("classid");
+        $list=model("productname")->where("classid",$classid)->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+
+    /**
+     * 根据产品id获取规格列表
+     */
+    public function getsepcificationlist(){
+        $productname_id=request()->param("productname_id");
+        $list=model("view_specification")->where("productname_id",$productname_id)->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
     public function texture()
     {
         $list = model("texture")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
@@ -592,10 +626,47 @@ class Steelmanage extends Right
                 $result = model("paymenttype")->where("id", $id)->update($data);
                 return returnRes($result, '添加失败');
             }
-        } else {
+        } else{
+            $type=request()->param("type");
             $data['typelist'] = model("paymentclass")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'type'=>$type))->find();
             return returnRes($data, '无相关数据', $data);
         }
     }
+    public function pjlx()
+    {
+        $list = model("pjlx")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+    }
+
+    public function addpjlx()
+    {
+        if (request()->isPost()) {
+            $data = request()->post();
+            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+            $data['add_name'] = Session::get("uinfo", "admin")['name'];
+            $data['add_id'] = Session::get("uid", "admin");
+            if (empty(request()->post("id"))) {
+                $result = model("pjlx")->allowField(true)->save($data);
+                return returnRes($result, '添加失败');
+            } else {
+                $id = request()->post("id");
+                $result = model("pjlx")->allowField(true)->save($data,['id' => $id]);
+                return returnRes($result, '修改失败');
+            }
+
+        } else {
+            $id = request()->param("id");
+            if( $id ){
+                $data['info'] = model("pjlx")->where("id", $id)->find();
+            }else{
+                $data=null;
+            }
+            return returnRes($data, '无相关数据', $data);
+        }
+    }
+//    public function ceshi(){
+//        $list['value']=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("classname")->select();
+//        return json($list);
+//    }
 
 }

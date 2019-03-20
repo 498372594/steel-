@@ -51,7 +51,7 @@ class Purchase extends Base
         //库存列表
         $data["storage"] = model("storage")->where("companyid", $companyid)->field("id,storage")->select();
         //大类
-        $data["texture"]=$this->getclassnamelist();
+        $data["classname"]=$this->getclassnamelist();
         //材质
         $data["texture"] = model("texture")->where("companyid", $companyid)->field("id,texturename")->select();
         //产地
@@ -91,5 +91,74 @@ class Purchase extends Base
         $class=reqeust()->param("paymentclass");
         $paymentclass=model("paymenttype")->field("id,name")->where("class",$class)->select();
        return returnRes($paymentclass,"没有相关数据",$paymentclass);
+    }
+    /**
+     * 基础列表返回仓库下拉
+     */
+    public function getstorage(){
+        $list = model("storage")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,storage")->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+    /**
+     * 基础列表 票据类型
+     */
+    public function getpjlx(){
+        $list = model("pjlx")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,pjlx,tax_rate")->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+
+    /**获取供应商
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getsupplier(){
+        $list = model("custom")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"issupplier"=>1))->field("custom,id")->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+
+    /**获取结算方式
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getjiesuanfangshi(){
+        $list = model("jiesuanfangshi")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid']))->field("id,jiesuanfangshi")->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+
+    /**获取材质
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function gettexture(){
+        $list = model("texture")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid']))->field("id,texturename")->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+
+    /**产地
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getoriginarea(){
+        $list = model("originarea")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid']))->field("id,originarea")->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+
+    /**品名下拉获取
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getproductname(){
+        $list = model("productname")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid']))->field("id,name")->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
     }
 }
