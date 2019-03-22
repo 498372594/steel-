@@ -3,8 +3,7 @@
  * 不同环境下获取真实的IP
  * @return array|false|string
  */
-if (!function_exists('get_real_client_ip'))
-{
+if (!function_exists('get_real_client_ip')) {
     function get_real_client_ip()
     {
         // 防止重复运行代码或者重复的来访者IP
@@ -44,11 +43,11 @@ if (!function_exists("info")) {
      * @param string $data
      * @return array
      */
-    function info($code = '', $msg = '', $data= '')
+    function info($code = '', $msg = '', $data = '')
     {
         $result = [
             'code' => $code,
-            'msg'  => $msg,
+            'msg' => $msg,
             'data' => $data,
         ];
         return $result;
@@ -60,7 +59,8 @@ if (!function_exists("info")) {
  * @param  date $h [1-24]
  * @return string
  */
-function get_curr_time_section($h = ''){
+function get_curr_time_section($h = '')
+{
     date_default_timezone_set('Asia/Shanghai');
 
     //如果没有传入参数，则取当前时间的小时
@@ -70,10 +70,10 @@ function get_curr_time_section($h = ''){
 
     $str = '';
 
-    if($h<11) $str = "早上好";
-    else if($h<13) $str = "中午好";
-    else if($h<17) $str = "下午好";
-    else if($h<19) $str = "傍晚好";
+    if ($h < 11) $str = "早上好";
+    else if ($h < 13) $str = "中午好";
+    else if ($h < 17) $str = "下午好";
+    else if ($h < 19) $str = "傍晚好";
     else $str = "晚上好";
 
     return $str;
@@ -96,7 +96,7 @@ function now_datetime()
  * @param $data
  * @return \think\response\Json
  */
-function json_return ($code="", $msg="", $data="")
+function json_return($code = "", $msg = "", $data = "")
 {
     return json(info($code, $msg, $data));
 }
@@ -108,7 +108,7 @@ function json_return ($code="", $msg="", $data="")
  * @param string $data
  * @return \think\response\Json
  */
-function json_suc ($code=0, $msg="操作成功！", $data="")
+function json_suc($code = 0, $msg = "操作成功！", $data = "")
 {
     return json(info($code, $msg, $data));
 }
@@ -120,7 +120,7 @@ function json_suc ($code=0, $msg="操作成功！", $data="")
  * @param string $data
  * @return \think\response\Json
  */
-function json_err ($code=-1, $msg="操作失败！", $data="")
+function json_err($code = -1, $msg = "操作失败！", $data = "")
 {
     return json(info($code, $msg, $data));
 }
@@ -131,17 +131,14 @@ function json_err ($code=-1, $msg="操作失败！", $data="")
  */
 function isMobile()
 {
-    if (isset ($_SERVER['HTTP_X_WAP_PROFILE']))
-    {
+    if (isset ($_SERVER['HTTP_X_WAP_PROFILE'])) {
         return true;
     }
-    if (isset ($_SERVER['HTTP_VIA']))
-    {
+    if (isset ($_SERVER['HTTP_VIA'])) {
         return stristr($_SERVER['HTTP_VIA'], "wap") ? true : false;
     }
-    if (isset ($_SERVER['HTTP_USER_AGENT']))
-    {
-        $clientkeywords = array ('nokia',
+    if (isset ($_SERVER['HTTP_USER_AGENT'])) {
+        $clientkeywords = array('nokia',
             'sony',
             'ericsson',
             'mot',
@@ -174,15 +171,12 @@ function isMobile()
             'wap',
             'mobile'
         );
-        if (preg_match("/(" . implode('|', $clientkeywords) . ")/i", strtolower($_SERVER['HTTP_USER_AGENT'])))
-        {
+        if (preg_match("/(" . implode('|', $clientkeywords) . ")/i", strtolower($_SERVER['HTTP_USER_AGENT']))) {
             return true;
         }
     }
-    if (isset ($_SERVER['HTTP_ACCEPT']))
-    {
-        if ((strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') !== false) && (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') === false || (strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') < strpos($_SERVER['HTTP_ACCEPT'], 'text/html'))))
-        {
+    if (isset ($_SERVER['HTTP_ACCEPT'])) {
+        if ((strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') !== false) && (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') === false || (strpos($_SERVER['HTTP_ACCEPT'], 'vnd.wap.wml') < strpos($_SERVER['HTTP_ACCEPT'], 'text/html')))) {
             return true;
         }
     }
@@ -192,21 +186,24 @@ function isMobile()
 /**
  * 清除模版缓存 不删除 temp目录
  */
-function clear_temp_cache() {
+function clear_temp_cache()
+{
     $temp_files = (array)glob(TEMP_PATH . DS . '/*.php');
-    array_map(function($v){ if(file_exists($v)) @unlink($v); }, $temp_files);
+    array_map(function ($v) {
+        if (file_exists($v)) @unlink($v);
+    }, $temp_files);
     return true;
 }
 
 /**
  * 重新加载配置缓存信息
  */
-function loadCache ()
+function loadCache()
 {
     $settings = \think\Db::table("setting")->select();
     $refer = [];
     if ($settings) {
-        foreach ($settings as $k=>$v) {
+        foreach ($settings as $k => $v) {
             $refer[$v['module']][$v['code']] = $v['val'];
         }
     }
@@ -217,7 +214,7 @@ function loadCache ()
  * 配置缓存
  * 加载系统配置并缓存
  */
-function cacheSettings ()
+function cacheSettings()
 {
     \think\Cache::set("settings", NULL);
     $settings = loadCache();
@@ -228,7 +225,7 @@ function cacheSettings ()
 /**
  * 获取配置缓存信息
  */
-function getSettings($module="", $code="")
+function getSettings($module = "", $code = "")
 {
     $settings = \think\Cache::get("settings");
     if (empty($settings)) {
@@ -255,12 +252,12 @@ function getSettings($module="", $code="")
 /**
  * 重新加载下拉表缓存信息
  */
-function loadDropdownList ()
+function loadDropdownList()
 {
     $data = \think\Db::table("dropdown")->select();
     $refer = [];
     if ($data) {
-        foreach ($data as $k=>$v) {
+        foreach ($data as $k => $v) {
             $refer[$v['module']][$v['code']] = $v['val'];
         }
     }
@@ -276,7 +273,7 @@ function loadDropdownList ()
  * @param bool $hasEmpty 是否包含空值
  * @return array|mixed|null
  */
-function getDropdownList($module = '', $code = '' , $hasEmpty = true)
+function getDropdownList($module = '', $code = '', $hasEmpty = true)
 {
     $dropdown = \think\Cache::get("dropdown");
 
@@ -297,12 +294,12 @@ function getDropdownList($module = '', $code = '' , $hasEmpty = true)
     if (empty($code)) {
 
         // 是否包含空值
-        if($hasEmpty){
+        if ($hasEmpty) {
 
-            $dropdownList  = array("" => "");
+            $dropdownList = array("" => "");
             $dropdownList = $dropdownList + $dropdown[$module];
             return $dropdownList;
-        }else{
+        } else {
             return $dropdown[$module];
         }
     } else {
@@ -319,7 +316,7 @@ function getDropdownList($module = '', $code = '' , $hasEmpty = true)
  */
 function loadDropdown()
 {
-    \think\Cache::set('dropdown',NULL);
+    \think\Cache::set('dropdown', NULL);
     $dropdown = selDropdown();
     \think\Cache::set('dropdown', $dropdown, 0);
     return $dropdown;
@@ -334,7 +331,7 @@ function selDropdown()
     $data = \think\Db::table('dropdown')->select();
     $refer = [];
     if ($data) {
-        foreach ($data as $k=>$v) {
+        foreach ($data as $k => $v) {
             $refer[$v['module']][$v['code']] = $v['val'];
         }
     }
@@ -405,19 +402,19 @@ function get($key)
  * @param $successData @desc 成功时要返回的数据，可选
  * @return \think\response\Json
  */
-function returnRes($res,$errors,$successData = '')
+function returnRes($res, $errors, $successData = '')
 
 {
-    if(!$res){
+    if (!$res) {
         $res = [
             'code' => 0,
             'msg' => $errors
         ];
-    }else{
+    } else {
         $res = [
             'code' => 1,
         ];
-        if($successData){
+        if ($successData) {
             $res['data'] = $successData;
         }
     }
@@ -432,4 +429,20 @@ function returnRes($res,$errors,$successData = '')
 function returnFail($errors)
 {
     return json(['code' => 0, 'msg' => $errors]);
+}
+
+/**
+ * 操作成功时的返回
+ * @param array $data
+ * @return \think\response\Json
+ */
+function returnSuc($data = [])
+{
+    $res = [
+        'code' => 1,
+    ];
+    if ($data) {
+        $res['data'] = $data;
+    }
+    return json($res);
 }
