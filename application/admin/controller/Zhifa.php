@@ -2,8 +2,8 @@
 /**
  * Created by PhpStorm.
  * User: Administrator
- * Date: 2019/3/18
- * Time: 11:26
+ * Date: 2019/3/25
+ * Time: 16:36
  */
 
 namespace app\admin\controller;
@@ -13,10 +13,10 @@ use think\Db;
 use think\Request;
 use think\Session;
 
-class Salesorder extends Right
+class Zhifa extends Right
 {
     /**
-     * 获取销售单列表
+     * 获取采购直发单列表
      * @param Request $request
      * @param int $pageLimit
      * @return \think\response\Json
@@ -25,7 +25,7 @@ class Salesorder extends Right
     public function getlist(Request $request, $pageLimit = 10)
     {
         $params = $request->param();
-        $list = \app\admin\model\Salesorder::where('companyid', Session::get('uinfo.companyid'));
+        $list = \app\admin\model\Cgzfd::where('companyid', Session::get('uinfo.companyid'));
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
@@ -55,7 +55,7 @@ class Salesorder extends Right
     }
 
     /**
-     * 获取销售单详情
+     * 获取采购直发单详情
      * @param int $id
      * @return \think\response\Json
      * @throws \think\db\exception\DataNotFoundException
@@ -64,7 +64,7 @@ class Salesorder extends Right
      */
     public function detail($id = 0)
     {
-        $data = \app\admin\model\Salesorder::with(['details', 'other'])
+        $data = \app\admin\model\Cgzfd::with(['details', 'other'])
             ->where('companyid', Session::get('uinfo.companyid'))
             ->where('id', $id)
             ->find();
@@ -76,7 +76,7 @@ class Salesorder extends Right
     }
 
     /**
-     * 添加销售单
+     * 添加采购直发单
      * @param Request $request
      * @return \think\response\Json
      * @throws \think\Exception
@@ -84,15 +84,15 @@ class Salesorder extends Right
     public function add(Request $request)
     {
         if ($request->isPost()) {
-            $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')->count();
+            $count = \app\admin\model\Cgzfd::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
             $data = $request->post();
             $data['add_name'] = Session::get("uinfo.name", "admin");
             $data['add_id'] = Session::get("uid", "admin");
             $data['companyid'] = $companyId;
-            $data['system_no'] = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data['system_no'] = 'CGZFD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data['ywlx'] = 1;
-            $model = new \app\admin\model\Salesorder();
+            $model = new \app\admin\model\Cgzfd();
             $model->allowField(true)->data($data)->save();
             $id = $model->getLastInsID();
             foreach ($data['details'] as $c => $v) {
@@ -118,22 +118,8 @@ class Salesorder extends Right
      */
     public function audit($id = 0, $status = 3)
     {
-        $salesorder = \app\admin\model\Salesorder::get($id);
+        $salesorder = \app\admin\model\Cgzfd::get($id);
         $salesorder->status = $status;
-        $salesorder->save();
-        return returnSuc();
-    }
-
-    /**
-     * 作废
-     * @param int $id
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
-     */
-    public function cancel($id = 0)
-    {
-        $salesorder = \app\admin\model\Salesorder::get($id);
-        $salesorder->status = 2;
         $salesorder->save();
         return returnSuc();
     }
