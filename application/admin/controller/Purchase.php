@@ -11,14 +11,73 @@ use app\admin\library\traits\Tree;
  */
 class Purchase extends Base
 {
-    public function puchaseadd(){
+    /**采购单添加
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function purchaseadd(){
         if(request()->isPost()){
+            $count = \app\admin\model\Purchaselist::whereTime('create_time', 'today')->count();
+            $companyId =  Session::get("uinfo", "admin")['companyid'];
+            $data = request()->post();
+            $data['add_name'] =  Session::get("uinfo", "admin")['name'];
+            $data['add_id'] =  Session::get("uinfo", "admin")['uid'];
+            $data['companyid'] = $companyId;
+            $data['system_no'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data['ywlx'] = 1;
+            model("purchaselist")->allowField(true)->data($data)->save();
+            $id = model("purchaselist")->id;
 
+            foreach ($data['details'] as $c => $v) {
+                $data['details'][$c]['companyid'] = $companyId;
+                $data['details'][$c]['purchase_id'] = $id;
+                $data['details'][$c]['supplier_id'] =  $data['supplier_id'];
+                //未入库
+               if($data["rkfs"]==1){
+                   $data['details'][$c]['is_finished'] = 1;
+               }
+               //自动入库
+                if($data["rkfs"]==2){
+                    $data['details'][$c]['is_finished'] = 2;
+                }
+            }
+            //自动入库
+            if($data["rkfs"]==2){
+                $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
+                $dat['add_name'] =  Session::get("uinfo", "admin")['name'];
+                $dat['add_id'] =  Session::get("uinfo", "admin")['uid'];
+                $dat['companyid'] = $companyId;
+                $dat['status'] = 1;
+                $dat['type'] = 1;//入库类型（采购入库）
+                $dat['rkdh'] = 'RKDH' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $dat["service_time"]=date("Y-m-d H:s:i",time());//业务时间
+                $dat["remark"]='RKD' .  $data['system_no'];
+                $dat['system_no'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                model("instoragelist")->allowField(true)->data($dat)->save();
+                $instorage_id = model("instoragelist")->id;
+                foreach ($data['details'] as $c => $v) {
+                    $count = \app\admin\model\InstorageDetails::whereTime('create_time', 'today')->count();
+                    $data['details'][$c]['type'] = 1;//入库类型，采购入库
+                    $data['details'][$c]['zyh'] = 'KC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);;//资源号
+                    $data['details'][$c]['is_finished'] = 2;//已入库
+                    $data['details'][$c]['instorage_time'] = date("Y-m-d H:s:i",time());//入库类型，采购入库
+                    $data['details'][$c]['instorage_id'] = $instorage_id;//入库列表的id
+                }
+                model('InstorageDetails')->allowField(true)->saveAll($data['details']);
+            }
+            model('purchasedetails')->allowField(true)->saveAll($data['details']);
+            foreach ($data['other'] as $c => $v) {
+                $data['other'][$c]['purchase_id'] = $id;
+            }
+            model('purchase_fee')->allowField(true)->saveAll($data['details']);
+            return returnRes(true, '', ['id' => $id]);
         }else{
-            $purchase_id=request()->param("purchase_id");
-            $data['purchaselist']=model("view_purchaselist")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'id'=>$purchase_id))->find();
-            $data['purchasedetails']=model("purchasedetails")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'id'=>$purchase_id))->select();
-            $data["purchaseFee"]=model("purchase_fee")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'id'=>$purchase_id))->select();
+            $purchase_id=request()->param("id");
+            $data['purchaselist']=db("purchaselist")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'id'=>$purchase_id))->find();
+            $data['detail']=model("purchasedetails")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'id'=>$purchase_id))->select();
+            $data["other"]=model("purchase_fee")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'id'=>$purchase_id))->select();
             return returnRes($data, '没有数据，请添加后重试', $data);
         }
     }
@@ -36,14 +95,48 @@ class Purchase extends Base
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function getpurchaselist(){
-        $list = model("view_purchaselist")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+    public function getpurchaselist( $pageLimit = 10){
+        $params = request()->param();
+        $list = \app\admin\model\Purchaselist::where('companyid', Session::get("uinfo", "admin")['companyid']);
+
+        if (!empty($params['ywsjStart'])) {
+            $list->where('service_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $list->where('service_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        if (!empty($params['status'])) {
+            $list->where('status', $params['status']);
+        }
+        if (!empty($params['rkfs'])) {
+            $list->where('rkfs', $params['rkfs']);
+        }
+        if (!empty($params['supplier_id'])) {
+            $list->where('supplier_id', $params['supplier_id']);
+        }
+        if (!empty($params['pjlx'])) {
+            $list->where('pjlx', $params['pjlx']);
+        }
+        if (!empty($params['system_no'])) {
+            $list->where('system_no', 'like', '%' . $params['system_no'] . '%');
+        }
+        if (!empty($params['ywlx'])) {
+            $list->where('ywlx', $params['ywlx']);
+        }
+        $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
+
+    /**采购单列表
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
     public function purchaseaddinfo(){
         $companyid= Session::get("uinfo", "admin")['companyid'];
         //往来单位运营商
-        $data["custom"] = model("custom")->where("companyid",$companyid)->field("id,custom")->select();
+        $data["custom"] = model("custom")->where(array("companyid"=>$companyid,"issupplier"=>1))->field("id,custom")->select();
         //结算方式
         $data["jiesuanfangshi"] = model("jiesuanfangshi")->where("companyid", $companyid)->field("id,jiesuanfangshi")->select();
         //票据类型
@@ -68,7 +161,12 @@ class Purchase extends Base
 
         return returnRes($data,"没有相关数据",$data);
     }
-
+public function getpurchasedetail(){
+    $id=request()->param("id");
+    $data["list"]=model("purchaselist")->where(array("id"=>$id))->find();
+    $data["detail"]=model("purchasedetails")->where(array("purchase_id"=>$id))->find();
+    return returnRes($data,"没有相关数据",$data);
+    }
     /**根据收支方向获取收支分类
      * @return \think\response\Json|void
      * @throws \think\db\exception\DataNotFoundException
