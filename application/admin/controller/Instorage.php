@@ -40,9 +40,9 @@ class Instorage extends Right
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function instoragedetail(){
+    public function instorageorder(){
         $instorage_id=request()->param("instorage_id");
-        $list = model("purchasedetails")->where("instorage_id",$instorage_id)->paginate(10);
+        $list = model("InstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -120,7 +120,10 @@ class Instorage extends Right
                 $data['details'][$c]['instorage_time'] = date("Y-m-d H:s:i",time());//入库类型，采购入库
                 $data['details'][$c]['instorage_id'] = $instorage_id;//入库列表的id
             }
+            //库存
             model('InstorageDetails')->allowField(true)->saveAll($data['details']);
+            //入库单
+            model('InstorageOrder')->allowField(true)->saveAll($data['details']);
             $res =model("purchasedetails")->where("id","in",$ids)->update(array("is_finished"=>2));
             return returnRes($res,'修改失败');
         }
@@ -387,8 +390,6 @@ class Instorage extends Right
                     return returnRes($res,'转库失败');
 
                 }
-
-
             }
         }
 }

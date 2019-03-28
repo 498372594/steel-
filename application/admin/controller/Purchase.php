@@ -66,6 +66,7 @@ class Purchase extends Base
                     $data['details'][$c]['instorage_id'] = $instorage_id;//入库列表的id
                 }
                 model('InstorageDetails')->allowField(true)->saveAll($data['details']);
+                model('InstorageOrder')->allowField(true)->saveAll($data['details']);
             }
             model('purchasedetails')->allowField(true)->saveAll($data['details']);
             foreach ($data['other'] as $c => $v) {
