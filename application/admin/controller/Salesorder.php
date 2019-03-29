@@ -9,6 +9,8 @@
 namespace app\admin\controller;
 
 
+use app\admin\validate\SalesorderDetails;
+use app\admin\validate\SalesorderOther;
 use think\Db;
 use think\Request;
 use think\Session;
@@ -25,7 +27,7 @@ class Salesorder extends Right
     public function getlist(Request $request, $pageLimit = 10)
     {
         $params = $request->param();
-        $list = \app\admin\model\Salesorder::where('companyid', Session::get('uinfo.companyid'));
+        $list = \app\admin\model\Salesorder::where('companyid', Session::get('uinfo.companyid', 'admin'));
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
@@ -50,6 +52,9 @@ class Salesorder extends Right
         if (!empty($params['ywlx'])) {
             $list->where('ywlx', $params['ywlx']);
         }
+        if (!empty($params['remark'])) {
+            $list->where('remark', 'like', '%' . $params['remark'] . '%');
+        }
         $list = $list->paginate($pageLimit);
         return returnRes(true, '', $list);
     }
@@ -65,7 +70,7 @@ class Salesorder extends Right
     public function detail($id = 0)
     {
         $data = \app\admin\model\Salesorder::with(['details', 'other'])
-            ->where('companyid', Session::get('uinfo.companyid'))
+            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -86,55 +91,124 @@ class Salesorder extends Right
         if ($request->isPost()) {
             $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
+
+            //数据处理
             $data = $request->post();
             $data['add_name'] = Session::get("uinfo.name", "admin");
             $data['add_id'] = Session::get("uid", "admin");
             $data['companyid'] = $companyId;
             $data['system_no'] = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data['ywlx'] = 1;
-            $model = new \app\admin\model\Salesorder();
-            $model->allowField(true)->data($data)->save();
-            $id = $model->getLastInsID();
-            foreach ($data['details'] as $c => $v) {
-                $data['details'][$c]['companyid'] = $companyId;
-                $data['details'][$c]['order_id'] = $id;
+
+            //数据验证
+            $validate = new \app\admin\validate\Salesorder();
+            if (!$validate->check($data)) {
+                return returnFail($validate->getError());
             }
-            Db::name('SalesorderDetails')->insertAll($data['details']);
-            foreach ($data['other'] as $c => $v) {
-                $data['other'][$c]['order_id'] = $id;
+
+            Db::startTrans();
+            try {
+                $model = new \app\admin\model\Salesorder();
+                $model->allowField(true)->data($data)->save();
+
+                //处理明细
+                $id = $model->getLastInsID();
+                $num = 1;
+                $detailsValidate = new SalesorderDetails();
+                foreach ($data['details'] as $c => $v) {
+                    $data['details'][$c]['companyid'] = $companyId;
+                    $data['details'][$c]['order_id'] = $id;
+                    if (!$detailsValidate->check($data['details'][$c])) {
+                        throw new \Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                    }
+                    $num++;
+                }
+                Db::name('SalesorderDetails')->insertAll($data['details']);
+
+                $num = 1;
+                $otherValidate = new SalesorderOther();
+                $nowDate = date('Y-m-d H:i:s');
+                if (!empty($data['other'])) {
+                    //处理其他费用
+                    foreach ($data['other'] as $c => $v) {
+                        $data['other'][$c]['order_id'] = $id;
+                        $data['other'][$c]['date'] = $nowDate;
+                        if (!$otherValidate->check($data['other'][$c])) {
+                            throw new \Exception('请检查第' . $num . '行' . $otherValidate->getError());
+                        }
+                        $num++;
+                    }
+                    Db::name('SalesorderOther')->insertAll($data['other']);
+                }
+                Db::commit();
+                return returnRes(true, '', ['id' => $id]);
+            } catch (\Exception $e) {
+                Db::rollback();
+                return returnFail($e->getMessage());
             }
-            Db::name('SalesorderOther')->insertAll($data['other']);
-            return returnRes(true, '', ['id' => $id]);
         }
-        return returnFail('请求错误');
+        return returnFail('请求方式错误');
     }
 
     /**
-     * 审核、反审核
+     * 审核
+     * @param Request $request
      * @param int $id
-     * @param int $status
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function audit($id = 0, $status = 3)
+    public function audit(Request $request, $id = 0)
     {
-        $salesorder = \app\admin\model\Salesorder::get($id);
-        $salesorder->status = $status;
-        $salesorder->save();
-        return returnSuc();
+        if ($request->isPut()) {
+            $salesorder = \app\admin\model\Salesorder::get($id);
+            if (empty($salesorder) || $salesorder->status == 2) {
+                return returnFail('数据不存在或已作废');
+            }
+            $salesorder->status = 3;
+            $salesorder->auditer = Session::get('uid', 'admin');
+            $salesorder->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
+    }
+
+    /**
+     * 反审核
+     * @param Request $request
+     * @param int $id
+     * @return \think\response\Json
+     * @throws \think\exception\DbException
+     */
+    public function unAudit(Request $request, $id = 0)
+    {
+        if ($request->isPut()) {
+            $salesorder = \app\admin\model\Salesorder::get($id);
+            if (empty($salesorder) || $salesorder->status == 2) {
+                return returnFail('数据不存在或已作废');
+            }
+            $salesorder->status = 1;
+            $salesorder->auditer = null;
+            $salesorder->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
     }
 
     /**
      * 作废
+     * @param Request $request
      * @param int $id
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function cancel($id = 0)
+    public function cancel(Request $request, $id = 0)
     {
-        $salesorder = \app\admin\model\Salesorder::get($id);
-        $salesorder->status = 2;
-        $salesorder->save();
-        return returnSuc();
+        if ($request->isPost()) {
+            $salesorder = \app\admin\model\Salesorder::get($id);
+            $salesorder->status = 2;
+            $salesorder->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
     }
 }
