@@ -9,11 +9,8 @@
 namespace app\admin\controller;
 
 
-use app\admin\validate\SalesorderDetails;
-use app\admin\validate\SalesorderOther;
-use think\Db;
-use think\Request;
-use think\Session;
+use app\admin\validate\{SalesorderDetails, SalesorderOther};
+use think\{Db, Request, Session};
 
 class Salesorder extends Base
 {
@@ -177,15 +174,29 @@ class Salesorder extends Base
      * 审核
      * @param Request $request
      * @param int $id
+     * @param boolean $isWeb
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function audit(Request $request, $id = 0)
+    public function audit(Request $request, $id = 0, $isWeb = true)
     {
         if ($request->isPut()) {
-            $salesorder = \app\admin\model\Salesorder::get($id);
-            if (empty($salesorder) || $salesorder->status == 2) {
-                return returnFail('数据不存在或已作废');
+            if ($isWeb) {
+                $salesorder = \app\admin\model\Salesorder::get($id);
+            } else {
+                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)->find();
+            }
+            if (empty($salesorder)) {
+                return returnFail('数据不存在');
+            }
+            if ($salesorder->ywlx != 1 && $isWeb) {
+                return returnFail('此销售单禁止直接审核');
+            }
+            if ($salesorder->status == 3) {
+                return returnFail('此单已审核');
+            }
+            if ($salesorder->status == 2) {
+                return returnFail('此单已作废');
             }
             $salesorder->status = 3;
             $salesorder->auditer = Session::get('uid', 'admin');
@@ -199,15 +210,29 @@ class Salesorder extends Base
      * 反审核
      * @param Request $request
      * @param int $id
+     * @param boolean $isWeb
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function unAudit(Request $request, $id = 0)
+    public function unAudit(Request $request, $id = 0, $isWeb = true)
     {
         if ($request->isPut()) {
-            $salesorder = \app\admin\model\Salesorder::get($id);
-            if (empty($salesorder) || $salesorder->status == 2) {
+            if ($isWeb) {
+                $salesorder = \app\admin\model\Salesorder::get($id);
+            } else {
+                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)->find();
+            }
+            if (empty($salesorder)) {
                 return returnFail('数据不存在或已作废');
+            }
+            if ($salesorder->ywlx != 1 && $isWeb) {
+                return returnFail('此销售单禁止直接反审核');
+            }
+            if ($salesorder->status == 1) {
+                return returnFail('此单未审核');
+            }
+            if ($salesorder->status == 2) {
+                return returnFail('此单已作废');
             }
             $salesorder->status = 1;
             $salesorder->auditer = null;
@@ -221,13 +246,30 @@ class Salesorder extends Base
      * 作废
      * @param Request $request
      * @param int $id
+     * @param boolean $isWeb
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function cancel(Request $request, $id = 0)
+    public function cancel(Request $request, $id = 0, $isWeb = true)
     {
         if ($request->isPost()) {
-            $salesorder = \app\admin\model\Salesorder::get($id);
+            if ($isWeb) {
+                $salesorder = \app\admin\model\Salesorder::get($id);
+            } else {
+                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)->find();
+            }
+            if (empty($salesorder)) {
+                return returnFail('数据不存在');
+            }
+            if ($salesorder->ywlx != 1 && $isWeb) {
+                return returnFail('此销售单禁止直接作废');
+            }
+            if ($salesorder->status == 3) {
+                return returnFail('此单已审核，禁止作废');
+            }
+            if ($salesorder->status == 2) {
+                return returnFail('此单已作废');
+            }
             $salesorder->status = 2;
             $salesorder->save();
             return returnSuc();

@@ -1,5 +1,5 @@
 <?php
-namespace app\admin\library\traits;
+namespace app\admin\library\tree;
 /**
  * Tree 树型类(无限分类)
  *
@@ -20,7 +20,7 @@ class Tree {
     /**
      * 构造函数
      *
-     * @param array $result 树型数据表结果集
+     * @param \ArrayAccess $result 树型数据表结果集
      * @param array $fields 树型数据表字段，array(分类id,父id)
      * @param integer $root 顶级分类的父id
      */

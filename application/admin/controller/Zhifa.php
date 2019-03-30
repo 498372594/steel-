@@ -9,11 +9,8 @@
 namespace app\admin\controller;
 
 
-use app\admin\validate\CgzfdDetails;
-use app\admin\validate\CgzfdOther;
-use think\Db;
-use think\Request;
-use think\Session;
+use app\admin\validate\{CgzfdDetails, CgzfdOther};
+use think\{Db, Request, Session};
 
 class Zhifa extends Base
 {
@@ -158,7 +155,8 @@ class Zhifa extends Base
                     'department' => $data['department'] ?? '',
                     'employer' => $data['employer'] ?? '',
                     'ywsj' => $data['ywsj'],
-                    'car_no' => $data['car_no'] ?? ''
+                    'car_no' => $data['car_no'] ?? '',
+                    'data_id' => $id
                 ];
                 foreach ($data['details'] as $c => $v) {
                     $salesOrder['details'][] = [
@@ -187,6 +185,47 @@ class Zhifa extends Base
                     throw new \Exception($salesRes);
                 }
 
+                //添加采购单
+                $purchase = [
+                    'rkfs' => 2,
+                    'supplier_id' => $data['gys_id'],
+                    'pjlx' => $data['gfpj'],
+                    'remark' => $data['remark'] ?? '',
+                    'service_time' => $data['ywsj'],
+                    'department' => $data['department'] ?? '',
+                    'employer' => $data['employer'] ?? '',
+                    'data_id' => $id
+                ];
+                foreach ($data['details'] as $c => $v) {
+                    $purchase['details'][] = [
+                        'storage_id' => $v['storage_id'],
+                        'productname' => $v['name'] ?? '',
+                        'specification' => $v['guige'] ?? '',
+                        'texture' => $v['caizhi'] ?? '',
+                        'originarea' => $v['chandi'] ?? '',
+                        'length' => $v['length'] ?? '',
+                        'houdu_name' => $v['houdu'] ?? '',
+                        'width' => $v['width'] ?? '',
+                        'm_heavy' => $v['mizhong'] ?? '',
+                        'jsfs' => $v['jsfs_id'],
+                        'lingzhi' => $v['in_lingzhi'] ?? '',
+                        'jianshu' => $v['in_jianshu'] ?? '',
+                        'jianzhishu' => $v['jzs'] ?? '',
+                        'shuliang' => $v['in_number'] ?? '',
+                        'unit_price' => $v['in_price'],
+                        'total_price' => $v['in_price_and_tax'] ?? '',
+                        'remark' => $v['remark'] ?? '',
+                        'tax_rate' => $v['in_tax_rate'] ?? '',
+                        'tax_price' => $v['in_tax'] ?? '',
+                        'heavy' => $v['in_weight'],
+                        'productname_id' => $v['wuzi_id'],
+                    ];
+                }
+                $salesRes = (new Purchase())->purchaseadd(2, $purchase, true);
+                if ($salesRes !== true) {
+                    throw new \Exception($salesRes);
+                }
+
                 Db::commit();
                 return returnRes(true, '', ['id' => $id]);
             } catch (\Exception $e) {
@@ -208,12 +247,21 @@ class Zhifa extends Base
     {
         if ($request->isPut()) {
             $cgzfd = \app\admin\model\Cgzfd::get($id);
-            if (empty($cgzfd) || $cgzfd->status == 2) {
-                return returnFail('数据不存在或已作废');
+            if (empty($cgzfd)) {
+                return returnFail('数据不存在');
+            }
+            if ($cgzfd->status == 2) {
+                return returnFail('此单已作废');
+            }
+            if ($cgzfd->status == 3) {
+                return returnFail('此单已审核');
             }
             $cgzfd->status = 3;
             $cgzfd->auditer = Session::get('uid', 'admin');
             $cgzfd->save();
+            (new Salesorder())->audit($request, $id, false);
+
+            //todo 审核采购单
             return returnSuc();
         }
         return returnFail('请求方式错误');
@@ -230,12 +278,21 @@ class Zhifa extends Base
     {
         if ($request->isPut()) {
             $cgzfd = \app\admin\model\Cgzfd::get($id);
-            if (empty($cgzfd) || $cgzfd->status == 2) {
-                return returnFail('数据不存在或已作废');
+            if (empty($cgzfd)) {
+                return returnFail('数据不存在');
+            }
+            if ($cgzfd->status == 2) {
+                return returnFail('此单已作废');
+            }
+            if ($cgzfd->status == 1) {
+                return returnFail('此单未审核');
             }
             $cgzfd->status = 1;
             $cgzfd->auditer = null;
             $cgzfd->save();
+            (new Salesorder())->unAudit($request, $id, false);
+
+            //todo 反审核采购单
             return returnSuc();
         }
         return returnFail('请求方式错误');
@@ -252,8 +309,20 @@ class Zhifa extends Base
     {
         if ($request->isPost()) {
             $cgzfd = \app\admin\model\Cgzfd::get($id);
+            if (empty($cgzfd)) {
+                return returnFail('数据不存在');
+            }
+            if ($cgzfd->status == 3) {
+                return returnFail('此单已审核，无法作废');
+            }
+            if ($cgzfd->status == 2) {
+                return returnFail('此单已作废');
+            }
             $cgzfd->status = 2;
             $cgzfd->save();
+            (new Salesorder())->cancel($request, $id, false);
+
+            //todo 作废采购单
             return returnSuc();
         }
         return returnFail('请求方式错误');
