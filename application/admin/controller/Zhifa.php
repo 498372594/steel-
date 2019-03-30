@@ -9,11 +9,13 @@
 namespace app\admin\controller;
 
 
+use app\admin\validate\CgzfdDetails;
+use app\admin\validate\CgzfdOther;
 use think\Db;
 use think\Request;
 use think\Session;
 
-class Zhifa extends Right
+class Zhifa extends Base
 {
     /**
      * 获取采购直发单列表
@@ -24,6 +26,9 @@ class Zhifa extends Right
      */
     public function getlist(Request $request, $pageLimit = 10)
     {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
         $params = $request->param();
         $list = \app\admin\model\Cgzfd::where('companyid', Session::get('uinfo.companyid'));
         if (!empty($params['ywsjStart'])) {
@@ -56,14 +61,18 @@ class Zhifa extends Right
 
     /**
      * 获取采购直发单详情
+     * @param Request $request
      * @param int $id
      * @return \think\response\Json
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    public function detail($id = 0)
+    public function detail(Request $request, $id = 0)
     {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
         $data = \app\admin\model\Cgzfd::with(['details', 'other'])
             ->where('companyid', Session::get('uinfo.companyid'))
             ->where('id', $id)
@@ -86,41 +95,167 @@ class Zhifa extends Right
         if ($request->isPost()) {
             $count = \app\admin\model\Cgzfd::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
+
+            //获取请求数据
             $data = $request->post();
             $data['add_name'] = Session::get("uinfo.name", "admin");
             $data['add_id'] = Session::get("uid", "admin");
             $data['companyid'] = $companyId;
             $data['system_no'] = 'CGZFD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data['ywlx'] = 1;
-            $model = new \app\admin\model\Cgzfd();
-            $model->allowField(true)->data($data)->save();
-            $id = $model->getLastInsID();
-            foreach ($data['details'] as $c => $v) {
-                $data['details'][$c]['companyid'] = $companyId;
-                $data['details'][$c]['order_id'] = $id;
+
+            //验证数据
+            $validate = new \app\admin\validate\Cgzfd();
+            if (!$validate->check($data)) {
+                return returnFail($validate->getError());
             }
-            Db::name('SalesorderDetails')->insertAll($data['details']);
-            foreach ($data['other'] as $c => $v) {
-                $data['other'][$c]['order_id'] = $id;
+
+            Db::startTrans();
+            try {
+                $model = new \app\admin\model\Cgzfd();
+                $model->allowField(true)->data($data)->save();
+
+                //处理明细
+                $id = $model->getLastInsID();
+                $num = 1;
+                $detailsValidate = new CgzfdDetails();
+                foreach ($data['details'] as $c => $v) {
+                    $data['details'][$c]['companyid'] = $companyId;
+                    $data['details'][$c]['order_id'] = $id;
+
+                    if (!$detailsValidate->check($data['details'][$c])) {
+                        throw new \Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                    }
+                    $num++;
+                }
+                Db::name('CgzfdDetails')->insertAll($data['details']);
+
+                //处理其他费用
+                $num = 1;
+                $otherValidate = new CgzfdOther();
+                $nowDate = date('Y-m-d H:i:s');
+                if (!empty($data['other'])) {
+                    foreach ($data['other'] as $c => $v) {
+                        $data['other'][$c]['order_id'] = $id;
+                        $data['other'][$c]['date'] = $nowDate;
+                        if (!$otherValidate->check($data['other'][$c])) {
+                            throw new \Exception('请检查第' . $num . '行' . $otherValidate->getError());
+                        }
+                        $num++;
+                    }
+                    Db::name('CgzfdOther')->insertAll($data['other']);
+                }
+
+                //添加销售单
+                $salesOrder = [
+                    'custom_id' => $data['kh_id'],
+                    'pjlx' => $data['khpj'],
+                    'jsfs' => $data['khjsfs'] ?? '',
+                    'ckfs' => 1,
+                    'contact' => $data['contact'] ?? '',
+                    'mobile' => $data['mobile'] ?? '',
+                    'remark' => $data['remark'] ?? '',
+                    'department' => $data['department'] ?? '',
+                    'employer' => $data['employer'] ?? '',
+                    'ywsj' => $data['ywsj'],
+                    'car_no' => $data['car_no'] ?? ''
+                ];
+                foreach ($data['details'] as $c => $v) {
+                    $salesOrder['details'][] = [
+                        'storage_id' => $v['storage_id'],
+                        'wuzi_id' => $v['wuzi_id'],
+                        'name' => $v['name'] ?? '',
+                        'guige' => $v['guige'] ?? '',
+                        'caizhi' => $v['caizhi'] ?? '',
+                        'chandi' => $v['chandi'] ?? '',
+                        'mizhong' => $v['mizhong'] ?? '',
+                        'jsfs_id' => $v['jsfs_id'],
+                        'length' => $v['length'] ?? '',
+                        'num' => $v['out_number'] ?? '',
+                        'jzs' => $v['jzs'] ?? '',
+                        'weight' => $v['out_weight'],
+                        'price' => $v['out_price'],
+                        'total_fee' => $v['out_total_fee'] ?? '',
+                        'tax_rate' => $v['out_tax_rate'] ?? '',
+                        'tax' => $v['out_tax'] ?? '',
+                        'price_and_tax' => $v['out_price_and_tax'] ?? '',
+                    ];
+                }
+                $salesOrder['other'] = $data['other'] ?? [];
+                $salesRes = (new Salesorder())->add($request, 2, $salesOrder, true);
+                if ($salesRes !== true) {
+                    throw new \Exception($salesRes);
+                }
+
+                Db::commit();
+                return returnRes(true, '', ['id' => $id]);
+            } catch (\Exception $e) {
+                Db::rollback();
+                return returnFail($e->getMessage());
             }
-            Db::name('SalesorderOther')->insertAll($data['other']);
-            return returnRes(true, '', ['id' => $id]);
         }
-        return returnFail('请求错误');
+        return returnFail('请求方式错误');
     }
 
     /**
-     * 审核、反审核
+     * 审核
+     * @param Request $request
      * @param int $id
-     * @param int $status
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function audit($id = 0, $status = 3)
+    public function audit(Request $request, $id = 0)
     {
-        $salesorder = \app\admin\model\Cgzfd::get($id);
-        $salesorder->status = $status;
-        $salesorder->save();
-        return returnSuc();
+        if ($request->isPut()) {
+            $cgzfd = \app\admin\model\Cgzfd::get($id);
+            if (empty($cgzfd) || $cgzfd->status == 2) {
+                return returnFail('数据不存在或已作废');
+            }
+            $cgzfd->status = 3;
+            $cgzfd->auditer = Session::get('uid', 'admin');
+            $cgzfd->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
+    }
+
+    /**
+     * 反审核
+     * @param Request $request
+     * @param int $id
+     * @return \think\response\Json
+     * @throws \think\exception\DbException
+     */
+    public function unAudit(Request $request, $id = 0)
+    {
+        if ($request->isPut()) {
+            $cgzfd = \app\admin\model\Cgzfd::get($id);
+            if (empty($cgzfd) || $cgzfd->status == 2) {
+                return returnFail('数据不存在或已作废');
+            }
+            $cgzfd->status = 1;
+            $cgzfd->auditer = null;
+            $cgzfd->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
+    }
+
+    /**
+     * 作废
+     * @param Request $request
+     * @param int $id
+     * @return \think\response\Json
+     * @throws \think\exception\DbException
+     */
+    public function cancel(Request $request, $id = 0)
+    {
+        if ($request->isPost()) {
+            $cgzfd = \app\admin\model\Cgzfd::get($id);
+            $cgzfd->status = 2;
+            $cgzfd->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
     }
 }
