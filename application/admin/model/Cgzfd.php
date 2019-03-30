@@ -18,11 +18,11 @@ class Cgzfd extends Base
 
     public function details()
     {
-        return $this->hasMany('SalesorderDetails', 'order_id', 'id');
+        return $this->hasMany('CgzfdDetails', 'order_id', 'id');
     }
 
     public function other()
     {
-        return $this->hasMany('SalesorderOther', 'order_id', 'id');
+        return $this->hasMany('CgzfdOther', 'order_id', 'id');
     }
 }

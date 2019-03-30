@@ -15,7 +15,7 @@ use think\Db;
 use think\Request;
 use think\Session;
 
-class Salesorder extends Right
+class Salesorder extends Base
 {
     /**
      * 获取销售单列表
@@ -83,30 +83,41 @@ class Salesorder extends Right
     /**
      * 添加销售单
      * @param Request $request
-     * @return \think\response\Json
+     * @param int $ywlx
+     * @param array $data
+     * @param bool $return
+     * @return bool|string|\think\response\Json|array
      * @throws \think\Exception
      */
-    public function add(Request $request)
+    public function add(Request $request, $ywlx = 1, $data = [], $return = false)
     {
         if ($request->isPost()) {
             $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
 
             //数据处理
-            $data = $request->post();
+            if (empty($data)) {
+                $data = $request->post();
+            }
             $data['add_name'] = Session::get("uinfo.name", "admin");
             $data['add_id'] = Session::get("uid", "admin");
             $data['companyid'] = $companyId;
             $data['system_no'] = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            $data['ywlx'] = 1;
+            $data['ywlx'] = $ywlx;
 
             //数据验证
             $validate = new \app\admin\validate\Salesorder();
             if (!$validate->check($data)) {
-                return returnFail($validate->getError());
+                if ($return) {
+                    return $validate->getError();
+                } else {
+                    return returnFail($validate->getError());
+                }
             }
 
-            Db::startTrans();
+            if (!$return) {
+                Db::startTrans();
+            }
             try {
                 $model = new \app\admin\model\Salesorder();
                 $model->allowField(true)->data($data)->save();
@@ -140,14 +151,26 @@ class Salesorder extends Right
                     }
                     Db::name('SalesorderOther')->insertAll($data['other']);
                 }
-                Db::commit();
-                return returnRes(true, '', ['id' => $id]);
+                if (!$return) {
+                    Db::commit();
+                    return returnRes(true, '', ['id' => $id]);
+                } else {
+                    return true;
+                }
             } catch (\Exception $e) {
-                Db::rollback();
-                return returnFail($e->getMessage());
+                if ($return) {
+                    return $e->getMessage();
+                } else {
+                    Db::rollback();
+                    return returnFail($e->getMessage());
+                }
             }
         }
-        return returnFail('请求方式错误');
+        if ($return) {
+            return '请求方式错误';
+        } else {
+            return returnFail('请求方式错误');
+        }
     }
 
     /**

@@ -16,7 +16,7 @@
         }
     ],
     "require": {
-        "php": ">=5.6.0",
+        "php": ">=7.0.0",
         "topthink/framework": "~5.0.21",
         "qt/qframe-auth": "^1.0",
         "topthink/think-captcha": "^1.0"
