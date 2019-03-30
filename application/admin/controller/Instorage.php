@@ -32,7 +32,7 @@ class Instorage extends Right
         if (!empty($params['remark'])) {
             $list->where('remark', 'like', '%' . $params['remark'] . '%');
         }
-        $list->paginate(10);
+        $list=$list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -100,9 +100,13 @@ class Instorage extends Right
      */
     public function instorage(){
         if(request()->isPost()){
-            $ids = request()->param("id");
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
+            //生成入库单列表
             $data["status"]=1;
+            $data["department"]=request()->param("department");
+            $data["clerk"]=request()->param("clerk");
+            $data["pjlx"]=request()->param("pjlx");
+            $data["service_time"]=date("Y-m-d H:s:i",time());
             $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
             $data["clerk"]=request()->post("clerk");
             $data["department"]=request()->post("department");
@@ -114,17 +118,24 @@ class Instorage extends Right
             $instorage_id = model("instoragelist")->id;
             foreach ($data['details'] as $c => $v) {
                 $count = \app\admin\model\InstorageDetails::whereTime('create_time', 'today')->count();
+                $data['details'][$c]['in_out'] = 1;//入库，2出库
                 $data['details'][$c]['type'] = 1;//入库类型，采购入库
                 $data['details'][$c]['zyh'] = 'KC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);;//资源号
                 $data['details'][$c]['is_finished'] = 2;//已入库
                 $data['details'][$c]['instorage_time'] = date("Y-m-d H:s:i",time());//入库类型，采购入库
                 $data['details'][$c]['instorage_id'] = $instorage_id;//入库列表的id
+                $data['details'][$c]['purchasedetail_id'] = $v["id"];//入库列表的id
+                $change[$c]["id"]=$v["id"];
+                $change[$c]["actual_shuliang"]=$v["shuliang"];
+                $change[$c]["actual_heavy"]=$v["heavy"];
+                $change[$c]['is_finished'][$c]['is_finished'] = 2;//已入库
+                unset($v["id"]);
             }
             //库存
             model('InstorageDetails')->allowField(true)->saveAll($data['details']);
             //入库单
             model('InstorageOrder')->allowField(true)->saveAll($data['details']);
-            $res =model("purchasedetails")->where("id","in",$ids)->update(array("is_finished"=>2));
+            $res =model("purchasedetails")->update($change);
             return returnRes($res,'修改失败');
         }
     }
@@ -163,7 +174,7 @@ class Instorage extends Right
     /**
      * 预留存量释放列表
      */
-        public function relaselist(){
+        public function releaselist(){
             $list=model("view_reserved")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid']))->paginate(10);
             return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
         }
@@ -176,10 +187,10 @@ class Instorage extends Right
      */
         public function releasegoods(){
             if(request()->isPost()){
-                $data=request()->post();
+                $data=request()->param();
                 foreach($data["released"] as $key=>$value){
-                    $info=model("InstorageDetails")->where("id",$value["purchasedetails_id"])->find();
-                    $info1=model("reserved")->where("id",$value["id"])->find();
+                    $info=db("InstorageDetails")->where("id",$value["instoragedetail_id"])->find();
+                    $info1=db("reserved")->where("id",$value["id"])->find();
                     $inf["shuliang"]=$info["shuliang"]+$value["reserved_num"];
                     $inf["lingzhi"]=$info["lingzhi"]+$value["reserved_lingzhi"];
                     $inf["jianshu"]=$info["jianshu"]+$value["reserved_jianshu"];
@@ -190,11 +201,11 @@ class Instorage extends Right
                     $inf1["reserved_jianshu"]=$info1["reserved_jianshu"]-$value["reserved_jianshu"];
                     $inf1["reserved_heavy"]=$info1["reserved_heavy"]-$value["reserved_heavy"];
                     $inf1["reserved_jianshu"]=$info1["reserved_jianshu"]-$value["reserved_jianshu"];
-                    model("InstorageDetails")->save($inf);
+                    db("InstorageDetails")->update($inf);
                     if($inf1["reserved_num"]==0){
-                        model("reserved")->where("id", $inf1["id"])->delete();
+                        db("reserved")->where("id", $inf1["id"])->delete();
                     }
-                    $res=model("reserved")->save($inf1);
+                    $res=db("reserved")->update($inf1);
                 }
                 return returnRes($res,'锁定');
             }
@@ -392,4 +403,9 @@ class Instorage extends Right
                 }
             }
         }
+//        public function ceshi(){
+//            $arr=model("unit")->update(array("id"=>11,"unit"=>"吨1"));
+//
+//            dump($arr);
+//        }
 }

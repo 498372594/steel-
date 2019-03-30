@@ -1,7 +1,7 @@
 <?php
 
 namespace app\admin\model;
-
+use traits\model\SoftDelete;
 class Member extends Base
 {
     // 验证规则

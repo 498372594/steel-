@@ -60,12 +60,12 @@ class Steelmanage extends Right
                 if($re){
                     return returnFail('该类存在子分类');
                 }else{
-                    $result = model("$model")->where($where)->delete();
+                    $result = model("$model")->where($where)->update(array("delete_time"=>date("Y-m-d H:i:s")));
                     return returnRes($result, '删除失败');
                 }
                 break;
             default:
-                $result = model("$model")->where($where)->delete();
+                $result = model("$model")->where($where)->update(array("delete_time"=>date("Y-m-d H:i:s")));
                 return returnRes($result, '删除失败');
 
         }

@@ -5,10 +5,12 @@ namespace app\admin\model;
 use think\Config;
 use think\Db;
 use think\Session;
-
+use traits\model\SoftDelete;
 class User extends Base
 {
-
+    use SoftDelete;
+    protected $deleteTime = 'delete_time';
+    protected $autoWriteTimestamp = 'datetime';
     /**
      * 用户登录
      */

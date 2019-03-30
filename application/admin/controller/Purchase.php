@@ -70,8 +70,8 @@ class Purchase extends Base
                     $count = \app\admin\model\InstorageDetails::whereTime('create_time', 'today')->count();
                     $data['details'][$c]['type'] = 1;//入库类型，采购入库
                     $data['details'][$c]['zyh'] = 'KC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);;//资源号
-                    $data['details'][$c]['is_finished'] = 2;//已入库
-                    $data['details'][$c]['instorage_time'] = date("Y-m-d H:s:i");//入库类型，采购入库
+//                    $data['details'][$c]['is_finished'] = 2;//已入库
+                    $data['details'][$c]['instorage_time'] = date("Y-m-d H:s:i");//入库时间
                     $data['details'][$c]['instorage_id'] = $instorage_id;//入库列表的id
                 }
                 model('InstorageDetails')->allowField(true)->saveAll($data['details']);
@@ -148,12 +148,21 @@ class Purchase extends Base
         if (!empty($params['ywlx'])) {
             $list->where('ywlx', $params['ywlx']);
         }
+        if (!empty($params['shdw_id'])) {
+            $list->where('shdw_id', $params['shdw_id']);
+        }
+        if (!empty($params['ysdw_id'])) {
+            $list->where('ysdw_id', $params['ysdw_id']);
+        }
+        if (!empty($params['remark'])) {
+            $list->where('remark', $params['remark']);
+        }
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
     /**
-     * 采购单列表
+     * 采购单列表返回数据
      * @return \think\response\Json
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\ModelNotFoundException
@@ -199,7 +208,7 @@ class Purchase extends Base
     {
         $id = request()->param("id");
         $data["list"] = model("purchaselist")->where(array("id" => $id))->find();
-        $data["detail"] = model("purchasedetails")->where(array("purchase_id" => $id))->find();
+        $data["detail"] = model("purchasedetails")->where(array("purchase_id" => $id))->select();
         return returnRes($data, "没有相关数据", $data);
     }
 

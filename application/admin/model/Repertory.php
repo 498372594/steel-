@@ -1,9 +1,12 @@
 <?php
 
 namespace app\admin\model;
-
+use traits\model\SoftDelete;
 class Repertory extends Base
 {
+    use SoftDelete;
+    protected $deleteTime = 'delete_time';
+    protected $autoWriteTimestamp = 'datetime';
     // 验证规则
     public $rules = [
         'name'  => 'require|max:30',
