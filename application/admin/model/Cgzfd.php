@@ -14,7 +14,8 @@ use traits\model\SoftDelete;
 class Cgzfd extends Base
 {
     use SoftDelete;
-    protected $autoWriteTimestamp = true;
+    protected $deleteTime = 'delete_time';
+    protected $autoWriteTimestamp = 'datetime';
 
     public function details()
     {
