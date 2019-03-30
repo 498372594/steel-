@@ -9,7 +9,9 @@
 namespace app\admin\model;
 
 
+use traits\model\SoftDelete;
+
 class CgzfdOther extends Base
 {
-
+    use SoftDelete;
 }

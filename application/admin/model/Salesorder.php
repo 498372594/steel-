@@ -13,8 +13,7 @@ use traits\model\SoftDelete;
 class Salesorder extends Base
 {
     use SoftDelete;
-    protected $deleteTime = 'delete_time';
-    protected $autoWriteTimestamp = 'datetime';
+    protected $autoWriteTimestamp = true;
 
     public function details()
     {
