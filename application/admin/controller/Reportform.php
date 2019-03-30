@@ -84,4 +84,26 @@ class Reportform extends Right
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
+    /**出库成本明细表
+     * @param int $pageLimit
+     * @return \think\response\Json
+     */
+    public function ckcbmx($pageLimit=10){
+        $params = request()->param();
+        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"in_out"=>2));
+        $list=$this->getsearch($params,$list);
+        $list = $list->paginate($pageLimit);
+        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+    }
+    /**入库单历史记录
+     * @param int $pageLimit
+     * @return \think\response\Json
+     */
+    public function getinstoragelist($pageLimit=10){
+        $params = request()->param();
+        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"in_out"=>2));
+        $list=$this->getsearch($params,$list);
+        $list = $list->paginate($pageLimit);
+        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+    }
 }

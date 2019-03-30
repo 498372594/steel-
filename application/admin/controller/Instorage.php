@@ -174,7 +174,7 @@ class Instorage extends Right
     /**
      * 预留存量释放列表
      */
-        public function relaselist(){
+        public function releaselist(){
             $list=model("view_reserved")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid']))->paginate(10);
             return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
         }
