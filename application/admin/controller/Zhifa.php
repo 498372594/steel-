@@ -8,9 +8,16 @@
 
 namespace app\admin\controller;
 
-
+use app\admin\model\Cgzfd;
 use app\admin\validate\{CgzfdDetails, CgzfdOther};
-use think\{Db, Request, Session};
+use Exception;
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    exception\DbException,
+    Request,
+    response\Json,
+    Session};
 
 class Zhifa extends Base
 {
@@ -18,8 +25,8 @@ class Zhifa extends Base
      * 获取采购直发单列表
      * @param Request $request
      * @param int $pageLimit
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function getlist(Request $request, $pageLimit = 10)
     {
@@ -27,30 +34,30 @@ class Zhifa extends Base
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = \app\admin\model\Cgzfd::where('companyid', Session::get('uinfo.companyid'));
+        $list = Cgzfd::where('companyid', Session::get('uinfo.companyid', 'admin'));
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
         if (!empty($params['ywsjEnd'])) {
             $list->where('ywsj', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
+        if (!empty($params['cgpb'])) {
+            $list->where('gfpj', $params['cgpb']);
+        }
         if (!empty($params['status'])) {
             $list->where('status', $params['status']);
-        }
-        if (!empty($params['custom_id'])) {
-            $list->where('custom_id', $params['custom_id']);
-        }
-        if (!empty($params['employer'])) {
-            $list->where('employer', $params['employer']);
-        }
-        if (!empty($params['pjlx'])) {
-            $list->where('pjlx', $params['pjlx']);
         }
         if (!empty($params['system_no'])) {
             $list->where('system_no', 'like', '%' . $params['system_no'] . '%');
         }
-        if (!empty($params['ywlx'])) {
-            $list->where('ywlx', $params['ywlx']);
+        if (!empty($params['custom_id'])) {
+            $list->where('kh_id', $params['custom_id']);
+        }
+        if (!empty($params['xspb'])) {
+            $list->where('khpj', $params['xspb']);
+        }
+        if (!empty($params['remark'])) {
+            $list->where('remark', 'like', '%' . $params['remark'] . '%');
         }
         $list = $list->paginate($pageLimit);
         return returnRes(true, '', $list);
@@ -60,18 +67,18 @@ class Zhifa extends Base
      * 获取采购直发单详情
      * @param Request $request
      * @param int $id
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function detail(Request $request, $id = 0)
     {
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
-        $data = \app\admin\model\Cgzfd::with(['details', 'other'])
-            ->where('companyid', Session::get('uinfo.companyid'))
+        $data = Cgzfd::with(['details', 'other'])
+            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -84,13 +91,13 @@ class Zhifa extends Base
     /**
      * 添加采购直发单
      * @param Request $request
-     * @return \think\response\Json
+     * @return Json
      * @throws \think\Exception
      */
     public function add(Request $request)
     {
         if ($request->isPost()) {
-            $count = \app\admin\model\Cgzfd::whereTime('create_time', 'today')->count();
+            $count = Cgzfd::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
 
             //获取请求数据
@@ -109,7 +116,7 @@ class Zhifa extends Base
 
             Db::startTrans();
             try {
-                $model = new \app\admin\model\Cgzfd();
+                $model = new Cgzfd();
                 $model->allowField(true)->data($data)->save();
 
                 //处理明细
@@ -121,7 +128,7 @@ class Zhifa extends Base
                     $data['details'][$c]['order_id'] = $id;
 
                     if (!$detailsValidate->check($data['details'][$c])) {
-                        throw new \Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                        throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                     }
                     $num++;
                 }
@@ -136,7 +143,7 @@ class Zhifa extends Base
                         $data['other'][$c]['order_id'] = $id;
                         $data['other'][$c]['date'] = $nowDate;
                         if (!$otherValidate->check($data['other'][$c])) {
-                            throw new \Exception('请检查第' . $num . '行' . $otherValidate->getError());
+                            throw new Exception('请检查第' . $num . '行' . $otherValidate->getError());
                         }
                         $num++;
                     }
@@ -182,7 +189,7 @@ class Zhifa extends Base
                 $salesOrder['other'] = $data['other'] ?? [];
                 $salesRes = (new Salesorder())->add($request, 2, $salesOrder, true);
                 if ($salesRes !== true) {
-                    throw new \Exception($salesRes);
+                    throw new Exception($salesRes);
                 }
 
                 //添加采购单
@@ -223,12 +230,12 @@ class Zhifa extends Base
                 }
                 $salesRes = (new Purchase())->purchaseadd(2, $purchase, true);
                 if ($salesRes !== true) {
-                    throw new \Exception($salesRes);
+                    throw new Exception($salesRes);
                 }
 
                 Db::commit();
                 return returnRes(true, '', ['id' => $id]);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Db::rollback();
                 return returnFail($e->getMessage());
             }
@@ -240,13 +247,13 @@ class Zhifa extends Base
      * 审核
      * @param Request $request
      * @param int $id
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function audit(Request $request, $id = 0)
     {
         if ($request->isPut()) {
-            $cgzfd = \app\admin\model\Cgzfd::get($id);
+            $cgzfd = Cgzfd::get($id);
             if (empty($cgzfd)) {
                 return returnFail('数据不存在');
             }
@@ -258,6 +265,7 @@ class Zhifa extends Base
             }
             $cgzfd->status = 3;
             $cgzfd->auditer = Session::get('uid', 'admin');
+            $cgzfd->audit_name = Session::get('uinfo.name', 'admin');
             $cgzfd->save();
             (new Salesorder())->audit($request, $id, false);
 
@@ -271,13 +279,13 @@ class Zhifa extends Base
      * 反审核
      * @param Request $request
      * @param int $id
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function unAudit(Request $request, $id = 0)
     {
         if ($request->isPut()) {
-            $cgzfd = \app\admin\model\Cgzfd::get($id);
+            $cgzfd = Cgzfd::get($id);
             if (empty($cgzfd)) {
                 return returnFail('数据不存在');
             }
@@ -289,6 +297,7 @@ class Zhifa extends Base
             }
             $cgzfd->status = 1;
             $cgzfd->auditer = null;
+            $cgzfd->audit_name = '';
             $cgzfd->save();
             (new Salesorder())->unAudit($request, $id, false);
 
@@ -302,13 +311,13 @@ class Zhifa extends Base
      * 作废
      * @param Request $request
      * @param int $id
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function cancel(Request $request, $id = 0)
     {
         if ($request->isPost()) {
-            $cgzfd = \app\admin\model\Cgzfd::get($id);
+            $cgzfd = Cgzfd::get($id);
             if (empty($cgzfd)) {
                 return returnFail('数据不存在');
             }

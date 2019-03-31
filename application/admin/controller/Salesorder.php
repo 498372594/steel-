@@ -8,9 +8,15 @@
 
 namespace app\admin\controller;
 
-
 use app\admin\validate\{SalesorderDetails, SalesorderOther};
-use think\{Db, Request, Session};
+use Exception;
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    exception\DbException,
+    Request,
+    response\Json,
+    Session};
 
 class Salesorder extends Base
 {
@@ -18,8 +24,8 @@ class Salesorder extends Base
      * 获取销售单列表
      * @param Request $request
      * @param int $pageLimit
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function getlist(Request $request, $pageLimit = 10)
     {
@@ -59,10 +65,10 @@ class Salesorder extends Base
     /**
      * 获取销售单详情
      * @param int $id
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function detail($id = 0)
     {
@@ -83,7 +89,7 @@ class Salesorder extends Base
      * @param int $ywlx
      * @param array $data
      * @param bool $return
-     * @return bool|string|\think\response\Json|array
+     * @return bool|string|Json|array
      * @throws \think\Exception
      */
     public function add(Request $request, $ywlx = 1, $data = [], $return = false)
@@ -127,7 +133,7 @@ class Salesorder extends Base
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['order_id'] = $id;
                     if (!$detailsValidate->check($data['details'][$c])) {
-                        throw new \Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                        throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                     }
                     $num++;
                 }
@@ -142,7 +148,7 @@ class Salesorder extends Base
                         $data['other'][$c]['order_id'] = $id;
                         $data['other'][$c]['date'] = $nowDate;
                         if (!$otherValidate->check($data['other'][$c])) {
-                            throw new \Exception('请检查第' . $num . '行' . $otherValidate->getError());
+                            throw new Exception('请检查第' . $num . '行' . $otherValidate->getError());
                         }
                         $num++;
                     }
@@ -154,7 +160,7 @@ class Salesorder extends Base
                 } else {
                     return true;
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 if ($return) {
                     return $e->getMessage();
                 } else {
@@ -175,8 +181,8 @@ class Salesorder extends Base
      * @param Request $request
      * @param int $id
      * @param boolean $isWeb
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function audit(Request $request, $id = 0, $isWeb = true)
     {
@@ -200,6 +206,7 @@ class Salesorder extends Base
             }
             $salesorder->status = 3;
             $salesorder->auditer = Session::get('uid', 'admin');
+            $salesorder->audit_name = Session::get('uinfo.name', 'admin');
             $salesorder->save();
             return returnSuc();
         }
@@ -211,8 +218,8 @@ class Salesorder extends Base
      * @param Request $request
      * @param int $id
      * @param boolean $isWeb
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function unAudit(Request $request, $id = 0, $isWeb = true)
     {
@@ -236,6 +243,7 @@ class Salesorder extends Base
             }
             $salesorder->status = 1;
             $salesorder->auditer = null;
+            $salesorder->audit_name = '';
             $salesorder->save();
             return returnSuc();
         }
@@ -247,8 +255,8 @@ class Salesorder extends Base
      * @param Request $request
      * @param int $id
      * @param boolean $isWeb
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function cancel(Request $request, $id = 0, $isWeb = true)
     {
