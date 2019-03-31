@@ -19,9 +19,9 @@ class CgzfdDetails extends Validate
         'jsfs_id' => 'require',
         'in_weight' => 'require',
         'in_price' => 'require',
-        'out_weight'=>'require',
-        'out_price' => 'require',
-        'jzs' => 'checkJZS'
+        'out_weight' => 'require',
+        'out_price' => 'require'
+//        'jzs' => 'checkJZS'
     ];
 
     protected $message = [
@@ -34,11 +34,11 @@ class CgzfdDetails extends Validate
         'out_price.require' => '销售单价不能为空',
     ];
 
-    protected function checkJZS($value, $rule, $data)
-    {
-        if (!empty($data['num'])) {
-            return empty($value) ? '当录入件数时，件支数为必填项且必须大于0' : true;
-        }
-        return true;
-    }
+//    protected function checkJZS($value, $rule, $data)
+//    {
+//        if (!empty($data['num'])) {
+//            return empty($value) ? '当录入件数时，件支数为必填项且必须大于0' : true;
+//        }
+//        return true;
+//    }
 }
