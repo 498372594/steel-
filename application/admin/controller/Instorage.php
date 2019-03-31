@@ -41,7 +41,7 @@ class Instorage extends Right
      * @throws \think\exception\DbException
      */
     public function instorageorder(){
-        $instorage_id=request()->param("instorage_id");
+        $instorage_id=request()->param("id");
         $list = model("InstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
