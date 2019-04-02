@@ -34,7 +34,14 @@ class Zhifa extends Base
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = Cgzfd::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list = Cgzfd::with([
+            'custom',
+            'gongyingshang',
+            'gfpjData',
+            'khpjData',
+            'gfjsfsData',
+            'khjsfsData',
+        ])->where('companyid', Session::get('uinfo.companyid', 'admin'));
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
@@ -77,8 +84,16 @@ class Zhifa extends Base
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
-        $data = Cgzfd::with(['details', 'other'])
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+        $data = Cgzfd::with([
+            'custom',
+            'gongyingshang',
+            'gfpjData',
+            'khpjData',
+            'gfjsfsData',
+            'khjsfsData',
+            'details' => ['specification', 'jsfs', 'storage'],
+            'other' => ['szmcData', 'pjlxData', 'custom']
+        ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -210,17 +225,14 @@ class Zhifa extends Base
                     $salesOrder['details'][] = [
                         'storage_id' => $v['storage_id'],
                         'wuzi_id' => $v['wuzi_id'],
-                        'name' => $v['name'] ?? '',
-                        'guige' => $v['guige'] ?? '',
                         'caizhi' => $v['caizhi'] ?? '',
                         'chandi' => $v['chandi'] ?? '',
-                        'mizhong' => $v['mizhong'] ?? '',
                         'jsfs_id' => $v['jsfs_id'],
                         'length' => $v['length'] ?? '',
                         'lingzhi' => $v['out_lingzhi'] ?? '',
                         'num' => $v['out_jianshu'] ?? '',
                         'jzs' => $v['jzs'] ?? '',
-                        'count'=>$v['out_number']??'',
+                        'count' => $v['out_number'] ?? '',
                         'weight' => $v['out_weight'],
                         'price' => $v['out_price'],
                         'total_fee' => $v['out_total_fee'] ?? '',
@@ -269,7 +281,7 @@ class Zhifa extends Base
             $cgzfd->auditer = Session::get('uid', 'admin');
             $cgzfd->audit_name = Session::get('uinfo.name', 'admin');
             $cgzfd->save();
-            (new Salesorder())->audit($request, $id, false);
+            (new Salesorder())->audit($request, $id, 2, false);
 
             //todo 审核采购单
             return returnSuc();
@@ -301,7 +313,7 @@ class Zhifa extends Base
             $cgzfd->auditer = null;
             $cgzfd->audit_name = '';
             $cgzfd->save();
-            (new Salesorder())->unAudit($request, $id, false);
+            (new Salesorder())->unAudit($request, $id, 2, false);
 
             //todo 反审核采购单
             return returnSuc();
@@ -331,7 +343,7 @@ class Zhifa extends Base
             }
             $cgzfd->status = 2;
             $cgzfd->save();
-            (new Salesorder())->cancel($request, $id, false);
+            (new Salesorder())->cancel($request, $id, 2, false);
 
             //todo 作废采购单
             return returnSuc();

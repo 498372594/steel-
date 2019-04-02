@@ -2,7 +2,6 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\Cgzfd;
 use app\admin\validate\{SalesTiaohuoDetails, SalesTiaohuoOther};
 use Exception;
 use think\{Db,
@@ -28,7 +27,8 @@ class SalesTiaohuo extends Base
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = \app\admin\model\SalesTiaohuo::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list = \app\admin\model\SalesTiaohuo::with(['custom', 'pjlxData', 'jsfsData'])
+            ->where('companyid', Session::get('uinfo.companyid', 'admin'));
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
@@ -68,7 +68,13 @@ class SalesTiaohuo extends Base
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
-        $data = \app\admin\model\SalesTiaohuo::with(['details', 'other'])
+        $data = \app\admin\model\SalesTiaohuo::with([
+            'custom',
+            'pjlxData',
+            'jsfsData',
+            'details' => ['specification', 'thJsfsData', 'thPjlxData', 'storage', 'xsJsfsData', 'wldwData'],
+            'other' => ['szmcData', 'pjlxData', 'custom']
+        ])
             ->where('companyid', Session::get('uinfo.companyid', 'admin'))
             ->where('id', $id)
             ->find();
@@ -266,7 +272,7 @@ class SalesTiaohuo extends Base
             $salesTiaohuo->audit_id = Session::get('uid', 'admin');
             $salesTiaohuo->audit_name = Session::get('uinfo.name', 'admin');
             $salesTiaohuo->save();
-            (new Salesorder())->audit($request, $id, false);
+            (new Salesorder())->audit($request, $id, 3, false);
 
             //todo 审核采购单
             return returnSuc();
@@ -284,7 +290,7 @@ class SalesTiaohuo extends Base
     public function unAudit(Request $request, $id = 0)
     {
         if ($request->isPut()) {
-            $cgzfd = Cgzfd::get($id);
+            $cgzfd = \app\admin\model\SalesTiaohuo::get($id);
             if (empty($cgzfd)) {
                 return returnFail('数据不存在');
             }
@@ -298,7 +304,7 @@ class SalesTiaohuo extends Base
             $cgzfd->audit_id = null;
             $cgzfd->audit_name = '';
             $cgzfd->save();
-            (new Salesorder())->unAudit($request, $id, false);
+            (new Salesorder())->unAudit($request, $id, 3, false);
 
             //todo 反审核采购单
             return returnSuc();
@@ -316,7 +322,7 @@ class SalesTiaohuo extends Base
     public function cancel(Request $request, $id = 0)
     {
         if ($request->isPost()) {
-            $cgzfd = Cgzfd::get($id);
+            $cgzfd = \app\admin\model\SalesTiaohuo::get($id);
             if (empty($cgzfd)) {
                 return returnFail('数据不存在');
             }
@@ -328,7 +334,7 @@ class SalesTiaohuo extends Base
             }
             $cgzfd->status = 2;
             $cgzfd->save();
-            (new Salesorder())->cancel($request, $id, false);
+            (new Salesorder())->cancel($request, $id, 3, false);
 
             //todo 作废采购单
             return returnSuc();

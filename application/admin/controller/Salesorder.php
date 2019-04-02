@@ -30,7 +30,11 @@ class Salesorder extends Base
     public function getlist(Request $request, $pageLimit = 10)
     {
         $params = $request->param();
-        $list = \app\admin\model\Salesorder::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list = \app\admin\model\Salesorder::with([
+            'custom',
+            'pjlxData',
+            'jsfsData',
+        ])->where('companyid', Session::get('uinfo.companyid', 'admin'));
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
@@ -72,7 +76,13 @@ class Salesorder extends Base
      */
     public function detail($id = 0)
     {
-        $data = \app\admin\model\Salesorder::with(['details', 'other'])
+        $data = \app\admin\model\Salesorder::with([
+            'custom',
+            'pjlxData',
+            'jsfsData',
+            'details' => ['specification', 'jsfs', 'storage'],
+            'other' => ['szmcData', 'pjlxData', 'custom']
+        ])
             ->where('companyid', Session::get('uinfo.companyid', 'admin'))
             ->where('id', $id)
             ->find();
@@ -180,23 +190,28 @@ class Salesorder extends Base
      * 审核
      * @param Request $request
      * @param int $id
+     * @param int $ywlx
      * @param boolean $isWeb
      * @return Json
      * @throws DbException
      */
-    public function audit(Request $request, $id = 0, $isWeb = true)
+    public function audit(Request $request, $id = 0, $ywlx = 1, $isWeb = true)
     {
         if ($request->isPut()) {
+            if ($ywlx != 1 && $isWeb) {
+                return returnFail('此销售单禁止直接审核');
+            }
             if ($isWeb) {
-                $salesorder = \app\admin\model\Salesorder::get($id);
+                $salesorder = \app\admin\model\Salesorder::where('id', $id)
+                    ->where('ywlx', $ywlx)
+                    ->find();
             } else {
-                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)->find();
+                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)
+                    ->where('ywlx', $ywlx)
+                    ->find();
             }
             if (empty($salesorder)) {
                 return returnFail('数据不存在');
-            }
-            if ($salesorder->ywlx != 1 && $isWeb) {
-                return returnFail('此销售单禁止直接审核');
             }
             if ($salesorder->status == 3) {
                 return returnFail('此单已审核');
@@ -217,23 +232,28 @@ class Salesorder extends Base
      * 反审核
      * @param Request $request
      * @param int $id
+     * @param int $ywlx
      * @param boolean $isWeb
      * @return Json
      * @throws DbException
      */
-    public function unAudit(Request $request, $id = 0, $isWeb = true)
+    public function unAudit(Request $request, $id = 0, $ywlx = 1, $isWeb = true)
     {
         if ($request->isPut()) {
+            if ($ywlx != 1 && $isWeb) {
+                return returnFail('此销售单禁止直接反审核');
+            }
             if ($isWeb) {
-                $salesorder = \app\admin\model\Salesorder::get($id);
+                $salesorder = \app\admin\model\Salesorder::where('id', $id)
+                    ->where('ywlx', $ywlx)
+                    ->find();
             } else {
-                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)->find();
+                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)
+                    ->where('ywlx', $ywlx)
+                    ->find();
             }
             if (empty($salesorder)) {
                 return returnFail('数据不存在或已作废');
-            }
-            if ($salesorder->ywlx != 1 && $isWeb) {
-                return returnFail('此销售单禁止直接反审核');
             }
             if ($salesorder->status == 1) {
                 return returnFail('此单未审核');
@@ -254,23 +274,28 @@ class Salesorder extends Base
      * 作废
      * @param Request $request
      * @param int $id
+     * @param int $ywlx
      * @param boolean $isWeb
      * @return Json
      * @throws DbException
      */
-    public function cancel(Request $request, $id = 0, $isWeb = true)
+    public function cancel(Request $request, $id = 0, $ywlx = 1, $isWeb = true)
     {
         if ($request->isPost()) {
+            if ($ywlx != 1 && $isWeb) {
+                return returnFail('此销售单禁止直接作废');
+            }
             if ($isWeb) {
-                $salesorder = \app\admin\model\Salesorder::get($id);
+                $salesorder = \app\admin\model\Salesorder::where('id', $id)
+                    ->where('ywlx', $ywlx)
+                    ->find();
             } else {
-                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)->find();
+                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)
+                    ->where('ywlx', $ywlx)
+                    ->find();
             }
             if (empty($salesorder)) {
                 return returnFail('数据不存在');
-            }
-            if ($salesorder->ywlx != 1 && $isWeb) {
-                return returnFail('此销售单禁止直接作废');
             }
             if ($salesorder->status == 3) {
                 return returnFail('此单已审核，禁止作废');
