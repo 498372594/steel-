@@ -229,6 +229,8 @@ class Zhifa extends Base
                         'chandi' => $v['chandi'] ?? '',
                         'jsfs_id' => $v['jsfs_id'],
                         'length' => $v['length'] ?? '',
+                        'houdu' => $v['houdu'] ?? '',
+                        'width' => $v['width'] ?? '',
                         'lingzhi' => $v['out_lingzhi'] ?? '',
                         'num' => $v['out_jianshu'] ?? '',
                         'jzs' => $v['jzs'] ?? '',
@@ -239,6 +241,9 @@ class Zhifa extends Base
                         'tax_rate' => $v['out_tax_rate'] ?? '',
                         'tax' => $v['out_tax'] ?? '',
                         'price_and_tax' => $v['out_price_and_tax'] ?? '',
+                        'remark' => $v['remark'] ?? '',
+                        'car_no' => $v['car_no'] ?? '',
+                        'batch_no' => $v['batch_no'] ?? '',
                     ];
                 }
                 $salesOrder['other'] = $data['other'] ?? [];
