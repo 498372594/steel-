@@ -28,7 +28,7 @@ class Salesorder extends Base
     public function jsfsData()
     {
         return $this->belongsTo('Jiesuanfangshi', 'jsfs', 'id')->cache(true, 60)
-            ->field('id,jiesuanfangshi')->bind(['jsfs_name' => 'jiesuanfangshi']);
+            ->field('id,jiesuanfangshi')->bind(['jisuan_name' => 'jiesuanfangshi']);
     }
 
     public function custom()

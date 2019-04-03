@@ -1,6 +1,7 @@
 <?php
 
 namespace app\admin\controller;
+
 use think\Controller;
 use think\Db;
 use think\Exception;
@@ -8,33 +9,34 @@ use think\Session;
 
 class Initinput extends Right
 {
-    public function instorageinit(){
-        if(request()->isPost()){
+    public function instorageinit()
+    {
+        if (request()->isPost()) {
             $ids = request()->param("id");
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
-            $data["rkdh"]="RKD".date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            $data["status"]=1;
+            $data["rkdh"] = "RKD" . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data["status"] = 1;
             $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data["clerk"]=request()->post("clerk");
-            $data["department"]=request()->post("department");
+            $data["clerk"] = request()->post("clerk");
+            $data["department"] = request()->post("department");
             $data['add_name'] = Session::get("uinfo", "admin")['name'];
             $data['add_id'] = Session::get("uid", "admin");
-            $data['service_time'] = date("Y-m-d H:s:i",time());
+            $data['service_time'] = date("Y-m-d H:s:i", time());
             $data['remark'] = request()->post("remark");
             $data['remark'] = request()->post("remark");
 //            $KC="KC".time();
-            $re=model("instoragelist")->save($data);
-            $purchasedetails=request()->post("purchasedetails");
-            $instorage_id=model("instoragelist")->id;
-            foreach ($purchasedetails as $key=>$value){
-                $purchasedetails["$key"]["instorage_id"]=$instorage_id;
+            $re = model("instoragelist")->save($data);
+            $purchasedetails = request()->post("purchasedetails");
+            $instorage_id = model("instoragelist")->id;
+            foreach ($purchasedetails as $key => $value) {
+                $purchasedetails["$key"]["instorage_id"] = $instorage_id;
 
                 $count = \app\admin\model\Purchasedetails::whereTime('create_time', 'today')->count();
-                $purchasedetails["$key"]["zyh"]="ZYH".date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $purchasedetails["$key"]["zyh"] = "ZYH" . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
-            $res =model("purchasedetails")->savaAll($purchasedetails);
+            $res = model("purchasedetails")->savaAll($purchasedetails);
 //            $res =model("purchasedetails")->where("id","in","ids")->update(array("is_finished"=>2,"instorage_id"=>$instorage_id));
-            return returnRes($res,'失败');
+            return returnRes($res, '失败');
         }
     }
 //    /**批量操作入库
@@ -56,7 +58,13 @@ class Initinput extends Right
 //            return returnRes($res,'修改失败');
 //        }
 //    }
-    public function getinitsearch($params,$list){
+    /**条件搜索
+     * @param $params
+     * @param $list
+     * @return mixed
+     */
+    public function getinitsearch($params, $list)
+    {
         //系统单号
         if (!empty($params['system_number'])) {
             $list->where('system_number', $params['system_number']);
@@ -93,16 +101,116 @@ class Initinput extends Right
         }
         //部门
         if (!empty($params['group_id'])) {
-            $list->where('group_id',$params['group_id']);
+            $list->where('group_id', $params['group_id']);
+        }
+        //备注
+        if (!empty($params['beizhu'])) {
+            $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
         }
         return $list;
     }
-    public function initbank(){
-        $params=request()->param();
-        $list= $list = \app\admin\model\InitBank::where('companyid', Session::get('uinfo.companyid', 'admin'));
-        $list=$this->getinitsearch($params,$list);
+
+    /**银行账户余额初始录入列表
+     * @return \think\response\Json
+     */
+    public function initbank()
+    {
+        $params = request()->param();
+        $list = $list = \app\admin\model\InitBank::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list = $this->getinitsearch($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
 
+    /**银行账户余额初始录入明细列表
+     * @param int $id
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function initbankdetail($id = 0)
+    {
+        $data = \app\admin\model\InitBank::with(['details'])
+            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('id', $id)
+            ->find();
+        if (empty($data)) {
+            return returnFail('数据不存在');
+        } else {
+            return returnRes(true, '', $data);
+        }
+    }
+
+    /**银行账户余额初始录入添加修改
+     * @param array $data
+     * @param bool $return
+     * @return string|\think\response\Json
+     * @throws \Exception
+     */
+
+    public function initbankadd($data = [], $return = false)
+    {
+        if (request()->isPost()) {
+            $companyId = Session::get('uinfo.companyid', 'admin');
+            $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')->count();
+            $data = request()->post();
+            $data["status"] = 0;
+            $data['create_operator_name'] = Session::get("uinfo.name", "admin");
+            $data['create_operator_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $companyId;
+            $data['system_number'] = 'XJYHYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            if (!$return) {
+                Db::startTrans();
+            }
+            try {
+                model("init_bank")->allowField(true)->data($data)->save();
+                $id = model("init_bank")->getLastInsID();
+                foreach ($data["detail"] as $c => $v) {
+                    $data['details'][$c]['companyid'] = $companyId;
+                    $data['details'][$c]['bank_id'] = $id;
+                }
+               model('InitBankMx')->saveAll($data['details']);
+                if (!$return) {
+                    Db::commit();
+                    return returnRes(true, '', ['id' => $id]);
+                } else {
+                    return true;
+                }
+            } catch (Exception $e) {
+                if ($return) {
+                    return $e->getMessage();
+                } else {
+                    Db::rollback();
+                    return returnFail($e->getMessage());
+                }
+            }
+        }
+        if ($return) {
+            return '请求方式错误';
+        } else {
+            return returnFail('请求方式错误');
+        }
+    }
+
+    /**
+     *应收账款余额初始录入
+     */
+    public function initysk(){
+        $params = request()->param();
+        $list = $list = \app\admin\model\InitYsfk::where(array("companyid"=>Session::get('uinfo.companyid', 'admin'),"type"=>0));
+        $list = $this->getinitsearch($params, $list);
+        $list = $list->paginate(10);
+        return returnRes(true, '', $list);
+    }
+    /**
+     *应付账款余额初始录入
+     */
+    public function inityfk(){
+        $params = request()->param();
+        $list = $list = \app\admin\model\InitYsfk::where(array("companyid"=>Session::get('uinfo.companyid', 'admin'),"type"=>1));
+        $list = $this->getinitsearch($params, $list);
+        $list = $list->paginate(10);
+        return returnRes(true, '', $list);
+    }
 }

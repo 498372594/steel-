@@ -19,23 +19,23 @@ class Purchase extends Base
      * @throws \think\exception\DbException
      * @throws \Exception
      */
-    public function purchaseadd($ywlx = 1, $data = [], $return = false)
+    public function purchaseadd($moshi_type = 6, $data = [], $return = false)
     {
         if (request()->isPost()) {
-            $count = \app\admin\model\Purchaselist::whereTime('create_time', 'today')->count();
+            $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')->count();
             $companyId = Session::get("uinfo.companyid", "admin");
 
             if (empty($data)) {
                 $data = request()->post();
             }
-            $data['add_name'] = Session::get("uinfo.name", "admin");
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['create_operator'] = Session::get("uinfo.name", "admin");
+            $data['create_operate_id'] = Session::get("uid", "admin");
             $data['companyid'] = $companyId;
-            $data['system_no'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            $data['ywlx'] = $ywlx;
+            $data['system_number'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data['moshi_type'] = $moshi_type;
 
-            model("purchaselist")->allowField(true)->data($data)->save();
-            $id = model("purchaselist")->id;
+            model("CgPurchase")->allowField(true)->data($data)->save();
+            $id = model("CgPurchase")->getLastInsID();
 
             foreach ($data['details'] as $c => $v) {
                 $data['details'][$c]['companyid'] = $companyId;
@@ -44,17 +44,18 @@ class Purchase extends Base
                 $data['details'][$c]['pjlx'] = $data['pjlx'];
                 $data['details'][$c]['service_time'] = $data['service_time'];
                 //未入库
-                if ($data["rkfs"] == 1) {
+                if ($data["ruku_fangshi"] == 1) {
                     $data['details'][$c]['is_finished'] = 1;
+                    $data['type'] = 2;
                 }
                 //自动入库
-                if ($data["rkfs"] == 2) {
-                    $data['details'][$c]['is_finished'] = 2;
+                if ($data["ruku_fangshi"] == 2) {
+                    $data['type'] = 1;
                 }
             }
             //自动入库
             if ($data["rkfs"] == 2) {
-                $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
+                $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')->count();
                 $dat['add_name'] = Session::get("uinfo.name", "admin");
                 $dat['add_id'] = Session::get("uid", "admin");
                 $dat['companyid'] = $companyId;
@@ -83,6 +84,8 @@ class Purchase extends Base
                     $data['other'][$c]['purchase_id'] = $id;
                 }
                 model('purchase_fee')->allowField(true)->saveAll($data['other']);
+                model('CapitalFy')->allowField(true)->saveAll($data['other']);
+
             }
             if ($return) {
                 return true;
@@ -122,39 +125,43 @@ class Purchase extends Base
     public function getpurchaselist($pageLimit = 10)
     {
         $params = request()->param();
-        $list = \app\admin\model\Purchaselist::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\CgPurchase::with([
+            'custom',
+            'pjlxData',
+            'jsfsData',
+        ])->where('companyid', Session::get("uinfo", "admin")['companyid']);
 
         if (!empty($params['ywsjStart'])) {
-            $list->where('service_time', '>=', $params['ywsjStart']);
+            $list->where('yw_time', '>=', $params['ywsjStart']);
         }
         if (!empty($params['ywsjEnd'])) {
-            $list->where('service_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
         if (!empty($params['status'])) {
             $list->where('status', $params['status']);
         }
-        if (!empty($params['rkfs'])) {
-            $list->where('rkfs', $params['rkfs']);
+        if (!empty($params['ruku_fangshi'])) {
+            $list->where('ruku_fangshi', $params['ruku_fangshi']);
         }
-        if (!empty($params['supplier_id'])) {
-            $list->where('supplier_id', $params['supplier_id']);
+        if (!empty($params['customer_id'])) {
+            $list->where('customer_id', $params['customer_id']);
         }
-        if (!empty($params['pjlx'])) {
-            $list->where('pjlx', $params['pjlx']);
+        if (!empty($params['piaoju_id'])) {
+            $list->where('piaoju_id', $params['piaoju_id']);
         }
-        if (!empty($params['system_no'])) {
-            $list->where('system_no', 'like', '%' . $params['system_no'] . '%');
+        if (!empty($params['system_number'])) {
+            $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
         }
-        if (!empty($params['ywlx'])) {
-            $list->where('ywlx', $params['ywlx']);
+        if (!empty($params['yw_type'])) {
+            $list->where('yw_type', $params['yw_type']);
         }
-        if (!empty($params['shdw_id'])) {
-            $list->where('shdw_id', $params['shdw_id']);
+        if (!empty($params['shou_huo_dan_wei'])) {
+            $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);
         }
-        if (!empty($params['ysdw_id'])) {
-            $list->where('ysdw_id', $params['ysdw_id']);
+        if (!empty($params['shou_huo_dan_wei'])) {
+            $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);
         }
-        if (!empty($params['remark'])) {
+            if (!empty($params['beizhu'])) {
             $list->where('remark', $params['remark']);
         }
         $list = $list->paginate($pageLimit);
@@ -204,18 +211,29 @@ class Purchase extends Base
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    public function getpurchasedetail()
+    public function getpurchasedetail($id=0)
     {
-        $id = request()->param("id");
-        $data["list"] = model("purchaselist")->where(array("id" => $id))->find();
-        $data["detail"] = model("purchasedetails")->where(array("purchase_id" => $id))->select();
-        return returnRes($data, "没有相关数据", $data);
+        $data = \app\admin\model\CgPurchase::with([
+            'custom',
+            'pjlxData',
+            'jsfsData',
+            'details' => ['specification', 'jsfs', 'storage','pinmingData','caizhiData','chandiData'],
+            'other',
+        ])
+            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('id', $id)
+            ->find();
+        if (empty($data)) {
+            return returnFail('数据不存在');
+        } else {
+            return returnRes(true, '', $data);
+        }
     }
 
     /**
      * 根据收支方向获取收支分类
      * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\except ion\DataNotFoundException
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
@@ -275,7 +293,31 @@ class Purchase extends Base
      */
     public function getsupplier()
     {
-        $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], "issupplier" => 1))->field("custom,id")->select();
+        $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], "issupplier" => 1))->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+    /**
+     * 获取客户
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getcustom()
+    {
+        $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], "iscustom" => 1))->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+    /**
+     * 获取往来单位
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getallcustom()
+    {
+        $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid']))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 

@@ -6,7 +6,7 @@ use app\admin\library\traits\Backend;
 use think\Db;
 use think\Exception;
 use think\Session;
-use app\admin\library\traits\Tree;
+use app\admin\library\tree\Tree;
 
 class Steelmanage extends Right
 {
@@ -109,7 +109,10 @@ class Steelmanage extends Right
             }
         } else {
             $id = request()->param("id");
-            $data['info'] = model("productname")->where("id", $id)->find();
+            if($id){
+                $data['info'] = model("productname")->where("id", $id)->find();
+            }
+
             $data["unit"] = model("unit")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,unit")->select();
             $list = db("classname")->field("pid,id,classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
             $list = new Tree($list);

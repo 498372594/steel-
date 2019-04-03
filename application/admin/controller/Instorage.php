@@ -23,7 +23,7 @@ class Instorage extends Right
         if (!empty($params['ywsjEnd'])) {
             $list->where('service_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
-        if (!empty($params['status'])) {
+        if (!empty($instorageorderparams['status'])) {
             $list->where('status', $params['status']);
         }
         if (!empty($params['system_no'])) {
@@ -42,7 +42,7 @@ class Instorage extends Right
      */
     public function instorageorder(){
         $instorage_id=request()->param("id");
-        $list = model("InstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
+        $list = model("ViewInstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -103,21 +103,34 @@ class Instorage extends Right
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
             //生成入库单列表
             $data["status"]=1;
-            $data["department"]=request()->param("department");
-            $data["clerk"]=request()->param("clerk");
-            $data["pjlx"]=request()->param("pjlx");
+            if(request()->param("id")){
+                $data["id"]=request()->post("id");
+            }
+            $data["department"]=request()->post("department");
+            $data["clerk"]=request()->post("clerk");
             $data["service_time"]=date("Y-m-d H:s:i",time());
             $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
             $data["clerk"]=request()->post("clerk");
+            $data["type"]=1;
             $data["department"]=request()->post("department");
             $data['add_name'] = Session::get("uinfo", "admin")['name'];
             $data['add_id'] = Session::get("uid", "admin");
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
-            $data["rukdh"]='RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data["system_no"]='RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+//            $data["rukdh"]='RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             model("instoragelist")->allowField(true)->save($data);
-            $instorage_id = model("instoragelist")->id;
+            if($data["id"]){
+                $instorage_id =$data["id"];
+            }else{
+                $instorage_id = model("instoragelist")->getLastInsID();
+            }
+
+
             foreach ($data['details'] as $c => $v) {
                 $count = \app\admin\model\InstorageDetails::whereTime('create_time', 'today')->count();
+                if(isset($v["instorage_id"])){
+                    $instorage_id=$v["instorage_id"];
+                }
                 $data['details'][$c]['in_out'] = 1;//入库，2出库
                 $data['details'][$c]['type'] = 1;//入库类型，采购入库
                 $data['details'][$c]['zyh'] = 'KC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);;//资源号
@@ -139,7 +152,6 @@ class Instorage extends Right
             return returnRes($res,'修改失败');
         }
     }
-
     /**
      *预留锁货库存列表
      */
