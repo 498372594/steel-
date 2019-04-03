@@ -1,15 +1,13 @@
 <?php
 
 namespace app\admin\controller;
-
-use app\admin\library\traits\Backend;
+use think\Controller;
 use think\Db;
 use think\Exception;
 use think\Session;
 
 class Initinput extends Right
 {
-    use Backend;
     public function instorageinit(){
         if(request()->isPost()){
             $ids = request()->param("id");
@@ -58,5 +56,53 @@ class Initinput extends Right
 //            return returnRes($res,'修改失败');
 //        }
 //    }
+    public function getinitsearch($params,$list){
+        //系统单号
+        if (!empty($params['system_number'])) {
+            $list->where('system_number', $params['system_number']);
+        }
+        //业务时间
+        if (!empty($params['ywsjStart'])) {
+            $list->where('yw_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        //制单时间
+        if (!empty($params['create_time_start'])) {
+            $list->where('create_time', '>=', $params['create_time_start']);
+        }
+        if (!empty($params['create_time_end'])) {
+            $list->where('create_time', '<=', date('Y-m-d', strtotime($params['create_time_end'] . ' +1 day')));
+        }
+        //制单人
+        if (!empty($params['create_operator_id'])) {
+            $list->where('create_operator_id', $params['create_operator_id']);
+        }
+        //修改人
+        if (!empty($params['update_operator_id'])) {
+            $list->where('update_operator_id', $params['update_operator_id']);
+        }
+        //修改人
+        if (!empty($params['update_operator_id'])) {
+            $list->where('update_operator_id', $params['update_operator_id']);
+        }
+        //状态
+        if (!empty($params['status'])) {
+            $list->where('status', $params['status']);
+        }
+        //部门
+        if (!empty($params['group_id'])) {
+            $list->where('group_id',$params['group_id']);
+        }
+        return $list;
+    }
+    public function initbank(){
+        $params=request()->param();
+        $list= $list = \app\admin\model\InitBank::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list=$this->getinitsearch($params,$list);
+        $list = $list->paginate(10);
+        return returnRes(true, '', $list);
+    }
 
 }
