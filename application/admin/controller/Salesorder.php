@@ -151,19 +151,62 @@ class Salesorder extends Base
 
                 $num = 1;
                 $otherValidate = new SalesorderOther();
-                $nowDate = date('Y-m-d H:i:s');
+//                $nowDate = date('Y-m-d H:i:s');
                 if (!empty($data['other'])) {
                     //处理其他费用
                     foreach ($data['other'] as $c => $v) {
-                        $data['other'][$c]['order_id'] = $id;
-                        $data['other'][$c]['date'] = $nowDate;
+                        $data['other'][$c]['group_id'] = $data['department'] ?? '';
+                        $data['other'][$c]['sale_operator_id'] = $data['employer'] ?? '';
+
                         if (!$otherValidate->check($data['other'][$c])) {
                             throw new Exception('请检查第' . $num . '行' . $otherValidate->getError());
                         }
                         $num++;
                     }
-                    Db::name('SalesorderOther')->insertAll($data['other']);
+                    $res = (new Feiyong())->addAll($data['other'], 1, $id, $data['ywsj'], false);
+                    if ($res !== true) {
+                        throw new Exception($res);
+                    }
                 }
+
+                if ($data['ckfs'] == 2) {
+                    //手动出库，添加出库通知单
+                    $notify = [];
+                    foreach ($data['details'] as $c => $v) {
+                        $notify[] = [
+                            'companyid' => $companyId,
+                            'chuku_type' => 4,
+                            'data_id' => $id,
+                            'guige_id' => $v['wuzi_id'],
+                            'caizhi' => $v['caizhi'] ?? '',
+                            'chandi' => $v['chandi'] ?? '',
+                            'jijiafangshi_id' => $v['jsfs_id'],
+                            'houdu' => $v['houdu'] ?? '',
+                            'kuandu' => $v['width'] ?? '',
+                            'changdu' => $v['length'] ?? '',
+                            'lingzhi' => $v['lingzhi'] ?? '',
+                            'jianshu' => $v['num'] ?? '',
+                            'zhijian' => $v['jzs'] ?? '',
+                            'counts' => $v['count'] ?? '',
+                            'zhongliang' => $v['weight'] ?? '',
+                            'price' => $v['price'] ?? '',
+                            'sumprice' => $v['total_fee'] ?? '',
+                            'shuie' => $v['tax'] ?? '',
+                            'shui_price' => $v['tax_rate'] ?? '',
+                            'sum_shui_price' => $v['price_and_tax'] ?? '',
+                            'remark' => $v['remark'] ?? '',
+                            'car_no' => $v['car_no'] ?? '',
+                            'pihao' => $v['batch_no'] ?? '',
+                            'cache_ywtime' => $data['ywsj'],
+                            'cache_data_pnumber' => $data['system_no'],
+                            'cache_customer_id' => $data['custom_id'],
+                            'store_id' => $v['storage_id'],
+                            'cache_create_operator' => $data['add_id'],
+                        ];
+                    }
+                    (new Chuku())->addNotify($notify);
+                }
+
                 if (!$return) {
                     Db::commit();
                     return returnRes(true, '', ['id' => $id]);

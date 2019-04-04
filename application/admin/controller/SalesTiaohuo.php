@@ -221,6 +221,8 @@ class SalesTiaohuo extends Base
                         'mizhong' => $v['mizhong'] ?? '',
                         'jsfs_id' => $v['xs_jsfs'],
                         'length' => $v['length'] ?? '',
+                        'houdu' => $v['houdu'] ?? '',
+                        'width' => $v['width'] ?? '',
                         'num' => $v['jianshu'] ?? '',
                         'count' => $v['number'] ?? '',
                         'jzs' => $v['jzs'] ?? '',
@@ -230,6 +232,9 @@ class SalesTiaohuo extends Base
                         'tax_rate' => $v['xs_tax_rate'] ?? '',
                         'tax' => $v['xs_tax'] ?? '',
                         'price_and_tax' => $v['xs_price_and_tax'] ?? '',
+                        'remark' => $v['remark'] ?? '',
+                        'car_no' => $v['car_no'] ?? '',
+                        'batch_no' => $v['batch_no'] ?? '',
                     ];
                 }
                 $salesOrder['other'] = $data['other'] ?? [];

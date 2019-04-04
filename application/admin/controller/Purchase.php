@@ -3,6 +3,7 @@
 namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
+use app\admin\validate\CgPurchaseMx;
 use think\Session;
 
 class Purchase extends Base
@@ -19,14 +20,21 @@ class Purchase extends Base
      * @throws \think\exception\DbException
      * @throws \Exception
      */
-    public function purchaseadd($moshi_type = 6, $data = [], $return = false)
+    public function ceshi(){
+//        $data["id"]=21;
+        $data["texturename"]="材质（不要删211啊啊啊）";
+       $re= model("texture")->allowField(true)->save($data);
+       dump( model("texture")->getLastInsID());
+    }
+    public function add(Request $request, $moshi_type = 6, $data = [], $return = false)
     {
-        if (request()->isPost()) {
+        if ($request->isPost()) {
             $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')->count();
-            $companyId = Session::get("uinfo.companyid", "admin");
+            $companyId = Session::get('uinfo.companyid', 'admin');
 
+            //数据处理
             if (empty($data)) {
-                $data = request()->post();
+                $data = $request->post();
             }
             $data['create_operator'] = Session::get("uinfo.name", "admin");
             $data['create_operate_id'] = Session::get("uid", "admin");
@@ -34,24 +42,162 @@ class Purchase extends Base
             $data['system_number'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data['moshi_type'] = $moshi_type;
 
-            model("CgPurchase")->allowField(true)->data($data)->save();
-            $id = model("CgPurchase")->getLastInsID();
+           // 数据验证
+            $validate = new \app\admin\validate\CgPurchase();
+            if (!$validate->check($data)) {
+                if ($return) {
+                    return $validate->getError();
+                } else {
+                    return returnFail($validate->getError());
+                }
+            }
+
+            if (!$return) {
+                Db::startTrans();
+            }
+            try {
+                $model = new \app\admin\model\CgPurchase();
+                $model->allowField(true)->data($data)->save();
+
+                //处理明细
+                $id = $model->getLastInsID();
+                $num = 1;
+                $detailsValidate = new \app\admin\validate\CgPurchaseMx();
+                foreach ($data['details'] as $c => $v) {
+                    $data['details'][$c]['companyid'] = $companyId;
+                    $data['details'][$c]['purchase_id'] = $id;
+                    if (!$detailsValidate->check($data['details'][$c])) {
+                        throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                    }
+                    $num++;
+                }
+                Db::name('CgPurchaseMx')->insertAll($data['details']);
+
+                $num = 1;
+                $otherValidate = new SalesorderOther();
+//                $nowDate = date('Y-m-d H:i:s');
+                if (!empty($data['other'])) {
+                    //处理其他费用
+                    foreach ($data['other'] as $c => $v) {
+//                        $data['other'][$c]['group_id'] = $data['group_id'] ?? '';
+//                        $data['other'][$c]['sale_operator_id'] = $data['sale_operator_id'] ?? '';
+
+                        if (!$otherValidate->check($data['other'][$c])) {
+                            throw new Exception('请检查第' . $num . '行' . $otherValidate->getError());
+                        }
+                        $num++;
+                    }
+                    $res = (new Feiyong())->addAll($data['other'], 2, $id, $data['yw_time'], false);
+                    if ($res !== true) {
+                        throw new Exception($res);
+                    }
+                }
+
+                if ($data['ruku_fangshi'] == 2) {
+                    //手动入库，添加入库通知单
+                    $notify = [];
+                    foreach ($data['details'] as $c => $v) {
+                        $notify[] = [
+                            'companyid' => $companyId,
+                            'ruku_type' => 4,
+                            'data_id' => $id,
+                            'guige_id' => $v['guige_id'],
+                            'caizhi' => $v['caizhi'] ?? '',
+                            'chandi' => $v['chandi'] ?? '',
+                            'jijiafangshi_id' => $v['jijiafangshi_id'],
+                            'houdu' => $v['houdu'] ?? '',
+                            'kuandu' => $v['kuandu'] ?? '',
+                            'changdu' => $v['changdu'] ?? '',
+                            'lingzhi' => $v['lingzhi'] ?? '',
+                            'jianshu' => $v['jianshu'] ?? '',
+                            'zhijian' => $v['zhijian'] ?? '',
+                            'counts' => $v['counts'] ?? '',
+                            'zhongliang' => $v['zhongliang'] ?? '',
+                            'price' => $v['price'] ?? '',
+                            'sumprice' => $v['sumprice'] ?? '',
+                            'shuie' => $v['shuie'] ?? '',
+                            'shui_price' => $v['shui_price'] ?? '',
+                            'sum_shui_price' => $v['sum_shui_price'] ?? '',
+                            'beizhu' => $v['remark'] ?? '',
+                            'chehao' => $v['chehao'] ?? '',
+                            'pihao' => $v['pihao'] ?? '',
+                            'huohao' => $v['huohao'] ?? '',
+                            'cache_ywtime' => $data['yw_time'],
+                            'cache_data_pnumber' => $data['system_number'],
+                            'cache_customer_id' => $data['custom_id'],
+                            'store_id' => $v['store_id'],
+                            'cache_create_operator' => $data['add_id'],
+                            'mizhong' => $v['mizhong'] ?? '',
+                            'jianzhong' => $v['jianzhong'] ?? '',
+                            'lisuan_zhongliang' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000),
+                            'guobang_zhongliang' => $v['zhongliang'] ?? '',
+                        ];
+                    }
+                    model("KcRkTz")->save($notify);
+                }
+                //自动入库
+                if ($data['ruku_fangshi'] == 1) {
+                    $data['data_id'] = $id;
+                    //生成入库单
+                    model("CkRk")->allowField(true)->data($data)->save();
+                    $rkid=model("CkRk")->getLastInsID();
+                    //入库明细
+
+                }
+
+                if (!$return) {
+                    Db::commit();
+                    return returnRes(true, '', ['id' => $id]);
+                } else {
+                    return true;
+                }
+            } catch (Exception $e) {
+                if ($return) {
+                    return $e->getMessage();
+                } else {
+                    Db::rollback();
+                    return returnFail($e->getMessage());
+                }
+            }
+        }
+        if ($return) {
+            return '请求方式错误';
+        } else {
+            return returnFail('请求方式错误');
+        }
+    }
+    public function purchaseadd($moshi_type = 6, $data = [], $return = false)
+    {
+        if (request()->isPost()) {
+            $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')->count();
+            $companyId = Session::get("uinfo.companyid", "admin");
+            $data = request()->post();
+            $data['create_operator'] = Session::get("uinfo.name", "admin");
+            $data['create_operate_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $companyId;
+            $data['system_number'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data['moshi_type'] = $moshi_type;
+            if(empty(request()->post("id"))){
+                model("CgPurchase")->allowField(true)->data($data)->save();
+                $purchase_id = model("CgPurchase")->getLastInsID();
+            }else{
+                $re=model("CgPurchase")->allowField(true)->update($data);
+                $purchase_id=$re->id;
+            }
+
+            if (!$return) {
+                Db::startTrans();
+            }
 
             foreach ($data['details'] as $c => $v) {
                 $data['details'][$c]['companyid'] = $companyId;
-                $data['details'][$c]['purchase_id'] = $id;
-                $data['details'][$c]['supplier_id'] = $data['supplier_id'];
-                $data['details'][$c]['pjlx'] = $data['pjlx'];
-                $data['details'][$c]['service_time'] = $data['service_time'];
-                //未入库
-                if ($data["ruku_fangshi"] == 1) {
-                    $data['details'][$c]['is_finished'] = 1;
-                    $data['type'] = 2;
-                }
-                //自动入库
-                if ($data["ruku_fangshi"] == 2) {
-                    $data['type'] = 1;
-                }
+                $data['details'][$c]['purchase_id'] = $purchase_id;
+            }
+            //采购单明细
+            model('CgPurchaseMx')->allowField(true)->saveAll($data['details']);
+            //手动入库添加入库通知
+            if($data["ruku_fangshi"]==1){
+
             }
             //自动入库
             if ($data["rkfs"] == 2) {

@@ -1,12 +1,16 @@
 <?php
 
+
 namespace app\admin\model;
 use traits\model\SoftDelete;
 class CapitalFy extends Base
 {
     use SoftDelete;
-    protected $deleteTime = 'delete_time';
-    protected $autoWriteTimestamp = 'datetime';
+//    use DeletePlugin;
+
+    protected $autoWriteTimestamp = true;
+//    protected $deleteTime = 'delete_time';
+//    protected $autoWriteTimestamp = 'datetime';
     // 验证规则
     public $rules = [
 
@@ -27,3 +31,4 @@ class CapitalFy extends Base
 
     ];
 }
+
