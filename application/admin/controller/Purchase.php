@@ -126,7 +126,7 @@ class Purchase extends Base
                             'cache_data_pnumber' => $data['system_number'],
                             'cache_customer_id' => $data['custom_id'],
                             'store_id' => $v['store_id'],
-                            'cache_create_operator' => $data['add_id'],
+                            'cache_create_operator' => $data['create_operate_id'],
                             'mizhong' => $v['mizhong'] ?? '',
                             'jianzhong' => $v['jianzhong'] ?? '',
                             'lisuan_zhongliang' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000),
@@ -141,7 +141,74 @@ class Purchase extends Base
                     //生成入库单
                     model("CkRk")->allowField(true)->data($data)->save();
                     $rkid=model("CkRk")->getLastInsID();
+                    //处理数据
+                    foreach ($data['details'] as $c => $v) {
+                        $data['details'][$c]['companyid'] = $companyId;
+                        $data['details'][$c]['kc_rk_id'] = $rkid;
+                        $data['details'][$c]['data_id'] = $id;
+                        $data['details'][$c]['cache_ywtime'] = $data['yw_time'];
+                        $data['details'][$c]['cache_data_pnumber'] = $data['system_number'];
+                        $data['details'][$c]['cache_customer_id'] = $data['custom_id'];
+                        $data['details'][$c]['cache_create_operator'] = $data['create_operate_id'];
+                        $data['details'][$c]['ruku_lingzhi'] = $v['lingzhi'];
+                        $data['details'][$c]['ruku_jianshu'] = $v['jianshu'];
+                        $data['details'][$c]['ruku_shuliang'] = $v['shuliang'];
+                        $data['details'][$c]['ruku_zhongliang'] = $v['zhongliang'];
+                        if (!$detailsValidate->check($data['details'][$c])) {
+                            throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                        }
+                        $num++;
+                    }
                     //入库明细
+                    Db::name('KcRkMx')->insertAll($data['details']);
+                    //入库库存
+                    $spot = [];
+                    foreach ($data['details'] as $c => $v) {
+                        $notify[] = [
+                            'companyid' => $companyId,
+                            'ruku_type' => 4,
+                            'data_id' => $id,
+                            'guige_id' => $v['guige_id'],
+                            'caizhi' => $v['caizhi'] ?? '',
+                            'chandi' => $v['chandi'] ?? '',
+                            'jijiafangshi_id' => $v['jijiafangshi_id'],
+                            'houdu' => $v['houdu'] ?? '',
+                            'kuandu' => $v['kuandu'] ?? '',
+                            'changdu' => $v['changdu'] ?? '',
+                            'lingzhi' => $v['lingzhi'] ?? '',
+                            'jianshu' => $v['jianshu'] ?? '',
+                            'zhijian' => $v['zhijian'] ?? '',
+                            'counts' => $v['counts'] ?? '',
+                            'zhongliang' => $v['zhongliang'] ?? '',
+                            'price' => $v['price'] ?? '',
+                            'sumprice' => $v['sumprice'] ?? '',
+                            'shuie' => $v['shuie'] ?? '',
+                            'shui_price' => $v['shui_price'] ?? '',
+                            'sum_shui_price' => $v['sum_shui_price'] ?? '',
+                            'beizhu' => $v['remark'] ?? '',
+                            'chehao' => $v['chehao'] ?? '',
+                            'pihao' => $v['pihao'] ?? '',
+                            'huohao' => $v['huohao'] ?? '',
+                            'cache_ywtime' => $data['yw_time'],
+                            'cache_data_pnumber' => $data['system_number'],
+                            'cache_customer_id' => $data['custom_id'],
+                            'store_id' => $v['store_id'],
+                            'cache_create_operator' => $data['create_operate_id'],
+                            'mizhong' => $v['mizhong'] ?? '',
+                            'jianzhong' => $v['jianzhong'] ?? '',
+                            'lisuan_zhongliang' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000),
+                            'guobang_zhongliang' => $v['zhongliang'] ?? '',
+                        ];
+                    }
+
+
+
+
+
+
+
+
+
 
                 }
 

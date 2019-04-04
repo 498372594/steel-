@@ -16,7 +16,7 @@ class Chuku extends Right
         if (empty($data)) {
             return;
         }
-        $now = time();
+        $now = time();  
         foreach ($data as $index => $item) {
             $data[$index]['create_time'] = $now;
             $data[$index]['update_time'] = $now;
