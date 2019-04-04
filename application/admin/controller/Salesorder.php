@@ -8,7 +8,7 @@
 
 namespace app\admin\controller;
 
-use app\admin\validate\{SalesorderDetails, SalesorderOther};
+use app\admin\validate\{FeiyongDetails, SalesorderDetails};
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -152,7 +152,7 @@ class Salesorder extends Base
                 Db::name('SalesorderDetails')->insertAll($data['details']);
 
                 $num = 1;
-                $otherValidate = new SalesorderOther();
+                $otherValidate = new FeiyongDetails();
                 if (!empty($data['other'])) {
                     //处理其他费用
                     foreach ($data['other'] as $c => $v) {

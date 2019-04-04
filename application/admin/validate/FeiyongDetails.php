@@ -1,17 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2019/3/28
- * Time: 9:55
- */
 
 namespace app\admin\validate;
 
-
 use think\Validate;
 
-class SalesorderOther extends Validate
+class FeiyongDetails extends Validate
 {
     protected $rule = [
         'fang_xiang' => 'require',
@@ -30,5 +23,4 @@ class SalesorderOther extends Validate
         'piaoju_id.require' => '票据类型不能为空',
         'danjia.require' => '单价不能为空',
     ];
-
 }

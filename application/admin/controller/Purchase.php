@@ -3,28 +3,33 @@
 namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
-use app\admin\validate\CgPurchaseMx;
-use think\Session;
+use app\admin\model\{CgPurchase, KcRk, KcSpot};
+use app\admin\validate\{CgPurchaseMx, FeiyongDetails};
+use Exception;
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    exception\DbException,
+    Request,
+    response\Json,
+    Session};
 
 class Purchase extends Base
 {
     /**
      * 采购单添加
-     * @param int $ywlx
+     * @param Request $request
+     * @param int $moshi_type
      * @param array $data
      * @param bool $return
-     * @return \think\response\Json|boolean
+     * @return array|bool|string|Json
      * @throws \think\Exception
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     * @throws \Exception
+     * @throws Exception
      */
-
     public function purchaseadd(Request $request, $moshi_type = 6, $data = [], $return = false)
     {
         if ($request->isPost()) {
-            $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')->count();
+            $count = CgPurchase::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
 
             //数据处理
@@ -37,7 +42,7 @@ class Purchase extends Base
             $data['system_number'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data['moshi_type'] = $moshi_type;
 
-           // 数据验证
+            // 数据验证
             $validate = new \app\admin\validate\CgPurchase();
             if (!$validate->check($data)) {
                 if ($return) {
@@ -51,13 +56,13 @@ class Purchase extends Base
                 Db::startTrans();
             }
             try {
-                $model = new \app\admin\model\CgPurchase();
+                $model = new CgPurchase();
                 $model->allowField(true)->data($data)->save();
 
                 //处理明细
                 $id = $model->getLastInsID();
                 $num = 1;
-                $detailsValidate = new \app\admin\validate\CgPurchaseMx();
+                $detailsValidate = new CgPurchaseMx();
                 foreach ($data['details'] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['purchase_id'] = $id;
@@ -69,13 +74,13 @@ class Purchase extends Base
                 Db::name('CgPurchaseMx')->insertAll($data['details']);
 
                 $num = 1;
-                $otherValidate = new SalesorderOther();
+                $otherValidate = new FeiyongDetails();
 //                $nowDate = date('Y-m-d H:i:s');
                 if (!empty($data['other'])) {
                     //处理其他费用
                     foreach ($data['other'] as $c => $v) {
-//                        $data['other'][$c]['group_id'] = $data['group_id'] ?? '';
-//                        $data['other'][$c]['sale_operator_id'] = $data['sale_operator_id'] ?? '';
+                        $data['other'][$c]['group_id'] = $data['group_id'] ?? '';
+                        $data['other'][$c]['sale_operator_id'] = $data['sale_operator_id'] ?? '';
 
                         if (!$otherValidate->check($data['other'][$c])) {
                             throw new Exception('请检查第' . $num . '行' . $otherValidate->getError());
@@ -124,21 +129,20 @@ class Purchase extends Base
                             'cache_create_operator' => $data['create_operate_id'],
                             'mizhong' => $v['mizhong'] ?? '',
                             'jianzhong' => $v['jianzhong'] ?? '',
-                            'lisuan_zhongliang' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000),
+                            'lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
                             'guobang_zhongliang' => $v['zhongliang'] ?? '',
                         ];
                     }
                     model("KcRkTz")->saveAll($notify);
-                }
-                //自动入库
-                if ($data['ruku_fangshi'] == 1) {
+                } elseif ($data['ruku_fangshi'] == 1) {
+                    //自动入库
                     $data['data_id'] = $id;
                     //生成入库单
-                    $count2 = \app\admin\model\KcRk::whereTime('create_time', 'today')->count();
-                    $data["system_number"]="RKD".date('Ymd') . str_pad($count2 + 1, 3, 0, STR_PAD_LEFT);
-                    $data["beizhu"]= $data['system_number'];
-                    model("CkRk")->allowField(true)->data($data)->save();
-                    $rkid=model("CkRk")->getLastInsID();
+                    $count2 = KcRk::whereTime('create_time', 'today')->count();
+                    $data["system_number"] = "RKD" . date('Ymd') . str_pad($count2 + 1, 3, 0, STR_PAD_LEFT);
+                    $data["beizhu"] = $data['system_number'];
+                    model("KcRk")->allowField(true)->data($data)->save();
+                    $rkid = model("KcRk")->getLastInsID();
                     //处理数据
                     foreach ($data['details'] as $c => $v) {
                         $data['details'][$c]['companyid'] = $companyId;
@@ -146,11 +150,11 @@ class Purchase extends Base
                         $data['details'][$c]['data_id'] = $id;
                         $data['details'][$c]['cache_ywtime'] = $data['yw_time'];
                         $data['details'][$c]['cache_data_pnumber'] = $data['system_number'];
-                        $data['details'][$c]['cache_customer_id'] = $data['custom_id'];
+                        $data['details'][$c]['cache_customer_id'] = $data['customer_id'];
                         $data['details'][$c]['cache_create_operator'] = $data['create_operate_id'];
                         $data['details'][$c]['ruku_lingzhi'] = $v['lingzhi'];
                         $data['details'][$c]['ruku_jianshu'] = $v['jianshu'];
-                        $data['details'][$c]['ruku_shuliang'] = $v['shuliang'];
+                        $data['details'][$c]['ruku_shuliang'] = $v['counts'];
                         $data['details'][$c]['ruku_zhongliang'] = $v['zhongliang'];
                         if (!$detailsValidate->check($data['details'][$c])) {
                             throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
@@ -159,7 +163,7 @@ class Purchase extends Base
                     }
                     //入库明细
                     Db::name('KcRkMx')->insertAll($data['details']);
-                    $count1 = \app\admin\model\KcSpot::whereTime('create_time', 'today')->count();
+                    $count1 = KcSpot::whereTime('create_time', 'today')->count();
                     //入库库存
                     $spot = [];
                     foreach ($data['details'] as $c => $v) {
@@ -168,7 +172,7 @@ class Purchase extends Base
                             'ruku_type' => 4,
                             'ruku_fangshi' => $data['ruku_fangshi'],
                             'piaoju_id' => $data['piaoju_id'],
-                            'resource_number'=>"KC". date('Ymd') . str_pad($count1 + 1, 3, 0, STR_PAD_LEFT),
+                            'resource_number' => "KC" . date('Ymd') . str_pad($count1 + 1, 3, 0, STR_PAD_LEFT),
                             'guige_id' => $v['guige_id'],
                             'data_id' => $id,
                             'pinming_id' => $v['pinming_id'],
@@ -199,18 +203,17 @@ class Purchase extends Base
                             'custom_id' => $data['custom_id'],
                             'mizhong' => $v['mizhong'] ?? '',
                             'jianzhong' => $v['jianzhong'] ?? '',
-                            'lisuan_zhongliang' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000),
-                            'guobang_zhizhong' => ($v['zhongliang']/$v["counts"]*$v["zhijian"]) ?? '',
-                            'lisuan_zhizhong' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000/$v["counts"]*$v["zhijian"]),
-                            'guobangjianzhong' => ($v['zhongliang']/$v["counts"]) ?? '',
-                            'lisuan_jianzhong' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000/$v["counts"]),
-                            'old_lisuan_zhongliang' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000),
-                            'old_lisuan_zhongliang' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000),
-                            'old_guobang_zhizhong' => ($v['zhongliang']/$v["counts"]*$v["zhijian"]) ?? '',
-                            'old_lisuan_zhizhong' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000/$v["counts"]*$v["zhijian"]),
-                            'old_guobangjianzhong' => ($v['zhongliang']/$v["counts"]) ?? '',
-                            'old_lisuan_jianzhong' => ($v["counts"]*$v["changdu"]* $v['mizhong']/1000/$v["counts"]),
-                            'status'=>0,
+                            'lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
+                            'guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
+                            'lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
+                            'guobangjianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
+                            'lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
+                            'old_lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
+                            'old_guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
+                            'old_lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
+                            'old_guobangjianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
+                            'old_lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
+                            'status' => 0,
                         ];
                     }
                     model("KcSpot")->saveAll($spot);
@@ -320,10 +323,10 @@ class Purchase extends Base
 
     /**
      * 获取大类列表
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getclassnamelist()
     {
@@ -336,13 +339,13 @@ class Purchase extends Base
     /**
      * 采购单列表
      * @param int $pageLimit
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function getpurchaselist($pageLimit = 10)
     {
         $params = request()->param();
-        $list = \app\admin\model\CgPurchase::with([
+        $list = CgPurchase::with([
             'custom',
             'pjlxData',
             'jsfsData',
@@ -378,7 +381,7 @@ class Purchase extends Base
         if (!empty($params['shou_huo_dan_wei'])) {
             $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);
         }
-            if (!empty($params['beizhu'])) {
+        if (!empty($params['beizhu'])) {
             $list->where('remark', $params['remark']);
         }
         $list = $list->paginate($pageLimit);
@@ -387,10 +390,10 @@ class Purchase extends Base
 
     /**
      * 采购单列表返回数据
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function purchaseaddinfo()
     {
@@ -423,20 +426,21 @@ class Purchase extends Base
     }
 
     /**
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @param int $id
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
      */
-    public function getpurchasedetail($id=0)
+    public function getpurchasedetail($id = 0)
     {
-        $data = \app\admin\model\CgPurchase::with([
+        $data = CgPurchase::with([
             'custom',
             'pjlxData',
             'jsfsData',
-            'details' => ['specification', 'jsfs', 'storage','pinmingData','caizhiData','chandiData'],
+            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData'],
             'other',
-        ]) ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+        ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -448,10 +452,10 @@ class Purchase extends Base
 
     /**
      * 根据收支方向获取收支分类
-     * @return \think\response\Json
-     * @throws \think\db\except ion\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getpaymentclass()
     {
@@ -462,10 +466,10 @@ class Purchase extends Base
 
     /**
      * 根据收支分类获取收支名称
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getpaymenttype()
     {
@@ -476,10 +480,10 @@ class Purchase extends Base
 
     /**
      * 基础列表返回仓库下拉
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\db\exception\DataNotFoundException
+     * @return Json
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws DataNotFoundException
      */
     public function getstorage()
     {
@@ -489,10 +493,10 @@ class Purchase extends Base
 
     /**
      * 基础列表 票据类型
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\db\exception\DataNotFoundException
+     * @return Json
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws DataNotFoundException
      */
     public function getpjlx()
     {
@@ -502,34 +506,36 @@ class Purchase extends Base
 
     /**
      * 获取供应商
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getsupplier()
     {
         $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], "issupplier" => 1))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
+
     /**
      * 获取客户
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getcustom()
     {
         $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], "iscustom" => 1))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
+
     /**
      * 获取往来单位
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getallcustom()
     {
@@ -539,10 +545,10 @@ class Purchase extends Base
 
     /**
      * 获取结算方式
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getjiesuanfangshi()
     {
@@ -552,10 +558,10 @@ class Purchase extends Base
 
     /**
      * 获取材质
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function gettexture()
     {
@@ -565,10 +571,10 @@ class Purchase extends Base
 
     /**
      * 产地
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getoriginarea()
     {
@@ -578,10 +584,10 @@ class Purchase extends Base
 
     /**
      * 品名下拉获取
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function getproductname()
     {

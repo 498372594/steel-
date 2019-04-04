@@ -93,7 +93,7 @@ class Feiyong extends Signin
      *     'tax_rate' => '税率',
      *     'tax' => '税额'
      * ];
-     * @param int $type 单据类型，0-采购单，1-销售单
+     * @param int $type 单据类型，1-销售单,2-采购单
      * @param int $data_id 关联数据id
      * @param string $yw_time 业务时间
      * @param bool $useTrans 是否使用事务
