@@ -17,7 +17,8 @@ class SalesorderDetails extends Base
     public function specification()
     {
         return $this->belongsTo('ViewSpecification', 'wuzi_id', 'id')->cache(true, 60)
-            ->field('id,specification,mizhong_name,productname');
+            ->field('id,specification,mizhong_name,productname')
+            ->bind(['guige' => 'specification', 'mizhong' => 'mizhong_name', 'pinming' => 'productname']);
     }
 
     public function jsfs()

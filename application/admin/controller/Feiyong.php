@@ -111,14 +111,14 @@ class Feiyong extends Signin
         try {
             foreach ($data as $item) {
                 //处理核销数据
-                $item['details'][] = [
+                $item['details'] = [[
                     'fyhx_type' => $type,
                     'data_id' => $data_id,
                     'cache_yw_time' => $yw_time,
                     'hx_money' => $item['money'] ?? 0,
                     'heji_zhongliang' => $item['zhongliang'] ?? 0,
                     'customer_id' => $item['customer_id']
-                ];
+                ]];
                 $item['yw_time'] = $yw_time;
                 $item['hxmoney'] = $item['money'] ?? 0;
                 $item['hxzhongliang'] = $item['zhongliang'] ?? 0;

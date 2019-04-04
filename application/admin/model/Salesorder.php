@@ -22,7 +22,8 @@ class Salesorder extends Base
 
     public function other()
     {
-        return $this->hasMany('SalesorderOther', 'order_id', 'id');
+        return $this->hasMany('CapitalFyhx', 'data_id', 'id')
+            ->where('fyhx_type', 1)->field('id,cap_fy_id,data_id');
     }
 
     public function jsfsData()

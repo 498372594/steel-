@@ -81,7 +81,7 @@ class Salesorder extends Base
             'pjlxData',
             'jsfsData',
             'details' => ['specification', 'jsfs', 'storage'],
-            'other' => ['szmcData', 'pjlxData', 'custom']
+            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]
         ])
             ->where('companyid', Session::get('uinfo.companyid', 'admin'))
             ->where('id', $id)
@@ -105,8 +105,10 @@ class Salesorder extends Base
     public function add(Request $request, $ywlx = 1, $data = [], $return = false)
     {
         if ($request->isPost()) {
-            $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
+            $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
+                ->where('companyid', $companyId)
+                ->count();
 
             //数据处理
             if (empty($data)) {
@@ -151,7 +153,6 @@ class Salesorder extends Base
 
                 $num = 1;
                 $otherValidate = new SalesorderOther();
-//                $nowDate = date('Y-m-d H:i:s');
                 if (!empty($data['other'])) {
                     //处理其他费用
                     foreach ($data['other'] as $c => $v) {
