@@ -7,23 +7,15 @@ class KcRk extends Base
     use SoftDelete;
     protected $deleteTime = 'delete_time';
     protected $autoWriteTimestamp = 'datetime';
-    // 验证规则
-    public $rules = [
 
-    ];
+    public function details()
+    {
+        return $this->hasMany('KcRkMx', 'kc_rk_id', 'id');
+    }
 
-    // 验证错误信息
-    public $msg = [
-
-    ];
-
-    // 场景
-    public $scene = [
-
-    ];
-
-    // 表单-数据表字段映射
-    public $map = [
-
-    ];
+    public function custom()
+    {
+        return $this->belongsTo('Custom', 'customer_id', 'id')->cache(true, 60)
+            ->field('id,custom')->bind(['custom_name' => 'custom']);
+    }
 }
