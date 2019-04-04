@@ -1,34 +1,29 @@
 <?php
 
-
 namespace app\admin\model;
-use traits\model\SoftDelete;
+
+use app\admin\library\traits\DeletePlugin;
+
 class CapitalFy extends Base
 {
-    use SoftDelete;
-//    use DeletePlugin;
-
+    use DeletePlugin;
     protected $autoWriteTimestamp = true;
-//    protected $deleteTime = 'delete_time';
-//    protected $autoWriteTimestamp = 'datetime';
-    // 验证规则
-    public $rules = [
 
-    ];
+    public function szmcData()
+    {
+        return $this->belongsTo('Paymenttype', 'shouzhimingcheng_id', 'id')->cache(true, 60)
+            ->field('id,class,name')->bind(['szfl_name' => 'class', 'szmc_name' => 'name']);
+    }
 
-    // 验证错误信息
-    public $msg = [
-    ];
+    public function pjlxData()
+    {
+        return $this->belongsTo('Pjlx', 'piaoju_id', 'id')->cache(true, 60)
+            ->field('id,pjlx')->bind(['pjlx_name' => 'pjlx']);
+    }
 
-    // 场景
-    public $scene = [
-
-    ];
-
-    // 表单-数据表字段映射
-    public $map = [
-
-    ];
+    public function custom()
+    {
+        return $this->belongsTo('Custom', 'customer_id', 'id')->cache(true, 60)
+            ->field('id,custom')->bind(['dfdw_name' => 'custom']);
+    }
 }
-
-
