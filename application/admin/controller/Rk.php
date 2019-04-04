@@ -40,9 +40,17 @@ class Rk extends Right
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function instorageorder(){
-        $instorage_id=request()->param("id");
-        $list = model("ViewInstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+    public function getrkmx($id=0){
+        $data = \app\admin\model\KcRk::with([
+            'custom',
+            'details' => ['specification', 'jsfs', 'storage','pinmingData','caizhiData','chandiData'],
+        ]) ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('id', $id)
+            ->find();
+        if (empty($data)) {
+            return returnFail('数据不存在');
+        } else {
+            return returnRes(true, '', $data);
+        }
     }
 }
