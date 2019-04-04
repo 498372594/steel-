@@ -29,6 +29,7 @@ class Purchase extends Base
     public function purchaseadd(Request $request, $moshi_type = 6, $data = [], $return = false)
     {
         if ($request->isPost()) {
+//            dump(purchaseadd);die;
             $count = CgPurchase::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
 
@@ -57,6 +58,7 @@ class Purchase extends Base
             }
             try {
                 $model = new CgPurchase();
+                //添加采购单列表
                 $model->allowField(true)->data($data)->save();
 
                 //处理明细
@@ -71,7 +73,8 @@ class Purchase extends Base
                     }
                     $num++;
                 }
-                Db::name('CgPurchaseMx')->insertAll($data['details']);
+                //t添加采购单明细
+               model('CgPurchaseMx')->allowField(true)->saveAll($data['details']);
 
                 $num = 1;
                 $otherValidate = new FeiyongDetails();
@@ -92,7 +95,6 @@ class Purchase extends Base
                         throw new Exception($res);
                     }
                 }
-
                 if ($data['ruku_fangshi'] == 2) {
                     //手动入库，添加入库通知单
                     $notify = [];
@@ -100,15 +102,19 @@ class Purchase extends Base
                         $notify[] = [
                             'companyid' => $companyId,
                             'ruku_type' => 4,
+                            'status'=>0,
                             'data_id' => $id,
                             'guige_id' => $v['guige_id'],
-                            'caizhi' => $v['caizhi'] ?? '',
-                            'chandi' => $v['chandi'] ?? '',
+                            'caizhi_id' => $v['caizhi_id'] ?? '',
+                            'chandi_id' => $v['chandi_id'] ?? '',
+                            'cache_piaoju_id' => $v['piaoju_id'] ?? '',
+                            'pinming_id' => $v['pinming_id'] ?? '',
                             'jijiafangshi_id' => $v['jijiafangshi_id'],
                             'houdu' => $v['houdu'] ?? '',
                             'kuandu' => $v['kuandu'] ?? '',
                             'changdu' => $v['changdu'] ?? '',
                             'lingzhi' => $v['lingzhi'] ?? '',
+                            'fy_sz' => $v['fy_sz'] ?? '',
                             'jianshu' => $v['jianshu'] ?? '',
                             'zhijian' => $v['zhijian'] ?? '',
                             'counts' => $v['counts'] ?? '',
@@ -116,10 +122,10 @@ class Purchase extends Base
                             'price' => $v['price'] ?? '',
                             'sumprice' => $v['sumprice'] ?? '',
                             'shuie' => $v['shuie'] ?? '',
-                            'ruku_lingzhi' => $v['lingzhi'] ?? '',
-                            'ruku_jianshu' => $v['jianshu'] ?? '',
-                            'ruku_zhongliang' => $v['zhongliang'] ?? '',
-                            'ruku_shuliang' => $v['counts'] ?? '',
+//                            'ruku_lingzhi' => $v['lingzhi'] ?? '',
+//                            'ruku_jianshu' => $v['jianshu'] ?? '',
+//                            'ruku_zhongliang' => $v['zhongliang'] ?? '',
+//                            'ruku_shuliang' => $v['counts'] ?? '',
                             'shui_price' => $v['shui_price'] ?? '',
                             'sum_shui_price' => $v['sum_shui_price'] ?? '',
                             'beizhu' => $v['beizhu'] ?? '',
@@ -128,7 +134,7 @@ class Purchase extends Base
                             'huohao' => $v['huohao'] ?? '',
                             'cache_ywtime' => $data['yw_time'],
                             'cache_data_pnumber' => $data['system_number'],
-                            'cache_customer_id' => $data['custom_id'],
+                            'cache_customer_id' => $data['customer_id'],
                             'store_id' => $v['store_id'],
                             'cache_create_operator' => $data['create_operate_id'],
                             'mizhong' => $v['mizhong'] ?? '',
@@ -137,7 +143,8 @@ class Purchase extends Base
                             'guobang_zhongliang' => $v['zhongliang'] ?? '',
                         ];
                     }
-                    model("KcRkTz")->saveAll($notify);
+                    //添加入库通知
+                    model("KcRkTz")->allowField(true)->saveAll($notify);
                 } elseif ($data['ruku_fangshi'] == 1) {
                     //自动入库
                     $data['data_id'] = $id;
@@ -166,7 +173,7 @@ class Purchase extends Base
                         $num++;
                     }
                     //入库明细
-                    Db::name('KcRkMx')->insertAll($data['details']);
+                    model('KcRkMx')->allowField(true)->saveAll($data['details']);
                     $count1 = KcSpot::whereTime('create_time', 'today')->count();
                     //入库库存
                     $spot = [];
@@ -181,8 +188,8 @@ class Purchase extends Base
                             'data_id' => $id,
                             'pinming_id' => $v['pinming_id'],
                             'store_id' => $v['store_id'],
-                            'caizhi' => $v['caizhi'] ?? '',
-                            'chandi' => $v['chandi'] ?? '',
+                            'caizhi_id' => $v['caizhi_id'] ?? '',
+                            'chandi_id' => $v['chandi_id'] ?? '',
                             'jijiafangshi_id' => $v['jijiafangshi_id'],
                             'houdu' => $v['houdu'] ?? '',
                             'kuandu' => $v['kuandu'] ?? '',
@@ -203,24 +210,34 @@ class Purchase extends Base
                             'beizhu' => $v['beizhu'] ?? '',
                             'chehao' => $v['chehao'] ?? '',
                             'pihao' => $v['pihao'] ?? '',
+                            'sumprice' => $v['sumprice'] ?? '',
                             'huohao' => $v['huohao'] ?? '',
-                            'custom_id' => $data['custom_id'],
+                            'customer_id' => $data['customer_id'],
                             'mizhong' => $v['mizhong'] ?? '',
                             'jianzhong' => $v['jianzhong'] ?? '',
                             'lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
                             'guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
+                            'guobang_zhongliang' =>$v["zhongliang"] ?? '',
                             'lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
-                            'guobangjianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
+                            'guobang_jianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
                             'lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
                             'old_lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
                             'old_guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
                             'old_lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
                             'old_guobangjianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
+                            'old_guobangzhongliang' => ($v['zhongliang']) ?? '',
                             'old_lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
                             'status' => 0,
+                            'guobang_price' => $v['guobang_price'] ?? '',
+                            'guobang_shui_price' => $v['guobang_shui_price'] ?? '',
+                            'zhi_price' => $v['zhi_price'] ?? '',
+                            'zhi_shui_price' => $v['zhi_shui_price'] ?? '',
+                            'lisuan_shui_price' => $v['lisuan_shui_price'] ?? '',
+                            'lisuan_price' => $v['lisuan_price'] ?? '',
                         ];
                     }
-                    model("KcSpot")->saveAll($spot);
+
+                    model("KcSpot")->allowField(true)->saveAll($spot);
                 }
 
                 if (!$return) {

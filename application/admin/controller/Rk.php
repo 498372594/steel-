@@ -53,4 +53,7 @@ class Rk extends Right
             return returnRes(true, '', $data);
         }
     }
+    public function getrktz(){
+
+    }
 }
