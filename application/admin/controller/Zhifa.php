@@ -1,14 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2019/3/25
- * Time: 16:36
- */
 
 namespace app\admin\controller;
 
-use app\admin\model\Cgzfd;
 use app\admin\model\SalesMoshi;
 use app\admin\validate\{SalesMoshiDetails};
 use Exception;
@@ -35,34 +28,35 @@ class Zhifa extends Base
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = Cgzfd::with([
+        $list = SalesMoshi::with([
             'custom',
             'gongyingshang',
             'gfpjData',
             'khpjData',
             'gfjsfsData',
             'khjsfsData',
-        ])->where('companyid', Session::get('uinfo.companyid', 'admin'));
+        ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('moshi_type',1);
         if (!empty($params['ywsjStart'])) {
-            $list->where('ywsj', '>=', $params['ywsjStart']);
+            $list->where('yw_time', '>=', $params['ywsjStart']);
         }
         if (!empty($params['ywsjEnd'])) {
-            $list->where('ywsj', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
         if (!empty($params['cgpb'])) {
-            $list->where('gfpj', $params['cgpb']);
+            $list->where('cg_piaoju_id', $params['cgpb']);
         }
         if (!empty($params['status'])) {
             $list->where('status', $params['status']);
         }
         if (!empty($params['system_no'])) {
-            $list->where('system_no', 'like', '%' . $params['system_no'] . '%');
+            $list->where('system_number', 'like', '%' . $params['system_no'] . '%');
         }
         if (!empty($params['custom_id'])) {
-            $list->where('kh_id', $params['custom_id']);
+            $list->where('customer_id', $params['custom_id']);
         }
         if (!empty($params['xspb'])) {
-            $list->where('khpj', $params['xspb']);
+            $list->where('piaoju_id', $params['xspb']);
         }
         if (!empty($params['remark'])) {
             $list->where('remark', 'like', '%' . $params['remark'] . '%');
@@ -85,7 +79,7 @@ class Zhifa extends Base
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
-        $data = Cgzfd::with([
+        $data = SalesMoshi::with([
             'custom',
             'gongyingshang',
             'gfpjData',
@@ -93,8 +87,9 @@ class Zhifa extends Base
             'gfjsfsData',
             'khjsfsData',
             'details' => ['specification', 'jsfs', 'storage'],
-            'other' => ['szmcData', 'pjlxData', 'custom']
+            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]]
         ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('moshi_type', 1)
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -115,13 +110,14 @@ class Zhifa extends Base
         if ($request->isPost()) {
             $companyId = Session::get('uinfo.companyid', 'admin');
             $count = SalesMoshi::whereTime('create_time', 'today')
-                ->where('company', $companyId)
+                ->where('companyid', $companyId)
                 ->where('moshi_type', 1)
                 ->count();
 
             //获取请求数据
             $data = $request->post();
             $data['create_operator_id'] = Session::get("uid", "admin");
+            $data['moshi_type'] = 1;
             $data['companyid'] = $companyId;
             $data['system_number'] = 'CGZFD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
 
@@ -133,7 +129,7 @@ class Zhifa extends Base
 
             Db::startTrans();
             try {
-                $model = new Cgzfd();
+                $model = new SalesMoshi();
                 $model->allowField(true)->data($data)->save();
 
                 //处理明细
@@ -153,21 +149,6 @@ class Zhifa extends Base
                     $num++;
                 }
                 Db::name('SalesMoshiMx')->insertAll($data['details']);
-
-                //处理其他费用
-//                $num = 1;
-//                $otherValidate = new FeiyongDetails();
-//                $nowDate = date('Y-m-d H:i:s');
-//                if (!empty($data['other'])) {
-//                    foreach ($data['other'] as $c => $v) {
-//                        $data['other'][$c]['order_id'] = $id;
-//                        $data['other'][$c]['date'] = $nowDate;
-//                        if (!$otherValidate->check($data['other'][$c])) {
-//                            throw new Exception('请检查第' . $num . '行' . $otherValidate->getError());
-//                        }
-//                        $num++;
-//                    }
-//                }
 
                 //添加采购单
                 $purchase = [
@@ -210,10 +191,10 @@ class Zhifa extends Base
                         'jianzhong' => $v['jianzhong'] ?? '',
                     ];
                 }
-//                $salesRes = (new Purchase())->purchaseadd($request, 2, $purchase, true);
-//                if ($salesRes !== true) {
-//                    throw new Exception($salesRes);
-//                }
+                $salesRes = (new Purchase())->purchaseadd($request, 2, $purchase, true);
+                if ($salesRes !== true) {
+                    throw new Exception($salesRes);
+                }
 
                 //添加销售单
                 $salesOrder = [
@@ -281,7 +262,7 @@ class Zhifa extends Base
     public function audit(Request $request, $id = 0)
     {
         if ($request->isPut()) {
-            $cgzfd = Cgzfd::get($id);
+            $cgzfd = SalesMoshi::get($id);
             if (empty($cgzfd)) {
                 return returnFail('数据不存在');
             }
@@ -313,7 +294,7 @@ class Zhifa extends Base
     public function unAudit(Request $request, $id = 0)
     {
         if ($request->isPut()) {
-            $cgzfd = Cgzfd::get($id);
+            $cgzfd = SalesMoshi::get($id);
             if (empty($cgzfd)) {
                 return returnFail('数据不存在');
             }
@@ -345,7 +326,7 @@ class Zhifa extends Base
     public function cancel(Request $request, $id = 0)
     {
         if ($request->isPost()) {
-            $cgzfd = Cgzfd::get($id);
+            $cgzfd = SalesMoshi::get($id);
             if (empty($cgzfd)) {
                 return returnFail('数据不存在');
             }

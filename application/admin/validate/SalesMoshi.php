@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2019/3/27
- * Time: 15:14
- */
 
 namespace app\admin\validate;
 
@@ -33,6 +27,7 @@ class SalesMoshi extends Validate
     ];
 
     protected $scene = [
-        'zhifa' => ['cg_customer_id', 'cg_piaoju_id', 'customer_id', 'piaoju_id', 'details', 'yw_time']
+        'zhifa' => ['cg_customer_id', 'cg_piaoju_id', 'customer_id', 'piaoju_id', 'details', 'yw_time'],
+        'tiaohuo' => ['customer_id', 'piaoju_id', 'details', 'yw_time']
     ];
 }
