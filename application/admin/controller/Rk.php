@@ -54,6 +54,13 @@ class Rk extends Right
         }
     }
     public function getrktz(){
-
+        $params = request()->param();
+        $list = \app\admin\model\KcRkTz::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list->where("jianshu",">",0)->where("lingzhi",">",0)->where("counts",">",0)->where("zhongliang",">",0);
+        if (!empty($params['beizhu'])) {
+            $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
+        }
+        $list=$list->paginate(10);
+        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 }
