@@ -77,4 +77,59 @@ class Ylsh extends Right
             return returnRes($res,'锁货延迟失败');
         }
     }
+
+    /**根据仓库id查询库存
+     * @param int $store_id
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function storespot($store_id=0){
+        $list=model("KcSpot")->where(array("companyid"=> Session::get("uinfo", "admin")['companyid'],"store_id"=>$store_id))->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+
+    }
+    public function addpandian($data = [], $return = false){
+        if (request()->isPost()) {
+            $companyId = Session::get('uinfo.companyid', 'admin');
+            $count = \app\admin\model\KcPandian::whereTime('create_time', 'today')->count();
+            $data = request()->post();
+            $data["status"] = 0;
+            $data['create_operator_name'] = Session::get("uinfo.name", "admin");
+            $data['create_operator_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $companyId;
+            $data['system_number'] = 'XJYHYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            if (!$return) {
+                Db::startTrans();
+            }
+            try {
+                model("init_bank")->allowField(true)->data($data)->save();
+                $id = model("init_bank")->getLastInsID();
+                foreach ($data["detail"] as $c => $v) {
+                    $data['details'][$c]['companyid'] = $companyId;
+                    $data['details'][$c]['bank_id'] = $id;
+                }
+                model('InitBankMx')->saveAll($data['details']);
+                if (!$return) {
+                    Db::commit();
+                    return returnRes(true, '', ['id' => $id]);
+                } else {
+                    return true;
+                }
+            } catch (Exception $e) {
+                if ($return) {
+                    return $e->getMessage();
+                } else {
+                    Db::rollback();
+                    return returnFail($e->getMessage());
+                }
+            }
+        }
+        if ($return) {
+            return '请求方式错误';
+        } else {
+            return returnFail('请求方式错误');
+        }
+    }
 }
