@@ -17,7 +17,7 @@ class SalesMoshi extends Base
     public function other()
     {
         return $this->hasOne('Salesorder', 'data_id', 'id')
-            ->where('ywlx', 2)->field('id,data_id');
+            ->where('ywlx', 3)->field('id,data_id');
     }
 
     public function gfjsfsData()

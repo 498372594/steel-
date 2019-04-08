@@ -28,7 +28,7 @@ class SalesTiaohuo extends Base
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = SalesMoshi::with(['custom', 'pjlxData', 'jsfsData'])
+        $list = SalesMoshi::with(['custom', 'khpjData', 'khjsfsData'])
             ->where('companyid', Session::get('uinfo.companyid', 'admin'))
             ->where('moshi_type', 2);
         if (!empty($params['ywsjStart'])) {
@@ -72,9 +72,9 @@ class SalesTiaohuo extends Base
         }
         $data = SalesMoshi::with([
             'custom',
-            'pjlxData',
-            'jsfsData',
-            'details' => ['specification', 'thJsfsData', 'thPjlxData', 'storage', 'xsJsfsData', 'wldwData'],
+            'khpjData',
+            'khjsfsData',
+            'details' => ['specification', 'cgJsfsData', 'cgPjData', 'storage', 'jsfs', 'wldwData'],
             'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]]
         ])
             ->where('companyid', Session::get('uinfo.companyid', 'admin'))
@@ -164,12 +164,12 @@ class SalesTiaohuo extends Base
                         'houdu' => $v['houdu'] ?? '',
                         'kuandu' => $v['kuandu'] ?? '',
                         'store_id' => $v['store_id'],
-                        'changdu' => $v['changdu'] ?? '',
+                        'changdu' => $v['changdu'] ?? 0,
                         'lingzhi' => $v['cg_lingzhi'] ?? '',
                         'jianshu' => $v['cg_jianshu'] ?? '',
-                        'zhijian' => $v['zhijian'] ?? '',
-                        'counts' => $v['cg_counts'] ?? '',
-                        'zhongliang' => $v['cg_zhongliang'] ?? '',
+                        'zhijian' => $v['zhijian'] ?? 0,
+                        'counts' => $v['cg_counts'] ?? 0,
+                        'zhongliang' => $v['cg_zhongliang'] ?? 0,
                         'price' => $v['cg_price'] ?? '',
                         'sumprice' => $v['cg_sumprice'] ?? '',
                         'shuie' => $v['cg_tax'] ?? '',
@@ -179,7 +179,7 @@ class SalesTiaohuo extends Base
                         'beizhu' => $v['beizhu'] ?? '',
                         'pihao' => $v['pihao'] ?? '',
                         'shui_price' => $v['cg_tax_rate'] ?? '',
-                        'mizhong' => $v['mizhong'] ?? '',
+                        'mizhong' => $v['mizhong'] ?? 0,
                         'jianzhong' => $v['jianzhong'] ?? '',
                     ];
                 }

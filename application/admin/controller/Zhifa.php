@@ -36,7 +36,7 @@ class Zhifa extends Base
             'gfjsfsData',
             'khjsfsData',
         ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
-            ->where('moshi_type',1);
+            ->where('moshi_type', 1);
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -172,12 +172,12 @@ class Zhifa extends Base
                         'houdu' => $v['houdu'] ?? '',
                         'kuandu' => $v['kuandu'] ?? '',
                         'store_id' => $v['store_id'],
-                        'changdu' => $v['changdu'] ?? '',
+                        'changdu' => $v['changdu'] ?? 0,
                         'lingzhi' => $v['cg_lingzhi'] ?? '',
                         'jianshu' => $v['cg_jianshu'] ?? '',
-                        'zhijian' => $v['zhijian'] ?? '',
-                        'counts' => $v['cg_counts'] ?? '',
-                        'zhongliang' => $v['cg_zhongliang'] ?? '',
+                        'zhijian' => $v['zhijian'] ?? 0,
+                        'counts' => $v['cg_counts'] ?? 0,
+                        'zhongliang' => $v['cg_zhongliang'] ?? 0,
                         'price' => $v['cg_price'] ?? '',
                         'sumprice' => $v['cg_sumprice'] ?? '',
                         'shuie' => $v['cg_tax'] ?? '',
@@ -187,7 +187,7 @@ class Zhifa extends Base
                         'beizhu' => $v['beizhu'] ?? '',
                         'pihao' => $v['pihao'] ?? '',
                         'shui_price' => $v['cg_tax_rate'] ?? '',
-                        'mizhong' => $v['mizhong'] ?? '',
+                        'mizhong' => $v['mizhong'] ?? 0,
                         'jianzhong' => $v['jianzhong'] ?? '',
                     ];
                 }

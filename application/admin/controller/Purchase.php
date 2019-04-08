@@ -74,7 +74,7 @@ class Purchase extends Base
                     $num++;
                 }
                 //t添加采购单明细
-               model('CgPurchaseMx')->allowField(true)->saveAll($data['details']);
+                model('CgPurchaseMx')->allowField(true)->saveAll($data['details']);
 
                 $num = 1;
                 $otherValidate = new FeiyongDetails();
@@ -102,7 +102,7 @@ class Purchase extends Base
                         $notify[] = [
                             'companyid' => $companyId,
                             'ruku_type' => 4,
-                            'status'=>0,
+                            'status' => 0,
                             'data_id' => $id,
                             'guige_id' => $v['guige_id'],
                             'caizhi_id' => $v['caizhi_id'] ?? '',
@@ -215,18 +215,18 @@ class Purchase extends Base
                             'customer_id' => $data['customer_id'],
                             'mizhong' => $v['mizhong'] ?? '',
                             'jianzhong' => $v['jianzhong'] ?? '',
-                            'lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
-                            'guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
-                            'guobang_zhongliang' =>$v["zhongliang"] ?? '',
-                            'lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
-                            'guobang_jianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
-                            'lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
-                            'old_lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
-                            'old_guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
-                            'old_lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
-                            'old_guobangjianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
+                            'lisuan_zhongliang' => $v["counts"] * $v["changdu"] * $v['mizhong'] / 1000,
+                            'guobang_zhizhong' => $v["counts"] == 0 ? 0 : ($v['zhongliang'] / $v["counts"] * $v["zhijian"]),
+                            'guobang_zhongliang' => $v["zhongliang"] ?? '',
+                            'lisuan_zhizhong' => $v["counts"] == 0 ? 0 : ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
+                            'guobang_jianzhong' => $v["counts"] == 0 ? 0 : ($v['zhongliang'] / $v["counts"]),
+                            'lisuan_jianzhong' => $v["counts"] == 0 ? 0 : ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
+                            'old_lisuan_zhongliang' => $v["counts"] * $v["changdu"] * $v['mizhong'] / 1000,
+                            'old_guobang_zhizhong' => $v["counts"] == 0 ? 0 : ($v['zhongliang'] / $v["counts"] * $v["zhijian"]),
+                            'old_lisuan_zhizhong' => $v["counts"] == 0 ? 0 : ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
+                            'old_guobangjianzhong' => $v['counts'] == 0 ? 0 : ($v['zhongliang'] / $v["counts"]),
                             'old_guobangzhongliang' => ($v['zhongliang']) ?? '',
-                            'old_lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
+                            'old_lisuan_jianzhong' => $v['counts'] == 0 ? 0 : ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
                             'status' => 0,
                             'guobang_price' => $v['guobang_price'] ?? '',
                             'guobang_shui_price' => $v['guobang_shui_price'] ?? '',
