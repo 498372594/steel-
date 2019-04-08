@@ -112,5 +112,50 @@ class Right extends Signin
         }
         return $list;
     }
+    public function getsearchcondition($params,$list){
+
+        //仓库
+        if (!empty($params['store_id'])) {
+            $list->where('store_id', $params['store_id']);
+        }
+        //品名
+        if (!empty($params['pinming'])) {
+            $list->where('pinming', 'like', '%' . $params['pinming'] . '%');
+        }
+        //规格
+        if (!empty($params['guige'])) {
+            $list->where('guige', $params['guige']);
+        }
+        //厚度
+        if (!empty($params['houdu_start'])) {
+            $list->where('houdu', '>=', $params['houdu_start']);
+        }
+        if (!empty($params['houdu_end'])) {
+            $list->where('houdu', '<=',$params['houdu_end']);
+        }
+        //宽度
+        if (!empty($params['width_start'])) {
+            $list->where('kuandu', '>=', $params['width_start']);
+        }
+        if (!empty($params['width_end'])) {
+            $list->where('kuandu', '<=',$params['width_end']);
+        }
+        //长度
+        if (!empty($params['length_start'])) {
+            $list->where('changdu', '>=', $params['length_start']);
+        }
+        if (!empty($params['length_end'])) {
+            $list->where('changdu', '<=',$params['length_end']);
+        }
+        //材质
+        if (!empty($params['caizhi'])) {
+            $list->where('caizhi', $params['caizhi']);
+        }
+        //规格
+        if (!empty($params['chandi'])) {
+            $list->where('chandi', $params['chandi']);
+        }
+        return $list;
+    }
 
 }
