@@ -26,7 +26,7 @@ class Purchase extends Base
      * @throws \think\Exception
      * @throws Exception
      */
-    public function purchaseadd(Request $request, $moshi_type = 6, $data = [], $return = false)
+    public function purchaseadd(Request $request, $moshi_type = 4, $data = [], $return = false)
     {
         if ($request->isPost()) {
 //            dump(purchaseadd);die;
@@ -147,6 +147,7 @@ class Purchase extends Base
                     model("KcRkTz")->allowField(true)->saveAll($notify);
                 } elseif ($data['ruku_fangshi'] == 1) {
                     //自动入库
+                    //采购单id
                     $data['data_id'] = $id;
                     //生成入库单
                     $count2 = KcRk::whereTime('create_time', 'today')->count();
