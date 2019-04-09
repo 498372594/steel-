@@ -22,14 +22,14 @@ class Purchase extends Base
      * @param int $moshi_type
      * @param array $data
      * @param bool $return
+     * @param array $spotIds
      * @return array|bool|string|Json
      * @throws \think\Exception
      * @throws Exception
      */
-    public function purchaseadd(Request $request, $moshi_type = 4, $data = [], $return = false)
+    public function purchaseadd(Request $request, $moshi_type = 4, $data = [], $return = false, &$spotIds = [])
     {
         if ($request->isPost()) {
-//            dump(purchaseadd);die;
             $count = CgPurchase::whereTime('create_time', 'today')->count();
             $companyId = Session::get('uinfo.companyid', 'admin');
 
@@ -77,9 +77,8 @@ class Purchase extends Base
                 model('CgPurchaseMx')->allowField(true)->saveAll($data['details']);
 
                 $num = 1;
-                $otherValidate = new FeiyongDetails();
-//                $nowDate = date('Y-m-d H:i:s');
                 if (!empty($data['other'])) {
+                    $otherValidate = new FeiyongDetails();
                     //处理其他费用
                     foreach ($data['other'] as $c => $v) {
                         $data['other'][$c]['group_id'] = $data['group_id'] ?? '';
@@ -177,9 +176,8 @@ class Purchase extends Base
                     model('KcRkMx')->allowField(true)->saveAll($data['details']);
                     $count1 = KcSpot::whereTime('create_time', 'today')->count();
                     //入库库存
-                    $spot = [];
                     foreach ($data['details'] as $c => $v) {
-                        $spot[] = [
+                        $spot = [
                             'companyid' => $companyId,
                             'ruku_type' => 4,
                             'ruku_fangshi' => $data['ruku_fangshi'],
@@ -236,9 +234,10 @@ class Purchase extends Base
                             'lisuan_shui_price' => $v['lisuan_shui_price'] ?? '',
                             'lisuan_price' => $v['lisuan_price'] ?? '',
                         ];
+                        $spotModel = new KcSpot();
+                        $spotModel->allowField(true)->save($spot);
+                        $spotIds[$v['index']] = $spotModel->id;
                     }
-
-                    model("KcSpot")->allowField(true)->saveAll($spot);
                 }
 
                 if (!$return) {

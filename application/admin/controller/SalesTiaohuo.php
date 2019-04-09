@@ -3,6 +3,7 @@
 namespace app\admin\controller;
 
 use app\admin\model\SalesMoshi;
+use app\admin\model\SalesMoshiMx;
 use app\admin\validate\{SalesMoshiDetails};
 use Exception;
 use think\{Db,
@@ -125,19 +126,18 @@ class SalesTiaohuo extends Base
                 $id = $model->getLastInsID();
                 $num = 1;
                 $detailsValidate = new SalesMoshiDetails();
-                $now = time();
+                $index = -1;
                 foreach ($data['details'] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['moshi_id'] = $id;
-                    $data['details'][$c]['create_time'] = $now;
-                    $data['details'][$c]['update_time'] = $now;
+                    $data['details'][$c]['index'] = $index--;
 
                     if (!$detailsValidate->scene('tiaohuo')->check($data['details'][$c])) {
                         throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                     }
                     $num++;
                 }
-                Db::name('SalesMoshiMx')->insertAll($data['details']);
+                (new SalesMoshiMx())->allowField(true)->saveAll($data['details']);
 
                 //添加采购单
                 $purchases = [];
@@ -181,13 +181,15 @@ class SalesTiaohuo extends Base
                         'shui_price' => $v['cg_tax_rate'] ?? '',
                         'mizhong' => $v['mizhong'] ?? 0,
                         'jianzhong' => $v['jianzhong'] ?? '',
+                        'index' => $v['index']
                     ];
                 }
                 $purchaseObj = new Purchase();
+                $spotIds = [];
                 foreach ($purchases as $v) {
-                    $salesRes = $purchaseObj->purchaseadd($request, 1, $v, true);
-                    if ($salesRes !== true) {
-                        throw new Exception($salesRes);
+                    $purchaseRes = $purchaseObj->purchaseadd($request, 1, $v, true, $spotIds);
+                    if ($purchaseRes !== true) {
+                        throw new Exception($purchaseRes);
                     }
                 }
 
@@ -229,10 +231,11 @@ class SalesTiaohuo extends Base
                         'remark' => $v['beizhu'] ?? '',
                         'car_no' => $v['chehao'] ?? '',
                         'batch_no' => $v['pihao'] ?? '',
+                        'index' => $v['index']
                     ];
                 }
                 $salesOrder['other'] = $data['other'] ?? [];
-                $salesRes = (new Salesorder())->add($request, 3, $salesOrder, true);
+                $salesRes = (new Salesorder())->add($request, 3, $salesOrder, true, $spotIds);
                 if ($salesRes !== true) {
                     throw new Exception($salesRes);
                 }

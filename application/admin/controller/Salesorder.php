@@ -99,10 +99,11 @@ class Salesorder extends Base
      * @param int $ywlx
      * @param array $data
      * @param bool $return
+     * @param array $spotIds
      * @return bool|string|Json|array
      * @throws \think\Exception
      */
-    public function add(Request $request, $ywlx = 1, $data = [], $return = false)
+    public function add(Request $request, $ywlx = 1, $data = [], $return = false, $spotIds = [])
     {
         if ($request->isPost()) {
             $companyId = Session::get('uinfo.companyid', 'admin');
@@ -114,10 +115,11 @@ class Salesorder extends Base
             if (empty($data)) {
                 $data = $request->post();
             }
+            $systemNumber = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data['add_name'] = Session::get("uinfo.name", "admin");
             $data['add_id'] = Session::get("uid", "admin");
             $data['companyid'] = $companyId;
-            $data['system_no'] = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data['system_no'] = $systemNumber;
             $data['ywlx'] = $ywlx;
 
             //数据验证
@@ -149,7 +151,7 @@ class Salesorder extends Base
                     }
                     $num++;
                 }
-                Db::name('SalesorderDetails')->insertAll($data['details']);
+                (new \app\admin\model\SalesorderDetails())->allowField(true)->saveAll($data['details']);
 
                 $num = 1;
                 $otherValidate = new FeiyongDetails();
@@ -206,6 +208,59 @@ class Salesorder extends Base
                         ];
                     }
                     (new Chuku())->addNotify($notify);
+                } elseif ($data['ckfs'] == 1) {
+                    //自动出库，生成出库单
+                    $stockOutData = [
+                        'remark' => '销售单，' . $systemNumber,
+                        'yw_time' => $data['ywsj'],
+                        'department' => $data['department'],
+                        'sale_operator_id' => $data['add_id'],
+                        'details' => []
+                    ];
+                    $stockOutDetail = [];
+                    foreach ($data['details'] as $v) {
+                        $stockOutData['details'][] = [
+                            'zhongliang' => $v['weight'] ?? '',
+                            'kucun_cktz_id' => $v['index'],
+                            'kc_spot_id' => $spotIds[$v['index']],
+                        ];
+                        $stockOutDetail[$v['index']] = [
+                            'companyid' => $companyId,
+                            'chuku_type' => 4,
+                            'data_id' => $id,
+                            'guige_id' => $v['wuzi_id'],
+                            'caizhi' => $v['caizhi'] ?? '',
+                            'chandi' => $v['chandi'] ?? '',
+                            'jijiafangshi_id' => $v['jsfs_id'],
+                            'houdu' => $v['houdu'] ?? '',
+                            'kuandu' => $v['width'] ?? '',
+                            'changdu' => $v['length'] ?? '',
+                            'lingzhi' => $v['lingzhi'] ?? '',
+                            'jianshu' => $v['num'] ?? '',
+                            'zhijian' => $v['jzs'] ?? '',
+                            'counts' => $v['count'] ?? '',
+                            'zhongliang' => $v['weight'] ?? '',
+                            'price' => $v['price'] ?? '',
+                            'sumprice' => $v['total_fee'] ?? '',
+                            'shuie' => $v['tax'] ?? '',
+                            'shui_price' => $v['tax_rate'] ?? '',
+                            'sum_shui_price' => $v['price_and_tax'] ?? '',
+                            'remark' => $v['remark'] ?? '',
+                            'car_no' => $v['car_no'] ?? '',
+                            'pihao' => $v['batch_no'] ?? '',
+                            'cache_ywtime' => $data['ywsj'],
+                            'cache_data_pnumber' => $data['system_no'],
+                            'cache_customer_id' => $data['custom_id'],
+                            'store_id' => $v['storage_id'],
+                            'cache_create_operator' => $data['add_id'],
+                        ];
+                    }
+                    $res = (new Chuku())->add($request, $stockOutData, $stockOutDetail, 4, 1, true);
+                    if ($res !== true) {
+                        throw new Exception($res);
+                    }
+                } else {
+                    throw new Exception('出库方式错误');
                 }
 
                 if (!$return) {

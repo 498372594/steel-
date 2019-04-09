@@ -102,14 +102,14 @@ class Chuku extends Right
      * 添加出库单
      * @param Request $request
      * @param array $data 出库数据
-     * @param array $stockOutDetail 出库明细
+     * @param array $stockOutDetails 出库明细
      * @param int $outType 出库类型
      * @param int $outMode 出库方式
      * @param bool $return 是否返回
      * @return array|bool|string|Json
      * @throws \think\Exception
      */
-    public function add(Request $request, $data = [], $stockOutDetail = [], $outType = 4, $outMode = 2, $return = false)
+    public function add(Request $request, $data = [], $stockOutDetails = [], $outType = 4, $outMode = 2, $return = false)
     {
         if (!$request->isPost()) {
             if ($return) {
@@ -161,28 +161,28 @@ class Chuku extends Right
                 }
 
                 //前端上传码单数据，包括出库通知单id
-                if (empty($stockOutDetail)) {
+                if (empty($stockOutDetails[$v['kucun_cktz_id']])) {
                     //获取出库通知单
-                    $stockOutDetail = KucunCktz::get($v['kucun_cktz_id']);
-                    if (empty($stockOutDetail)) {
+                    $stockOutNotify = KucunCktz::get($v['kucun_cktz_id']);
+                    if (empty($stockOutNotify)) {
                         throw new Exception('未找到出库通知单');
                     }
                     //判断是否超重出库
-                    if ($v['zhongliang'] > $stockOutDetail['zhongliang']) {
+                    if ($v['zhongliang'] > $stockOutNotify['zhongliang']) {
                         throw new Exception('禁止超重出库');
                     }
                     //减少待出库重量
-                    $stockOutDetail->zhongliang -= $v['zhongliang'];
-                    $stockOutDetail->save();
-                    $stockOutDetail = $stockOutDetail->getData();
+                    $stockOutNotify->zhongliang -= $v['zhongliang'];
+                    $stockOutNotify->save();
+                    $stockOutDetails[$v['kucun_cktz_id']] = $stockOutNotify->getData();
                 }
 
                 if (!isset($details[$v['kucun_cktz_id']])) {
                     //根据出库通知单数据生成明细单
-                    $detailsData = $stockOutDetail->getData();
+                    $detailsData = $stockOutDetails[$v['kucun_cktz_id']];
                     unset($detailsData['id'], $detailsData['create_time'], $detailsData['update_time'], $detailsData['delete_time']);
                     $detailsData['stock_out_id'] = $id;
-                    $detailsData['kucun_cktz_id'] = $v['kucun_cktz_id'];
+                    $detailsData['kucun_cktz_id'] = $v['kucun_cktz_id'] <= 0 ? null : $v['kucun_cktz_id'];
                     $detailsData['out_type'] = $outType;
                     $detailsData['out_mode'] = $outMode;
                     $detailModel = new StockOutDetail();
