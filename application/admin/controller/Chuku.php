@@ -26,7 +26,7 @@ class Chuku extends Right
     }
 
     /**
-     * 获取出库通知单
+     * 获取出库通知单列表
      * @param Request $request
      * @param int $pageLimit
      * @return Json
@@ -45,6 +45,9 @@ class Chuku extends Right
             'specification',
             'storage',
         ])->where('companyid', Session::get('uinfo.companyid', 'admin'));
+        if (!empty($params['id'])) {
+            $list->where('id', $params['id']);
+        }
         if (!empty($params['ywsjStart'])) {
             $list->where('cache_ywtime', '>=', $params['ywsjStart']);
         }
@@ -92,6 +95,39 @@ class Chuku extends Right
         $data->is_done = 1;
         $data->save();
         return returnSuc();
+    }
+
+    /**
+     * 获取出库单列表
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function getlist(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $params = $request->param();
+        $list = StockOut::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        if (!empty($params['ywsjStart'])) {
+            $list->where('yw_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        if (!empty($params['status'])) {
+            $list->where('status', $params['status']);
+        }
+        if (!empty($params['system_no'])) {
+            $list->where('system_number', 'like', '%' . $params['system_no'] . '%');
+        }
+        if (!empty($params['remark'])) {
+            $list->where('remark', 'like', '%' . $params['remark'] . '%');
+        }
+        $list = $list->paginate($pageLimit);
+        return returnRes(true, '', $list);
     }
 
     /**
@@ -226,6 +262,129 @@ class Chuku extends Right
                 return returnFail($e->getMessage());
             }
         }
+    }
+
+    /**
+     * 获取出库单
+     * @param Request $request
+     * @param $id
+     * @return Json
+     * @throws DbException
+     */
+    public function detail(Request $request, $id)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $data = StockOut::with([
+            'wait' => ['specification', 'jsfs', 'custom'],
+            'already' => ['specification', 'jsfs', 'spot', 'storage']
+        ])
+            ->where('id', $id)
+            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->find();
+        return returnRes(!empty($data), '出库单不存在', $data);
+    }
+
+    /**
+     * 审核
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     * @throws DbException
+     */
+    public function audit(Request $request, $id = 0)
+    {
+        if ($request->isPut()) {
+            $stockOut = StockOut::where('id', $id)
+                ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+                ->find();
+            if (empty($stockOut)) {
+                return returnFail('数据不存在');
+            }
+            if ($stockOut->status == 3) {
+                return returnFail('此单已审核');
+            }
+            if ($stockOut->status == 2) {
+                return returnFail('此单已作废');
+            }
+            $stockOut->status = 3;
+            $stockOut->check_operator_id = Session::get('uid', 'admin');
+            $stockOut->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
+    }
+
+    /**
+     * 反审核
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     * @throws DbException
+     */
+    public function unAudit(Request $request, $id = 0)
+    {
+        if ($request->isPut()) {
+            $stockOut = StockOut::where('id', $id)
+                ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+                ->find();
+            if (empty($stockOut)) {
+                return returnFail('数据不存在或已作废');
+            }
+            if ($stockOut->status == 1) {
+                return returnFail('此单未审核');
+            }
+            if ($stockOut->status == 2) {
+                return returnFail('此单已作废');
+            }
+            $stockOut->status = 1;
+            $stockOut->check_operator_id = null;
+            $stockOut->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
+    }
+
+    /**
+     * 作废
+     * @param Request $request
+     * @param int $id
+     * @param int $ywlx
+     * @param boolean $isWeb
+     * @return Json
+     * @throws DbException
+     */
+    public function cancel(Request $request, $id = 0, $isWeb = true)
+    {
+        if ($request->isPost()) {
+
+            if ($isWeb) {
+                $stockOut = \app\admin\model\Salesorder::where('id', $id)
+                    ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+                    ->find();
+            } else {
+                $stockOut = \app\admin\model\Salesorder::where('data_id', $id)
+                    ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+                    ->find();
+            }
+            if (empty($stockOut)) {
+                return returnFail('数据不存在');
+            }
+            if (!empty($stockOut->data_id) && $isWeb) {
+                return returnFail('此销售单禁止直接作废');
+            }
+            if ($stockOut->status == 3) {
+                return returnFail('此单已审核，禁止作废');
+            }
+            if ($stockOut->status == 2) {
+                return returnFail('此单已作废');
+            }
+            $stockOut->status = 2;
+            $stockOut->save();
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
     }
 
 }

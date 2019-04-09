@@ -215,17 +215,20 @@ class Salesorder extends Base
                         'yw_time' => $data['ywsj'],
                         'department' => $data['department'],
                         'sale_operator_id' => $data['add_id'],
-                        'details' => []
+                        'details' => [],
+                        'data_id' => $id
                     ];
                     $stockOutDetail = [];
+                    $index = -1;
                     foreach ($data['details'] as $v) {
+                        $v['index'] = $v['index'] ?? $index--;
                         $spotId = $v['spot_id'] ?? $spotIds[$v['index']];
                         $stockOutData['details'][] = [
                             'zhongliang' => $v['weight'] ?? '',
                             'kucun_cktz_id' => $v['index'],
                             'kc_spot_id' => $spotId,
                         ];
-                        $stockOutDetail[$spotId] = [
+                        $stockOutDetail[$v['index']] = [
                             'companyid' => $companyId,
                             'chuku_type' => 4,
                             'data_id' => $id,
@@ -405,6 +408,7 @@ class Salesorder extends Base
             }
             $salesorder->status = 2;
             $salesorder->save();
+            (new Chuku())->cancel($request, $id, false);
             return returnSuc();
         }
         return returnFail('请求方式错误');
