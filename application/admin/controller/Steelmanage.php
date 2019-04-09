@@ -6,7 +6,7 @@ use app\admin\library\traits\Backend;
 use think\Db;
 use think\Exception;
 use think\Session;
-use app\admin\library\traits\Tree;
+use app\admin\library\tree\Tree;
 
 class Steelmanage extends Right
 {
@@ -60,12 +60,12 @@ class Steelmanage extends Right
                 if($re){
                     return returnFail('该类存在子分类');
                 }else{
-                    $result = model("$model")->where($where)->delete();
+                    $result = model("$model")->where($where)->update(array("delete_time"=>date("Y-m-d H:i:s")));
                     return returnRes($result, '删除失败');
                 }
                 break;
             default:
-                $result = model("$model")->where($where)->delete();
+                $result = model("$model")->where($where)->update(array("delete_time"=>date("Y-m-d H:i:s")));
                 return returnRes($result, '删除失败');
 
         }
@@ -109,7 +109,10 @@ class Steelmanage extends Right
             }
         } else {
             $id = request()->param("id");
-            $data['info'] = model("productname")->where("id", $id)->find();
+            if($id){
+                $data['info'] = model("productname")->where("id", $id)->find();
+            }
+
             $data["unit"] = model("unit")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,unit")->select();
             $list = db("classname")->field("pid,id,classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
             $list = new Tree($list);

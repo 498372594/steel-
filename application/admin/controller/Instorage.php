@@ -14,25 +14,25 @@ class Instorage extends Right
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function getinstoragelist(){
+    public function getrk(){
         $params = request()->param();
-        $list = \app\admin\model\Instoragelist::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\KcRk::where('companyid', Session::get("uinfo", "admin")['companyid']);
         if (!empty($params['ywsjStart'])) {
-            $list->where('service_time', '>=', $params['ywsjStart']);
+            $list->where('yw_time', '>=', $params['ywsjStart']);
         }
         if (!empty($params['ywsjEnd'])) {
-            $list->where('service_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
-        if (!empty($params['status'])) {
+        if (!empty($instorageorderparams['status'])) {
             $list->where('status', $params['status']);
         }
-        if (!empty($params['system_no'])) {
-            $list->where('system_no', 'like', '%' . $params['system_no'] . '%');
+        if (!empty($params['system_number'])) {
+            $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
         }
-        if (!empty($params['remark'])) {
-            $list->where('remark', 'like', '%' . $params['remark'] . '%');
+        if (!empty($params['beizhu'])) {
+            $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
         }
-        $list->paginate(10);
+        $list=$list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -41,8 +41,8 @@ class Instorage extends Right
      * @throws \think\exception\DbException
      */
     public function instorageorder(){
-        $instorage_id=request()->param("instorage_id");
-        $list = model("InstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
+        $instorage_id=request()->param("id");
+        $list = model("ViewInstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -100,134 +100,60 @@ class Instorage extends Right
      */
     public function instorage(){
         if(request()->isPost()){
-            $ids = request()->param("id");
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
+            //生成入库单列表
             $data["status"]=1;
+            if(request()->param("id")){
+                $data["id"]=request()->post("id");
+            }
+            $data["department"]=request()->post("department");
+            $data["clerk"]=request()->post("clerk");
+            $data["service_time"]=date("Y-m-d H:s:i",time());
             $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
             $data["clerk"]=request()->post("clerk");
+            $data["type"]=1;
             $data["department"]=request()->post("department");
             $data['add_name'] = Session::get("uinfo", "admin")['name'];
             $data['add_id'] = Session::get("uid", "admin");
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
-            $data["rukdh"]='RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data["system_no"]='RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+//            $data["rukdh"]='RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             model("instoragelist")->allowField(true)->save($data);
-            $instorage_id = model("instoragelist")->id;
+            if($data["id"]){
+                $instorage_id =$data["id"];
+            }else{
+                $instorage_id = model("instoragelist")->getLastInsID();
+            }
+
+
             foreach ($data['details'] as $c => $v) {
                 $count = \app\admin\model\InstorageDetails::whereTime('create_time', 'today')->count();
+                if(isset($v["instorage_id"])){
+                    $instorage_id=$v["instorage_id"];
+                }
+                $data['details'][$c]['in_out'] = 1;//入库，2出库
                 $data['details'][$c]['type'] = 1;//入库类型，采购入库
                 $data['details'][$c]['zyh'] = 'KC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);;//资源号
                 $data['details'][$c]['is_finished'] = 2;//已入库
                 $data['details'][$c]['instorage_time'] = date("Y-m-d H:s:i",time());//入库类型，采购入库
                 $data['details'][$c]['instorage_id'] = $instorage_id;//入库列表的id
+                $data['details'][$c]['purchasedetail_id'] = $v["id"];//入库列表的id
+                $change[$c]["id"]=$v["id"];
+                $change[$c]["actual_shuliang"]=$v["shuliang"];
+                $change[$c]["actual_heavy"]=$v["heavy"];
+                $change[$c]['is_finished'][$c]['is_finished'] = 2;//已入库
+                unset($v["id"]);
             }
             //库存
             model('InstorageDetails')->allowField(true)->saveAll($data['details']);
             //入库单
             model('InstorageOrder')->allowField(true)->saveAll($data['details']);
-            $res =model("purchasedetails")->where("id","in",$ids)->update(array("is_finished"=>2));
+            $res =model("purchasedetails")->update($change);
             return returnRes($res,'修改失败');
         }
     }
 
-    /**
-     *预留锁货库存列表
-     */
-    public function lockgoodslist(){
-        $list=model("InstorageDetails")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"is_finished"=>2))->paginate(10);
-        return returnRes($list->toArray()['data'], '没数有据，请添加后重试', $list);
-    }
 
-    /**锁货
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     */
-    public function reservedgoods(){
-        if(request()->isPost()){
-            $data=request()->post();
-            foreach($data["reserved"] as $key=>$value){
-                $info=model("InstorageDetails")->where("id",$value["purchase_id"])->find();
-                $inf["shuliang"]=$info["shuliang"]-$value["reserved_num"];
-                $inf["jianshu"]=$info["jianshu"]-$value["reserved_jianshu"];
-                $inf["jianshu"]=$info["jianshu"]-$value["reserved_jianshu"];
-                $inf["heavy"]=$info["heavy"]-$value["reserved_heavy"];
-                $inf["id"]=$info["id"];
-                model("InstorageDetails")->where("id",$info["id"])->update($inf);
-            }
-            $res =model("reserved")->allowField(true)->saveAll($data["reserved"]);
-            return returnRes($res,'锁定');
-            }
-        }
-
-    /**
-     * 预留存量释放列表
-     */
-        public function relaselist(){
-            $list=model("view_reserved")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid']))->paginate(10);
-            return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
-        }
-
-    /**预留释放
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     */
-        public function releasegoods(){
-            if(request()->isPost()){
-                $data=request()->post();
-                foreach($data["released"] as $key=>$value){
-                    $info=model("InstorageDetails")->where("id",$value["purchasedetails_id"])->find();
-                    $info1=model("reserved")->where("id",$value["id"])->find();
-                    $inf["shuliang"]=$info["shuliang"]+$value["reserved_num"];
-                    $inf["lingzhi"]=$info["lingzhi"]+$value["reserved_lingzhi"];
-                    $inf["jianshu"]=$info["jianshu"]+$value["reserved_jianshu"];
-                    $inf["heavy"]=$info["heavy"]+$value["reserved_heavy"];
-                    $inf["id"]=$info["id"];
-                    $inf1["id"]=$info1["id"];
-                    $inf1["reserved_num"]=$info1["reserved_num"]-$value["reserved_num"];
-                    $inf1["reserved_jianshu"]=$info1["reserved_jianshu"]-$value["reserved_jianshu"];
-                    $inf1["reserved_heavy"]=$info1["reserved_heavy"]-$value["reserved_heavy"];
-                    $inf1["reserved_jianshu"]=$info1["reserved_jianshu"]-$value["reserved_jianshu"];
-                    model("InstorageDetails")->save($inf);
-                    if($inf1["reserved_num"]==0){
-                        model("reserved")->where("id", $inf1["id"])->delete();
-                    }
-                    $res=model("reserved")->save($inf1);
-                }
-                return returnRes($res,'锁定');
-            }
-        }
-
-/*
- *预留延迟
- */
-        public function  postpone(){
-            if(request()->isPost()){
-                $list=request()->post();
-                $res=model("reserved")->saveAll($list);
-                return returnRes($res,'延迟失败');
-            }
-        }
-
-    /**清库列表
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
-     */
-        public function clearstoragelist(){
-            $list=model("InstorageDetails")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"shuliang"=>0,"lingzhi"=>0,"jianshu"=>0,"heavy"=>0))->paginate(10);
-            return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
-        }
-
-    /**
-     * 清库
-     */
-        public function clearstorage(){
-            $id=request()->param("id");
-            $res=model("InstorageDetails")->where("id","in",$id)->update(array("status"=>2));
-            return returnRes($res,'清库失败');
-        }
 
     /**库存盘点
      * @return \think\response\Json
@@ -392,4 +318,9 @@ class Instorage extends Right
                 }
             }
         }
+//        public function ceshi(){
+//            $arr=model("unit")->update(array("id"=>11,"unit"=>"吨1"));
+//
+//            dump($arr);
+//        }
 }

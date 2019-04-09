@@ -2,10 +2,14 @@
 
 namespace app\admin\model;
 
+use traits\model\SoftDelete;
+
 class Account extends Base
 {
     protected $table = 'admin';
 
+    use SoftDelete;
+    protected $deleteTime = 'delete_time';
     protected $autoWriteTimestamp = 'datetime';
 
     // 验证规则
