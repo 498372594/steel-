@@ -20,7 +20,7 @@ class Ylsh extends Right
         $params = request()->param();
         $list = \app\admin\model\KcSpot::with([
             'specification', 'storage','pinmingData','caizhiData','chandiData','guigeData',
-        ])->where('companyid', Session::get("uinfo", "admin")['companyid']);
+        ])->where('companyid', $this->getCompanyId());
         $list =$this->getsearchcondition($params,$list);
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -37,7 +37,7 @@ class Ylsh extends Right
             $data=request()->post();
             foreach($data as $k=>$v){
                 $data[$k]['yuliu_type']="已预留";
-                $data[$k]['companyid']= Session::get('uinfo.companyid', 'admin');
+                $data[$k]['companyid']= $this->getCompanyId();
 
             }
             $res=model("KcYlSh")->allowField(true)->saveAll($data);
@@ -57,7 +57,7 @@ class Ylsh extends Right
      */
     public function getlock(){
         $params = request()->param();
-        $list=db("ViewKcYlsh")->where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list=db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
         if (!empty($params['ids'])) {
            $list->where('id', 'in',$params['ids']);
         }
@@ -86,18 +86,18 @@ class Ylsh extends Right
      * @throws \think\exception\DbException
      */
     public function storespot($store_id=0){
-        $list=model("KcSpot")->where(array("companyid"=> Session::get("uinfo", "admin")['companyid'],"store_id"=>$store_id))->select();
+        $list=model("KcSpot")->where(array("companyid"=> $this->getCompanyId(),"store_id"=>$store_id))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
 
     }
     public function addpandian($data = [], $return = false){
         if (request()->isPost()) {
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId = $this->getCompanyId();
             $count = \app\admin\model\KcPandian::whereTime('create_time', 'today')->count();
             $data = request()->post();
             $data["status"] = 0;
-            $data['create_operator_name'] = Session::get("uinfo.name", "admin");
-            $data['create_operator_id'] = Session::get("uid", "admin");
+            $data['create_operator_name'] = $this->getAccount()['name'];
+            $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_number'] = 'XJYHYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             if (!$return) {

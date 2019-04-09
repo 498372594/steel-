@@ -19,7 +19,7 @@ class Rk extends Right
         $params = request()->param();
         $list = \app\admin\model\KcRk::with([
             'custom',
-        ]) ->where('companyid', Session::get("uinfo", "admin")['companyid']);
+        ]) ->where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -46,7 +46,7 @@ class Rk extends Right
         $data = \app\admin\model\KcRk::with([
             'custom',
             'details' => ['specification', 'jsfs', 'storage','pinmingData','caizhiData','chandiData'],
-        ]) ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+        ]) ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -62,7 +62,7 @@ class Rk extends Right
      */
     public function getrktz(){
         $params = request()->param();
-        $list = \app\admin\model\KcRkTz::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\KcRkTz::where('companyid', $this->getCompanyId());
         $list->where("jianshu",">",0)->where("lingzhi",">",0)->where("counts",">",0);
 
         if (!empty($params['ids'])) {
@@ -115,13 +115,13 @@ class Rk extends Right
      */
     public function ruku(Request $request, $moshi_type = 4, $data = [], $return = false){
         if ($request->isPost()) {
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId = $this->getCompanyId();
             //数据处理
             if (empty($data)) {
                 $data = $request->post();
             }
-            $data['create_operator'] = Session::get("uinfo.name", "admin");
-            $data['create_operate_id'] = Session::get("uid", "admin");
+            $data['create_operator'] = $this->getAccount()['name'];
+            $data['create_operate_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['moshi_type'] = $moshi_type;
             if (!$return) {
@@ -266,7 +266,7 @@ class Rk extends Right
      */
     public function clearstoragelist(){
         $params = request()->param();
-        $list=\app\admin\model\KcRkTz::where(array("companyid"=> Session::get("uinfo", "admin")['companyid'],"zhongliang"=>0));
+        $list=\app\admin\model\KcRkTz::where(array("companyid"=> $this->getCompanyId(),"zhongliang"=>0));
         $list =$this->getsearchcondition($params,$list);
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);

@@ -18,7 +18,7 @@ use think\{Db,
     response\Json,
     Session};
 
-class Salesorder extends Base
+class Salesorder extends Right
 {
     /**
      * 获取销售单列表
@@ -34,7 +34,7 @@ class Salesorder extends Base
             'custom',
             'pjlxData',
             'jsfsData',
-        ])->where('companyid', Session::get('uinfo.companyid', 'admin'));
+        ])->where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
@@ -83,7 +83,7 @@ class Salesorder extends Base
             'details' => ['specification', 'jsfs', 'storage'],
             'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]
         ])
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -106,7 +106,7 @@ class Salesorder extends Base
     public function add(Request $request, $ywlx = 1, $data = [], $return = false, $spotIds = [])
     {
         if ($request->isPost()) {
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId = $this->getCompanyId();
             $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
                 ->where('companyid', $companyId)
                 ->count();
@@ -116,8 +116,8 @@ class Salesorder extends Base
                 $data = $request->post();
             }
             $systemNumber = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            $data['add_name'] = Session::get("uinfo.name", "admin");
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_no'] = $systemNumber;
             $data['ywlx'] = $ywlx;
@@ -215,17 +215,20 @@ class Salesorder extends Base
                         'yw_time' => $data['ywsj'],
                         'department' => $data['department'],
                         'sale_operator_id' => $data['add_id'],
-                        'details' => []
+                        'details' => [],
+                        'data_id' => $id
                     ];
                     $stockOutDetail = [];
+                    $index = -1;
                     foreach ($data['details'] as $v) {
+                        $v['index'] = $v['index'] ?? $index--;
                         $spotId = $v['spot_id'] ?? $spotIds[$v['index']];
                         $stockOutData['details'][] = [
                             'zhongliang' => $v['weight'] ?? '',
                             'kucun_cktz_id' => $v['index'],
                             'kc_spot_id' => $spotId,
                         ];
-                        $stockOutDetail[$spotId] = [
+                        $stockOutDetail[$v['index']] = [
                             'companyid' => $companyId,
                             'chuku_type' => 4,
                             'data_id' => $id,
@@ -256,7 +259,7 @@ class Salesorder extends Base
                             'cache_create_operator' => $data['add_id'],
                         ];
                     }
-                    $res = (new Chuku())->add($request, $stockOutData, $stockOutDetail, 4, 1, true);
+                    $res = (new Chuku())->add($request, $stockOutData, $stockOutDetail, 1, true);
                     if ($res !== true) {
                         throw new Exception($res);
                     }
@@ -320,8 +323,8 @@ class Salesorder extends Base
                 return returnFail('此单已作废');
             }
             $salesorder->status = 3;
-            $salesorder->auditer = Session::get('uid', 'admin');
-            $salesorder->audit_name = Session::get('uinfo.name', 'admin');
+            $salesorder->auditer = $this->getAccountId();
+            $salesorder->audit_name = $this->getAccount()['name'];
             $salesorder->save();
             return returnSuc();
         }
@@ -405,6 +408,7 @@ class Salesorder extends Base
             }
             $salesorder->status = 2;
             $salesorder->save();
+            (new Chuku())->cancel($request, $id, false);
             return returnSuc();
         }
         return returnFail('请求方式错误');

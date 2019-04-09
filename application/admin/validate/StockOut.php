@@ -14,7 +14,7 @@ class StockOut extends Validate
     ];
 
     protected $message = [
-        'ywsj.require' => '业务时间必须输入',
+        'yw_time.require' => '业务时间必须输入',
         'details.require' => '明细至少出现一行',
         'details.min' => '明细至少出现一行',
     ];

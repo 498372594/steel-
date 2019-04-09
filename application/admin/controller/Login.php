@@ -9,7 +9,7 @@ use think\Url;
  * Class Login
  * 登录控制器
  */
-class Login extends Base
+class Login extends Rigth
 {
 
     /**

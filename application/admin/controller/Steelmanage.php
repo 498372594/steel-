@@ -18,7 +18,7 @@ class Steelmanage extends Right
      */
     public function classname()
     {
-        $list = model("classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("classname")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -26,9 +26,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if(Db::table('classname')->where(['classname' => $data['classname']])->find()){
                 return returnFail('该类已经存在');
             }
@@ -78,11 +78,11 @@ class Steelmanage extends Right
             $ids = request()->param("id");
             $where = array(
                 'a.classid' => ['in', $ids],
-                'a.companyid' => Session::get("uinfo", "admin")['companyid']
+                'a.companyid' => $this->getCompanyId()
             );
         } else {
             $where = array(
-                'a.companyid' => Session::get("uinfo", "admin")['companyid']
+                'a.companyid' => $this->getCompanyId()
             );
         }
         $list = model("productname")->alias("a")->join("classname b","a.classid=b.id","left")->where($where)->field("a.*,b.classname")->paginate(10);
@@ -96,9 +96,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("productname")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -113,8 +113,8 @@ class Steelmanage extends Right
                 $data['info'] = model("productname")->where("id", $id)->find();
             }
 
-            $data["unit"] = model("unit")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,unit")->select();
-            $list = db("classname")->field("pid,id,classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+            $data["unit"] = model("unit")->where("companyid", $this->getCompanyId())->field("id,unit")->select();
+            $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
             $list = new Tree($list);
             $data['classname'] = $list->leaf();
             return returnRes($data, '无相关数据', $data);
@@ -131,11 +131,11 @@ class Steelmanage extends Right
             $ids = request()->param("productname_id");
             $where = array(
                 'productname_id' => ['in', $ids],
-                'companyid' => Session::get("uinfo", "admin")['companyid']
+                'companyid' => $this->getCompanyId()
             );
         } else {
             $where = array(
-                'companyid' => Session::get("uinfo", "admin")['companyid']
+                'companyid' => $this->getCompanyId()
             );
         }
         $list = model("view_specification")->where($where)->paginate(10);
@@ -149,9 +149,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("specification")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -166,8 +166,8 @@ class Steelmanage extends Right
                 $data['info'] = model("specification")->where("id", $id)->find();
             }
             $data["productlist"] = $this->getproductlist();
-            $data["originarealist"] = model("originarea")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,originarea")->select();
-            $data["texturelist"] = model("texture")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,texturename")->select();
+            $data["originarealist"] = model("originarea")->where("companyid", $this->getCompanyId())->field("id,originarea")->select();
+            $data["texturelist"] = model("texture")->where("companyid", $this->getCompanyId())->field("id,texturename")->select();
             return returnRes($data, '无相关数据', $data);
         }
     }
@@ -177,7 +177,7 @@ class Steelmanage extends Right
      */
     public function getproductlist()
     {
-        $list = db("classname")->field("pid,id,classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
         $menutree = new Tree($list);
         $menulist = $menutree->leaf();
 //        dump($menulist);
@@ -186,7 +186,7 @@ class Steelmanage extends Right
     }
     public function getproduct()
     {
-        $list = db("classname")->field("pid,id,classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
         $menutree = new Tree($list);
         $menulist = $menutree->leaf();
 //        dump($menulist);
@@ -198,7 +198,7 @@ class Steelmanage extends Right
     {
         foreach ($arr as $k => $v) {
 
-            $arr[$k]['productname'] = db("productname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->where("classid", $v["id"])->field("id,name")->select();
+            $arr[$k]['productname'] = db("productname")->where("companyid", $this->getCompanyId())->where("classid", $v["id"])->field("id,name")->select();
             if (array_key_exists('child', $v)) {
                 $v = $this->productnamedigui($v["child"]);
                 $arr[$k]["child"] = $v;
@@ -227,7 +227,7 @@ class Steelmanage extends Right
     }
     public function texture()
     {
-        $list = model("texture")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("texture")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -235,9 +235,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("texture")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -259,7 +259,7 @@ class Steelmanage extends Right
     }
     public function jianzhishu()
     {
-        $list = model("jianzhishu")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("jianzhishu")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -267,9 +267,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("jianzhishu")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -296,7 +296,7 @@ class Steelmanage extends Right
      */
     public function unit()
     {
-        $list = model("unit")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("unit")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -310,9 +310,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("unit")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -334,7 +334,7 @@ class Steelmanage extends Right
     }
     public function jsfs()
     {
-        $list = model("jsfs")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("jsfs")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -342,9 +342,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("jsfs")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -366,7 +366,7 @@ class Steelmanage extends Right
     }
     public function custom()
     {
-        $list = model("custom")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("custom")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -374,9 +374,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("custom")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -398,7 +398,7 @@ class Steelmanage extends Right
     }
     public function storage()
     {
-        $list = model("storage")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("storage")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -406,9 +406,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("storage")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -431,7 +431,7 @@ class Steelmanage extends Right
     }
     public function transportation()
     {
-        $list = model("transportation")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("transportation")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -439,9 +439,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("transportation")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -463,7 +463,7 @@ class Steelmanage extends Right
     }
     public function bank()
     {
-        $list = model("bank")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("bank")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -471,9 +471,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("bank")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -495,7 +495,7 @@ class Steelmanage extends Right
     }
     public function faxi()
     {
-        $list = model("faxi")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("faxi")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -503,9 +503,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("faxi")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -532,7 +532,7 @@ class Steelmanage extends Right
      */
     public function salesmansetting()
     {
-        $list = model("faxi")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("faxi")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -540,9 +540,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("faxi")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -567,7 +567,7 @@ class Steelmanage extends Right
      */
     public function jiesuanfangshi()
     {
-        $list = model("jiesuanfangshi")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("jiesuanfangshi")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -575,9 +575,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("jiesuanfangshi")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -600,7 +600,7 @@ class Steelmanage extends Right
     public function paymenttype()
     {
         $type=request()->param("type");
-        $list = model("paymenttype")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'type'=>$type))->paginate(10);
+        $list = model("paymenttype")->where(array("companyid"=>$this->getCompanyId(),'type'=>$type))->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
     public function addpaymenttype()
@@ -608,20 +608,20 @@ class Steelmanage extends Right
         if (request()->post()) {
             $data = request()->post();
             $data['sort'] = request()->post("sort");
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 if(!model("paymentclass")->where("name",$data['class'])->find()){
                     $data1['name']=$data['class'];
-                    $data1['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                    $data1['add_name'] = Session::get("uinfo", "admin")['name'];
-                    $data1['add_id'] = Session::get("uid", "admin");
+                    $data1['companyid'] = $this->getCompanyId();
+                    $data1['add_name'] = $this->getAccount()['name'];
+                    $data1['add_id'] = $this->getAccountId();
                     $result=model("paymentclass")->save($data1);
                 }
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("paymenttype")->save($data);
                 return returnRes($result, '添加失败');
             } else {
@@ -631,13 +631,13 @@ class Steelmanage extends Right
             }
         } else{
             $type=request()->param("type");
-            $data['typelist'] = model("paymentclass")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'type'=>$type))->find();
+            $data['typelist'] = model("paymentclass")->where(array("companyid"=>$this->getCompanyId(),'type'=>$type))->find();
             return returnRes($data, '无相关数据', $data);
         }
     }
     public function pjlx()
     {
-        $list = model("pjlx")->where("companyid", Session::get("uinfo", "admin")['companyid'])->paginate(10);
+        $list = model("pjlx")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -645,9 +645,9 @@ class Steelmanage extends Right
     {
         if (request()->isPost()) {
             $data = request()->post();
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 $result = model("pjlx")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
@@ -668,7 +668,7 @@ class Steelmanage extends Right
         }
     }
 //    public function ceshi(){
-//        $list['value']=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("classname")->select();
+//        $list['value']=model("classname")->where("companyid",$this->getCompanyId())->field("classname")->select();
 //        return json($list);
 //    }
 
