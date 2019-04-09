@@ -23,7 +23,9 @@ class Test extends Controller
         ];
         $this->add($data['order_no']);
         $data = json_encode($data);
-        $res = Queue::later(10,'ChangePrice',$data,$queue = null);
+        for ($i = 0;$i<10;$i++){
+            Queue::later(10,'app\admin\job\ChangePrice',$data,$queue = null);
+        }
     }
 
     public function add($orderNo){

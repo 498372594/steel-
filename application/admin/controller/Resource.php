@@ -82,7 +82,7 @@ class Resource extends Right
         }
         //品名
         if (!empty($params['productname'])) {
-            $list->where('productname', 'like', '%' . $params['productname'] . '%');$this->getAccountId()
+            $list->where('productname', 'like', '%' . $params['productname'] . '%');
         }
         //规格
         if (!empty($params['specification'])) {
