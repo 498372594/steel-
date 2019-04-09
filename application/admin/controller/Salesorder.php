@@ -209,6 +209,7 @@ class Salesorder extends Right
                     }
                     (new Chuku())->addNotify($notify);
                 } elseif ($data['ckfs'] == 1) {
+                    //如果是预留单生成的销售单，判断预留重量
                     //自动出库，生成出库单
                     $stockOutData = [
                         'remark' => '销售单，' . $systemNumber,
