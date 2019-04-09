@@ -236,7 +236,7 @@ class Purchase extends Base
                         ];
                         $spotModel = new KcSpot();
                         $spotModel->allowField(true)->save($spot);
-                        $spotIds[$v['index']] = $spotModel->id;
+                        $spotIds[$v['index'] ?? -1] = $spotModel->id;
                     }
                 }
 

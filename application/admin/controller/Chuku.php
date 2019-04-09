@@ -15,18 +15,14 @@ class Chuku extends Right
     /**
      * 添加出库通知单
      * @param array $data
+     * @throws Exception
      */
     public function addNotify($data = [])
     {
         if (empty($data)) {
             return;
         }
-        $now = time();
-        foreach ($data as $index => $item) {
-            $data[$index]['create_time'] = $now;
-            $data[$index]['update_time'] = $now;
-        }
-        Db::name('KucunCktz')->insertAll($data);
+        (new KucunCktz())->allowField(true)->saveAll($data);
     }
 
     /**

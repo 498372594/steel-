@@ -219,12 +219,13 @@ class Salesorder extends Base
                     ];
                     $stockOutDetail = [];
                     foreach ($data['details'] as $v) {
+                        $spotId = $v['spot_id'] ?? $spotIds[$v['index']];
                         $stockOutData['details'][] = [
                             'zhongliang' => $v['weight'] ?? '',
                             'kucun_cktz_id' => $v['index'],
-                            'kc_spot_id' => $spotIds[$v['index']],
+                            'kc_spot_id' => $spotId,
                         ];
-                        $stockOutDetail[$v['index']] = [
+                        $stockOutDetail[$spotId] = [
                             'companyid' => $companyId,
                             'chuku_type' => 4,
                             'data_id' => $id,
