@@ -20,20 +20,13 @@ class ChangePrice extends Controller
     {
         Log::write('hxc'.$data);
         $data = json_decode($data,true);
-        $res = Db::table('tp5_test')->where('order_no',$data['order_no'])->update(['status'=>1]);
+        $res = Db::table('tp5_test')->where(['order_no' => $data['order_no']])->update(['status'=>1]);
         if($res) {
             $job->delete();
-        }else{
-            $job->release(3); //$delay为延迟时间
         }
         if ($job->attempts() > 3) {
             $job->delete();
         }
-    }
-
-    public function failed($data)
-    {
-        // ...任务达到最大重试次数后，失败了
     }
 
     public function jobDone($data)

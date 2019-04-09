@@ -26,23 +26,25 @@ class Login extends Base
     public function login()
     {
         if (request()->isPost()) {
-            $captcha = input("captcha");
-            if (captcha_check($captcha)) {
+//            $captcha = input("captcha");
+//            if (captcha_check($captcha)) {
                 $account  = input("account");
                 $password = input("password");
 
                 $ret = Loader::model('User')->login($account, $password);
 
-                if (1 == $ret['code']) {
-                    // 登录成功
-                    $this->redirect(Url::build('admin/index/index'));
-                } else {
-                    $this->error($ret['msg']);
-                }
+                return returnRes($ret['code'] == 1,'登录失败',$ret['data']);
 
-            } else {
-                $this->error("图片验证码输入错误！");
-            }
+//                if (1 == $ret['code']) {
+//                    // 登录成功
+//                    $this->redirect(Url::build('admin/index/index'));
+//                } else {
+//                    $this->error($ret['msg']);
+//                }
+
+//            } else {
+//                $this->error("图片验证码输入错误！");
+//            }
         } else {
             $this->error("请求方式错误！");
         }
@@ -57,4 +59,7 @@ class Login extends Base
         Session::set('uinfo', NULL, 'admin');
         $this->success("退出成功！", Url::build('/admin/login/index'));
     }
+
+
+
 }

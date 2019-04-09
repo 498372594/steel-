@@ -3,6 +3,7 @@ namespace app\admin\controller;
 
 use think\Db;
 use think\Exception;
+use think\Request;
 
 class Auth extends Right
 {
@@ -344,7 +345,6 @@ class Auth extends Right
             if (empty($id)) {
                 return json_err(-1, "未知的ID！");
             }
-
             $rules = Db::table("authrule")->select();
             $convertRule = convert_tree_subs($id, $rules);
 
@@ -360,4 +360,15 @@ class Auth extends Right
             }
         }
     }
+
+    /**
+     * 当前登录用户
+     */
+    public function rolePath()
+    {
+        $rolepath = explode(',',$this->getAccount()['rolepath']);
+        return returnSuc($rolepath,'没有分配权限',$rolepath);
+    }
+
+
 }
