@@ -18,7 +18,7 @@ class Reportform extends Right
      */
     public function getpurchasedetails( $pageLimit = 10){
         $params = request()->param();
-        $list = \app\admin\model\Purchasedetails::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\Purchasedetails::where('companyid', $this->getCompanyId());
 
         if (!empty($params['ywsjStart'])) {
             $list->where('service_time', '>=', $params['ywsjStart']);
@@ -67,7 +67,7 @@ class Reportform extends Right
      */
     public function getbangcha($pageLimit=10){
         $params = request()->param();
-        $list = \app\admin\model\ViewPurchasedetails::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\ViewPurchasedetails::where('companyid', $this->getCompanyId());
         $list=$this->getsearch($params,$list);
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -79,7 +79,7 @@ class Reportform extends Right
      */
     public function rkcbmx($pageLimit=10){
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"in_out"=>1));
+        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>$this->getCompanyId(),"in_out"=>1));
         $list=$this->getsearch($params,$list);
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -90,7 +90,7 @@ class Reportform extends Right
      */
     public function ckcbmx($pageLimit=10){
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"in_out"=>2));
+        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>$this->getCompanyId(),"in_out"=>2));
         $list=$this->getsearch($params,$list);
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -101,7 +101,7 @@ class Reportform extends Right
      */
     public function getinstoragelist($pageLimit=10){
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"in_out"=>2));
+        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>$this->getCompanyId(),"in_out"=>2));
         $list=$this->getsearch($params,$list);
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);

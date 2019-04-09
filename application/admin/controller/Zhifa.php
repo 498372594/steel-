@@ -14,7 +14,7 @@ use think\{Db,
     response\Json,
     Session};
 
-class Zhifa extends Base
+class Zhifa extends Right
 {
     /**
      * 获取采购直发单列表
@@ -36,7 +36,7 @@ class Zhifa extends Base
             'khpjData',
             'gfjsfsData',
             'khjsfsData',
-        ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
+        ])->where('companyid', $this->getCompanyId())
             ->where('moshi_type', 1);
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
@@ -89,7 +89,7 @@ class Zhifa extends Base
             'khjsfsData',
             'details' => ['specification', 'jsfs', 'storage'],
             'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]]
-        ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
+        ])->where('companyid', $this->getCompanyId())
             ->where('moshi_type', 1)
             ->where('id', $id)
             ->find();
@@ -109,7 +109,7 @@ class Zhifa extends Base
     public function add(Request $request)
     {
         if ($request->isPost()) {
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId = $this->getCompanyId();
             $count = SalesMoshi::whereTime('create_time', 'today')
                 ->where('companyid', $companyId)
                 ->where('moshi_type', 1)
@@ -117,7 +117,7 @@ class Zhifa extends Base
 
             //获取请求数据
             $data = $request->post();
-            $data['create_operator_id'] = Session::get("uid", "admin");
+            $data['create_operator_id'] = $this->getAccountId();
             $data['moshi_type'] = 1;
             $data['companyid'] = $companyId;
             $data['system_number'] = 'CGZFD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
@@ -276,8 +276,8 @@ class Zhifa extends Base
                 return returnFail('此单已审核');
             }
             $cgzfd->status = 3;
-            $cgzfd->auditer = Session::get('uid', 'admin');
-            $cgzfd->audit_name = Session::get('uinfo.name', 'admin');
+            $cgzfd->auditer = $this->getAccountId();
+            $cgzfd->audit_name = $this->getAccount()['name'];
             $cgzfd->save();
             (new Salesorder())->audit($request, $id, 2, false);
 

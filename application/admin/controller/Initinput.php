@@ -16,11 +16,11 @@ class Initinput extends Right
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
             $data["rkdh"] = "RKD" . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data["status"] = 1;
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+            $data['companyid'] = $this->getCompanyId();
             $data["clerk"] = request()->post("clerk");
             $data["department"] = request()->post("department");
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             $data['service_time'] = date("Y-m-d H:s:i", time());
             $data['remark'] = request()->post("remark");
             $data['remark'] = request()->post("remark");
@@ -47,11 +47,11 @@ class Initinput extends Right
 //            $ids = request()->param("id");
 //            $data["rukdh"]="RKD".time();
 //            $data["status"]=1;
-//            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+//            $data['companyid'] = $this->getCompanyId();
 //            $data["clerk"]=request()->post("clerk");
 //            $data["department"]=request()->post("department");
-//            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-//            $data['add_id'] = Session::get("uid", "admin");
+//            $data['add_name'] = $this->getAccount()['name'];
+//            $data['add_id'] = $this->getAccountId();
 //            $KC="KC".time();
 //            $re=model("instoragelist")->save($data);
 //            $res =model("purchasedetails")->where("id","in",$ids)->update(array("is_finished"=>2,"instorage_id"=>model("instoragelist")->id,"instorage_time"=>date("Y-m-d h:s:i",time())));
@@ -116,7 +116,7 @@ class Initinput extends Right
     public function initbank()
     {
         $params = request()->param();
-        $list = $list = \app\admin\model\InitBank::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list = $list = \app\admin\model\InitBank::where('companyid', $this->getCompanyId());
         $list = $this->getinitsearch($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
@@ -132,7 +132,7 @@ class Initinput extends Right
     public function initbankdetail($id = 0)
     {
         $data = \app\admin\model\InitBank::with(['details'])
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -152,12 +152,12 @@ class Initinput extends Right
     public function initbankadd($data = [], $return = false)
     {
         if (request()->isPost()) {
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId = $this->getCompanyId();
             $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')->count();
             $data = request()->post();
             $data["status"] = 0;
-            $data['create_operator_name'] = Session::get("uinfo.name", "admin");
-            $data['create_operator_id'] = Session::get("uid", "admin");
+            $data['create_operator_name'] = $this->getAccount()['name'];
+            $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_number'] = 'XJYHYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             if (!$return) {
@@ -198,7 +198,7 @@ class Initinput extends Right
      */
     public function initysk(){
         $params = request()->param();
-        $list = $list = \app\admin\model\InitYsfk::where(array("companyid"=>Session::get('uinfo.companyid', 'admin'),"type"=>0));
+        $list = $list = \app\admin\model\InitYsfk::where(array("companyid"=>$this->getCompanyId(),"type"=>0));
         $list = $this->getinitsearch($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
@@ -208,7 +208,7 @@ class Initinput extends Right
      */
     public function inityfk(){
         $params = request()->param();
-        $list = $list = \app\admin\model\InitYsfk::where(array("companyid"=>Session::get('uinfo.companyid', 'admin'),"type"=>1));
+        $list = $list = \app\admin\model\InitYsfk::where(array("companyid"=>$this->getCompanyId(),"type"=>1));
         $list = $this->getinitsearch($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
