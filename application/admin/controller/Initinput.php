@@ -5,6 +5,7 @@ namespace app\admin\controller;
 use think\Controller;
 use think\Db;
 use think\Exception;
+use app\admin\model\{KcSpot};
 use think\Session;
 
 class Initinput extends Right
@@ -39,25 +40,7 @@ class Initinput extends Right
             return returnRes($res, '失败');
         }
     }
-//    /**批量操作入库
-//     * @return \think\response\Json
-//     */
-//    public function instorage(){
-//        if(request()->isPost()){
-//            $ids = request()->param("id");
-//            $data["rukdh"]="RKD".time();
-//            $data["status"]=1;
-//            $data['companyid'] = $this->getCompanyId();
-//            $data["clerk"]=request()->post("clerk");
-//            $data["department"]=request()->post("department");
-//            $data['add_name'] = $this->getAccount()['name'];
-//            $data['add_id'] = $this->getAccountId();
-//            $KC="KC".time();
-//            $re=model("instoragelist")->save($data);
-//            $res =model("purchasedetails")->where("id","in",$ids)->update(array("is_finished"=>2,"instorage_id"=>model("instoragelist")->id,"instorage_time"=>date("Y-m-d h:s:i",time())));
-//            return returnRes($res,'修改失败');
-//        }
-//    }
+
     /**条件搜索
      * @param $params
      * @param $list
@@ -236,24 +219,25 @@ class Initinput extends Right
             try {
                 model("InitKc")->allowField(true)->data($data)->save();
                 $id = model("InitKc")->getLastInsID();
-                foreach ($data["detail"] as $c => $v) {
+                foreach ($data["details"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['kc_id'] = $id;
                 }
                 //添加其他入库明细
-                model('InitKcMx')->saveAll($data['details']);
+                model('InitKcMx')->allowField(true)->saveAll($data['details']);
+                $count1 = \app\admin\model\KcSpot::whereTime('create_time', 'today')->count();
                 //添加到库存
+
                 foreach ($data['details'] as $c => $v) {
                     $spot = [
                         'companyid' => $companyId,
                         'ruku_type' => 8,
-                        'ruku_fangshi' => $data['ruku_fangshi'],
                         'piaoju_id' => $data['piaoju_id'],
                         'resource_number' => "KC" . date('Ymd') . str_pad($count1 + 1, 3, 0, STR_PAD_LEFT),
                         'guige_id' => $v['guige_id'],
                         'data_id' => $id,
                         'pinming_id' => $v['pinming_id'],
-                        'store_id' => $v['store_id'],
+                        'store_id' => $v['store_id']?? '',
                         'caizhi_id' => $v['caizhi_id'] ?? '',
                         'chandi_id' => $v['chandi_id'] ?? '',
                         'jijiafangshi_id' => $v['jijiafangshi_id'],
@@ -382,7 +366,7 @@ class Initinput extends Right
             return returnRes(true, '', $data);
         }
     }
-    public function ysfkadd($data = [], $return = false)
+    public function addysfk($data = [], $return = false)
     {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
@@ -404,7 +388,7 @@ class Initinput extends Right
             try {
                 model("InitYsfk")->allowField(true)->data($data)->save();
                 $id = model("InitYsfk")->getLastInsID();
-                foreach ($data["detail"] as $c => $v) {
+                foreach ($data["details"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['ysfk_id'] = $id;
                 }
@@ -473,7 +457,7 @@ class Initinput extends Right
             try {
                 model("InitYskp")->allowField(true)->data($data)->save();
                 $id = model("InitYskp")->getLastInsID();
-                foreach ($data["detail"] as $c => $v) {
+                foreach ($data["details"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['ysfk_id'] = $id;
                 }
@@ -499,4 +483,5 @@ class Initinput extends Right
             return returnFail('请求方式错误');
         }
     }
+
 }

@@ -48,7 +48,7 @@ class Rk extends Right
     {
         $data = \app\admin\model\KcRk::with([
             'custom',
-            'details' => ['specification', 'jsfs', 'storage','pinmingData','caizhiData','chandiData'],
+            'details' => ['specification', 'jsfs', 'storage','pinmingData','caizhiData','chandiData','customData'],
         ]) ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
@@ -151,6 +151,7 @@ class Rk extends Right
                 //处理数据
                 $detailsValidate = new KcRkMx();
                 $num = 1;
+                $count1 = KcSpot::whereTime('create_time', 'today')->count();
                 foreach ($data['details'] as $c => $v) {
                     $dat['details'][$c]['id'] = $v['id'];
                     $dat['details'][$c]['counts'] = $v['old_counts'] - $v["counts"];//剩下的总件数
@@ -159,6 +160,7 @@ class Rk extends Right
                     $dat['details'][$c]['zhongliang'] = $v['old_zhongliang'] - $v["zhongliang"];//剩下的总件数
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['kc_rk_id'] = $rkid;
+                    $data['details'][$c]['resource_number']= "KC" . date('Ymd') . str_pad($count1 + 1, 3, 0, STR_PAD_LEFT);
 //                        $data['details'][$c]['data_id'] = $id;
                     $data['details'][$c]['cache_data_number'] = $v['cache_data_number'];
                     $data['details'][$c]['cache_customer_id'] = $v['cache_customer_id'] ?? '';
@@ -182,7 +184,7 @@ class Rk extends Right
                 //入库明细
 
                 model('KcRkMx')->allowField(true)->saveAll($data['details']);
-                $count1 = KcSpot::whereTime('create_time', 'today')->count();
+
                 //入库库存
                 $spot = [];
                 foreach ($data['details'] as $c => $v) {
