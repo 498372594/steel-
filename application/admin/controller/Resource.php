@@ -15,7 +15,7 @@ class Resource extends Right
      */
     public function  xhbj(Request $request, $pageLimit = 10){
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageDetails::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\ViewInstorageDetails::where('companyid', $this->getCompanyId());
 //        if (!empty($params['ywsjStart'])) {
 //            $list->where('service_time', '>=', $params['ywsjStart']);
 //        }
@@ -33,7 +33,7 @@ class Resource extends Right
      */
     public function xhhz(Request $request, $pageLimit = 10){
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageDetails::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\ViewInstorageDetails::where('companyid', $this->getCompanyId());
         $list=$this->getsearch($params,$list);
         $list=$list->field("storage,classname,productname,specification,texture,originarea,houdu_name,width,length,jianshu,sum(jianshu) as total_jianshu,sum(lingzhi) as total_lingzhi,sum(shuliang) as total_shuliang,sum(heavy) as total_heavy,sum(lisuanzongzhong) as total_lisuanzongzhong")
             ->group("storage_id,classid,productname,specification,width,length,houdu_name")
@@ -47,7 +47,7 @@ class Resource extends Right
      */
     public function getinout(){
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageOrder::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\ViewInstorageOrder::where('companyid', $this->getCompanyId());
         $list=$this->getsearch($params,$list);
 
         $list=$list
@@ -60,7 +60,7 @@ class Resource extends Right
      */
     public function getenroute(){
         $params = request()->param();
-        $list = \app\admin\model\Purchasedetails::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\Purchasedetails::where('companyid', $this->getCompanyId());
         $list->where('is_finished',1);
         $list=$this->getsearch($params,$list);
         $list=$list
@@ -73,7 +73,7 @@ class Resource extends Right
      */
     public function  reservedgoods(){
         $params = request()->param();
-        $list = \app\admin\model\ViewReserved::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\ViewReserved::where('companyid', $this->getCompanyId());
         $list=$this->getsearch($params,$list);
         $list=$list
             ->paginate(10);

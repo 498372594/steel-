@@ -20,7 +20,7 @@ class Feiyong extends Signin
      */
     public function add(Request $request, $data = [], $count = 0, $return = false, $useTrans = true)
     {
-        $companyid = Session::get('uinfo.companyid', 'admin');
+        $companyid = $this->getCompanyId();
         if (empty($count)) {
             $count = CapitalFy::whereTime('create_time', 'today')->where('companyid', $companyid)->count() + 1;
         }
@@ -30,7 +30,7 @@ class Feiyong extends Signin
         }
         $data['companyid'] = $companyid;
         $data['system_number'] = 'FYD' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
-        $data['create_operator_id'] = Session::get('uid', 'admin');
+        $data['create_operator_id'] = $this->getAccountId();
         $data['fymx_create_type'] = $return ? 1 : 2;
         $validate = new \app\admin\validate\CapitalFy();
         if (!$validate->check($data)) {
@@ -103,7 +103,7 @@ class Feiyong extends Signin
     public function addAll($data = [], $type = 0, $data_id = 0, $yw_time = '', $useTrans = true)
     {
         $request = Request::instance();
-        $companyid = Session::get('uinfo.companyid', 'admin');
+        $companyid = $this->getCompanyId();
         $count = CapitalFy::whereTime('create_time', 'today')->where('companyid', $companyid)->count();
         if ($useTrans) {
             Db::startTrans();

@@ -20,7 +20,7 @@ class Rk extends Right
         $params = request()->param();
         $list = \app\admin\model\KcRk::with([
             'custom',
-        ])->where('companyid', Session::get("uinfo", "admin")['companyid']);
+        ]) ->where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -48,8 +48,8 @@ class Rk extends Right
     {
         $data = \app\admin\model\KcRk::with([
             'custom',
-            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData'],
-        ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            'details' => ['specification', 'jsfs', 'storage','pinmingData','caizhiData','chandiData'],
+        ]) ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -66,8 +66,9 @@ class Rk extends Right
     public function getrktz()
     {
         $params = request()->param();
-        $list = \app\admin\model\KcRkTz::where('companyid', Session::get("uinfo", "admin")['companyid']);
-        $list->where("jianshu", ">", 0)->where("lingzhi", ">", 0)->where("counts", ">", 0);
+
+        $list = \app\admin\model\KcRkTz::with(['storage','pinmingData','caizhiData','chandiData'])->where('companyid', $this->getCompanyId());
+        $list->where("jianshu",">",0)->where("lingzhi",">",0)->where("counts",">",0);
 
         if (!empty($params['ids'])) {
             $list->where("id", "in", $params['ids']);
@@ -89,6 +90,9 @@ class Rk extends Right
         }
         if (!empty($params['system_number'])) {
             $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
+        }
+        if (!empty($params['cache_data_pnumber'])) {
+            $list->where('cache_data_pnumber', 'like', '%' . $params['cache_data_pnumber'] . '%');
         }
         if (!empty($params['guige_id'])) {
             $list->where('guige_id', $params['guige_id']);
@@ -120,13 +124,13 @@ class Rk extends Right
     public function ruku(Request $request, $moshi_type = 4, $data = [], $return = false)
     {
         if ($request->isPost()) {
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId = $this->getCompanyId();
             //数据处理
             if (empty($data)) {
                 $data = $request->post();
             }
-            $data['create_operator'] = Session::get("uinfo.name", "admin");
-            $data['create_operate_id'] = Session::get("uid", "admin");
+            $data['create_operator'] = $this->getAccount()['name'];
+            $data['create_operate_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['moshi_type'] = $moshi_type;
             if (!$return) {
@@ -273,8 +277,8 @@ class Rk extends Right
     public function clearstoragelist()
     {
         $params = request()->param();
-        $list = \app\admin\model\KcRkTz::where(array("companyid" => Session::get("uinfo", "admin")['companyid'], "zhongliang" => 0));
-        $list = $this->getsearchcondition($params, $list);
+        $list=\app\admin\model\KcRkTz::where(array("companyid"=> $this->getCompanyId(),"zhongliang"=>0));
+        $list =$this->getsearchcondition($params,$list);
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
@@ -310,7 +314,7 @@ class Rk extends Right
             'customData',
             'details' => ['specification', 'jsfs', 'storage','chandiData','customData','caizhiData','pinmingData'],
         ])
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('companyid',$this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -322,32 +326,74 @@ class Rk extends Right
     public function addqtrk($data = [], $return = false){
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
-            $count = \app\admin\model\KcDiaobo::whereTime('create_time', 'today')->count();
+            $count = \app\admin\model\KcQtrk::whereTime('create_time', 'today')->count();
             $data = request()->post();
             $data["status"] = 0;
             $data['create_operator_name'] = $this->getAccount()['name'];
             $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
-            $data['system_number'] = 'KCPD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data['system_number'] = 'QTRKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             if (!$return) {
                 Db::startTrans();
             }
             try {
-                model("KcDiaobo")->allowField(true)->data($data)->save();
-                $id = model("KcPandian")->getLastInsID();
+                model("KcQtrk")->allowField(true)->data($data)->save();
+                $id = model("KcQtrk")->getLastInsID();
                 foreach ($data["detail"] as $c => $v) {
-                    $dat['details'][$c]['id']=$v["id"];
-                    $dat['details'][$c]['counts']=$v["old_counts"]-$v["counts"];
-                    $dat['details'][$c]['jianshu']= intval( floor($dat['details'][$c]['counts']/$v["zhijian"]));
-                    $dat['details'][$c]['lingzhi']= $dat['details'][$c]['counts']%$v["zhijian"];
                     $data['details'][$c]['companyid'] = $companyId;
-                    $data['details'][$c]['pandian_id'] = $id;
-                    unset($v["id"]);
+                    $data['details'][$c]['kc_rk_qt_id'] = $id;
                 }
-                //修改库存数量
-                model("KcSpot")->saveAll($dat['details']);
-                //添加到
-                model('KcPandianMx')->saveAll($data['details']);
+                //添加其他入库明细
+                model('KcQtrkMx')->saveAll($data['details']);
+                //添加入库通知
+                $notify = [];
+                foreach ($data['details'] as $c => $v) {
+                    $notify[] = [
+                        'companyid' => $companyId,
+                        'ruku_type' =>3,
+                        'status' => 0,
+                        'data_id' => $id,
+                        'guige_id' => $v['guige_id'],
+                        'caizhi_id' => $v['caizhi_id'] ?? '',
+                        'chandi_id' => $v['chandi_id'] ?? '',
+                        'cache_piaoju_id' => $v['piaoju_id'] ?? '',
+                        'pinming_id' => $v['pinming_id'] ?? '',
+                        'jijiafangshi_id' => $v['jijiafangshi_id'],
+                        'houdu' => $v['houdu'] ?? '',
+                        'kuandu' => $v['kuandu'] ?? '',
+                        'changdu' => $v['changdu'] ?? '',
+                        'lingzhi' => $v['lingzhi'] ?? '',
+                        'fy_sz' => $v['fy_sz'] ?? '',
+                        'zhongliang' => $v['zhongliang'] ?? '',
+                        'jianshu' => $v['jianshu'] ?? '',
+                        'zhijian' => $v['zhijian'] ?? '',
+                        'counts' => $v['counts'] ?? '',
+                        'price' => $v['price'] ?? '',
+                        'sumprice' => $v['sumprice'] ?? '',
+                        'shuie' => $v['shuie'] ?? '',
+//                            'ruku_lingzhi' => $v['lingzhi'] ?? '',
+//                            'ruku_jianshu' => $v['jianshu'] ?? '',
+//                            'ruku_zhongliang' => $v['zhongliang'] ?? '',
+//                            'ruku_shuliang' => $v['counts'] ?? '',
+                        'shui_price' => $v['shui_price'] ?? '',
+                        'sum_shui_price' => $v['sum_shui_price'] ?? '',
+                        'beizhu' => $v['beizhu'] ?? '',
+                        'chehao' => $v['chehao'] ?? '',
+                        'pihao' => $v['pihao'] ?? '',
+                        'huohao' => $v['huohao'] ?? '',
+                        'cache_ywtime' => $data['yw_time'],
+                        'cache_data_pnumber' => $data['system_number'],
+                        'cache_customer_id' => $data['customer_id'],
+                        'store_id' => $v['store_id'],
+                        'cache_create_operator' => $data['create_operate_id'],
+                        'mizhong' => $v['mizhong'] ?? '',
+                        'jianzhong' => $v['jianzhong'] ?? '',
+                        'lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
+                        'guobang_zhongliang' => $v['zhongliang'] ?? '',
+                    ];
+                }
+                //添加入库通知
+                model("KcRkTz")->allowField(true)->saveAll($notify);
                 if (!$return) {
                     Db::commit();
                     return returnRes(true, '', ['id' => $id]);
@@ -368,5 +414,9 @@ class Rk extends Right
         } else {
             return returnFail('请求方式错误');
         }
+    }
+    public function ceshi(){
+        $sum=model("KcYlSh")->where("spot_id","")->count("shuliang");
+        dump($sum);
     }
 }

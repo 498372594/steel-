@@ -16,7 +16,7 @@ class Instorage extends Right
      */
     public function getrk(){
         $params = request()->param();
-        $list = \app\admin\model\KcRk::where('companyid', Session::get("uinfo", "admin")['companyid']);
+        $list = \app\admin\model\KcRk::where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -65,7 +65,7 @@ class Instorage extends Right
      */
     public function waitinstorage(){
         $params = request()->param();
-        $list = \app\admin\model\Purchasedetails::where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"is_finished"=>1));
+        $list = \app\admin\model\Purchasedetails::where(array("companyid"=>$this->getCompanyId(),"is_finished"=>1));
         if (!empty($params['time_start'])) {
             $list->where('create_time', '>=', $params['time_start']);
         }
@@ -109,12 +109,12 @@ class Instorage extends Right
             $data["department"]=request()->post("department");
             $data["clerk"]=request()->post("clerk");
             $data["service_time"]=date("Y-m-d H:s:i",time());
-            $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
+            $data['companyid'] = $this->getCompanyId();
             $data["clerk"]=request()->post("clerk");
             $data["type"]=1;
             $data["department"]=request()->post("department");
-            $data['add_name'] = Session::get("uinfo", "admin")['name'];
-            $data['add_id'] = Session::get("uid", "admin");
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
             $data["system_no"]='RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
 //            $data["rukdh"]='RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
@@ -174,9 +174,9 @@ class Instorage extends Right
                 $dat["remark"]=$data[" remark"];
                 $count = \app\admin\model\Checkstoragelist::whereTime('create_time', 'today')->count();
                 $dat["xtdh"]='KCPD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-                $dat['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $dat['add_name'] = Session::get("uinfo", "admin")['name'];
-                $dat['add_id'] = Session::get("uid", "admin");
+                $dat['companyid'] = $this->getCompanyId();
+                $dat['add_name'] = $this->getAccount()['name'];
+                $dat['add_id'] = $this->getAccountId();
                 $re=model("checkstoragelist")->save($dat);
                 $check=$data["check"];
                 $id=model("checkstoragelist")->id;
@@ -195,7 +195,7 @@ class Instorage extends Right
      */
         public function checkstoragedetails(){
             $check_id=request()->param();
-            $list=model("checkstoragedetail")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],"check_id"=>$check_id))->paginate(10);
+            $list=model("checkstoragedetail")->where(array("companyid"=>$this->getCompanyId(),"check_id"=>$check_id))->paginate(10);
             return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
         }
 
@@ -203,7 +203,7 @@ class Instorage extends Right
      * 库存调拨单列表(条件筛选)
      */
         public function getpurchaselist(){
-            $where['companyid']=array('eq',Session::get("uinfo", "admin")['companyid']);
+            $where['companyid']=array('eq',$this->getCompanyId());
             $where['is_finished']=array('eq',2);
 
         if (request()->param('starttime') !== "" ||request()->param('endtime') !== "") {
@@ -296,9 +296,9 @@ class Instorage extends Right
                     $data1["rkdh"]="RKD".date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
                     $data1["remark"]="库存调拨单,KCDBD".date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
                     $data1["service_time"]=date("Y-m-d H:s:m",time());
-                    $data1['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                    $data1['add_name'] = Session::get("uinfo", "admin")['name'];
-                    $data1['add_id'] = Session::get("uid", "admin");
+                    $data1['companyid'] = $this->getCompanyId();
+                    $data1['add_name'] = $this->getAccount()['name'];
+                    $data1['add_id'] = $this->getAccountId();
                     $re=model("instoragelist")->save($data1);
                     //转以后生成的入库明细
                     $info["instorage_id"]=model("instoragelist")->id;

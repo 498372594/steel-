@@ -10,7 +10,7 @@ namespace app\admin\model;
 
 use traits\model\SoftDelete;
 
-class InitYsfk extends Base
+class InitYskp extends Base
 {
     use SoftDelete;
     protected $deleteTime = 'delete_time';
@@ -18,6 +18,6 @@ class InitYsfk extends Base
 
     public function details()
     {
-        return $this->hasMany('InitYsfkMx', 'ysfk_id', 'id');
+        return $this->hasMany('InitYskpMx', 'yskp_id', 'id');
     }
 }

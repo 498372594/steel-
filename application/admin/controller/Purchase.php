@@ -14,7 +14,7 @@ use think\{Db,
     response\Json,
     Session};
 
-class Purchase extends Base
+class Purchase extends Right
 {
     /**
      * 采购单添加
@@ -31,14 +31,14 @@ class Purchase extends Base
     {
         if ($request->isPost()) {
             $count = CgPurchase::whereTime('create_time', 'today')->count();
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId = $this->getCompanyId();
 
             //数据处理
             if (empty($data)) {
                 $data = $request->post();
             }
-            $data['create_operator'] = Session::get("uinfo.name", "admin");
-            $data['create_operate_id'] = Session::get("uid", "admin");
+            $data['create_operator'] = $this->getAccount()['name'];
+            $data['create_operate_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_number'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data['moshi_type'] = $moshi_type;
@@ -261,87 +261,6 @@ class Purchase extends Base
             return returnFail('请求方式错误');
         }
     }
-//    public function purchaseadd($moshi_type = 6, $data = [], $return = false)
-//    {
-//        if (request()->isPost()) {
-//            $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')->count();
-//            $companyId = Session::get("uinfo.companyid", "admin");
-//            $data = request()->post();
-//            $data['create_operator'] = Session::get("uinfo.name", "admin");
-//            $data['create_operate_id'] = Session::get("uid", "admin");
-//            $data['companyid'] = $companyId;
-//            $data['system_number'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-//            $data['moshi_type'] = $moshi_type;
-//            if(empty(request()->post("id"))){
-//                model("CgPurchase")->allowField(true)->data($data)->save();
-//                $purchase_id = model("CgPurchase")->getLastInsID();
-//            }else{
-//                $re=model("CgPurchase")->allowField(true)->update($data);
-//                $purchase_id=$re->id;
-//            }
-//
-//            if (!$return) {
-//                Db::startTrans();
-//            }
-//
-//            foreach ($data['details'] as $c => $v) {
-//                $data['details'][$c]['companyid'] = $companyId;
-//                $data['details'][$c]['purchase_id'] = $purchase_id;
-//            }
-//            //采购单明细
-//            model('CgPurchaseMx')->allowField(true)->saveAll($data['details']);
-//            //手动入库添加入库通知
-//            if($data["ruku_fangshi"]==1){
-//
-//            }
-//            //自动入库
-//            if ($data["rkfs"] == 2) {
-//                $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')->count();
-//                $dat['add_name'] = Session::get("uinfo.name", "admin");
-//                $dat['add_id'] = Session::get("uid", "admin");
-//                $dat['companyid'] = $companyId;
-//                $dat['status'] = 1;
-//                $dat['type'] = 1;//入库类型（采购入库）
-//                $dat['rkdh'] = 'RKDH' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-//                $dat["service_time"] = date("Y-m-d H:s:i", time());//业务时间
-//                $dat["remark"] = 'RKD' . $data['system_no'];
-//                $dat['system_no'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-//                model("instoragelist")->allowField(true)->data($dat)->save();
-//                $instorage_id = model("instoragelist")->id;
-//                foreach ($data['details'] as $c => $v) {
-//                    $count = \app\admin\model\InstorageDetails::whereTime('create_time', 'today')->count();
-//                    $data['details'][$c]['type'] = 1;//入库类型，采购入库
-//                    $data['details'][$c]['zyh'] = 'KC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);;//资源号
-////                    $data['details'][$c]['is_finished'] = 2;//已入库
-//                    $data['details'][$c]['instorage_time'] = date("Y-m-d H:s:i");//入库时间
-//                    $data['details'][$c]['instorage_id'] = $instorage_id;//入库列表的id
-//                }
-//                model('InstorageDetails')->allowField(true)->saveAll($data['details']);
-//                model('InstorageOrder')->allowField(true)->saveAll($data['details']);
-//            }
-//            model('purchasedetails')->allowField(true)->saveAll($data['details']);
-//            if (!empty($data['other'])) {
-//                foreach ($data['other'] as $c => $v) {
-//                    $data['other'][$c]['purchase_id'] = $id;
-//                }
-//                model('purchase_fee')->allowField(true)->saveAll($data['other']);
-//                model('CapitalFy')->allowField(true)->saveAll($data['other']);
-//
-//            }
-//            if ($return) {
-//                return true;
-//            } else {
-//                return returnRes(true, '', ['id' => $id]);
-//            }
-//        } else {
-//            $purchase_id = request()->param("id");
-//            $data['purchaselist'] = db("purchaselist")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], 'id' => $purchase_id))->find();
-//            $data['detail'] = model("purchasedetails")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], 'id' => $purchase_id))->select();
-//            $data["other"] = model("purchase_fee")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], 'id' => $purchase_id))->select();
-//            return returnRes($data, '没有数据，请添加后重试', $data);
-//        }
-//    }
-
     /**
      * 获取大类列表
      * @return Json
@@ -351,7 +270,7 @@ class Purchase extends Base
      */
     public function getclassnamelist()
     {
-        $list = db("classname")->field("pid,id,classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
         $list = new Tree($list);
         $list = $list->leaf();
         return returnRes($list, '没有数据，请添加后重试', $list);
@@ -370,8 +289,7 @@ class Purchase extends Base
             'custom',
             'pjlxData',
             'jsfsData',
-        ])->where('companyid', Session::get("uinfo", "admin")['companyid']);
-
+        ])->where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -393,6 +311,9 @@ class Purchase extends Base
         if (!empty($params['system_number'])) {
             $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
         }
+        if (!empty($params['beizhu'])) {
+            $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
+        }
         if (!empty($params['yw_type'])) {
             $list->where('yw_type', $params['yw_type']);
         }
@@ -401,9 +322,6 @@ class Purchase extends Base
         }
         if (!empty($params['shou_huo_dan_wei'])) {
             $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);
-        }
-        if (!empty($params['beizhu'])) {
-            $list->where('remark', $params['remark']);
         }
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -418,7 +336,7 @@ class Purchase extends Base
      */
     public function purchaseaddinfo()
     {
-        $companyid = Session::get("uinfo", "admin")['companyid'];
+        $companyid = $this->getCompanyId();
         //往来单位运营商
         $data["custom"] = model("custom")->where(array("companyid" => $companyid, "issupplier" => 1))->field("id,custom")->select();
         //结算方式
@@ -461,7 +379,7 @@ class Purchase extends Base
             'jsfsData',
             'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData'],
             'other',
-        ])->where('companyid', Session::get('uinfo.companyid', 'admin'))
+        ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -508,7 +426,7 @@ class Purchase extends Base
      */
     public function getstorage()
     {
-        $list = model("storage")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,storage")->select();
+        $list = model("storage")->where("companyid", $this->getCompanyId())->field("id,storage")->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
@@ -521,7 +439,7 @@ class Purchase extends Base
      */
     public function getpjlx()
     {
-        $list = model("pjlx")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,pjlx,tax_rate")->select();
+        $list = model("pjlx")->where("companyid", $this->getCompanyId())->field("id,pjlx,tax_rate")->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
@@ -534,7 +452,7 @@ class Purchase extends Base
      */
     public function getsupplier()
     {
-        $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], "issupplier" => 1))->select();
+        $list = model("custom")->where(array("companyid" => $this->getCompanyId(), "issupplier" => 1))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
@@ -547,7 +465,7 @@ class Purchase extends Base
      */
     public function getcustom()
     {
-        $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid'], "iscustom" => 1))->select();
+        $list = model("custom")->where(array("companyid" => $this->getCompanyId(), "iscustom" => 1))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
@@ -560,7 +478,7 @@ class Purchase extends Base
      */
     public function getallcustom()
     {
-        $list = model("custom")->where(array("companyid" => Session::get("uinfo", "admin")['companyid']))->select();
+        $list = model("custom")->where(array("companyid" => $this->getCompanyId()))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
@@ -573,7 +491,7 @@ class Purchase extends Base
      */
     public function getjiesuanfangshi()
     {
-        $list = model("jiesuanfangshi")->where(array("companyid" => Session::get("uinfo", "admin")['companyid']))->field("id,jiesuanfangshi")->select();
+        $list = model("jiesuanfangshi")->where(array("companyid" => $this->getCompanyId()))->field("id,jiesuanfangshi")->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
@@ -586,7 +504,7 @@ class Purchase extends Base
      */
     public function gettexture()
     {
-        $list = model("texture")->where(array("companyid" => Session::get("uinfo", "admin")['companyid']))->field("id,texturename")->select();
+        $list = model("texture")->where(array("companyid" => $this->getCompanyId()))->field("id,texturename")->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
@@ -599,7 +517,7 @@ class Purchase extends Base
      */
     public function getoriginarea()
     {
-        $list = model("originarea")->where(array("companyid" => Session::get("uinfo", "admin")['companyid']))->field("id,originarea")->select();
+        $list = model("originarea")->where(array("companyid" => $this->getCompanyId()))->field("id,originarea")->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
@@ -612,7 +530,7 @@ class Purchase extends Base
      */
     public function getproductname()
     {
-        $list = model("productname")->where(array("companyid" => Session::get("uinfo", "admin")['companyid']))->field("id,name")->select();
+        $list = model("productname")->where(array("companyid" => $this->getCompanyId()))->field("id,name")->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 }

@@ -1,12 +1,22 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: Administrator
+ * Date: 2019/3/19
+ * Time: 8:52
+ */
 
 namespace app\admin\model;
+
 use traits\model\SoftDelete;
-class KcRkTz extends Base
+
+class InitKcMx extends Base
 {
     use SoftDelete;
     protected $deleteTime = 'delete_time';
     protected $autoWriteTimestamp = 'datetime';
+
+
     public function specification()
     {
         return $this->belongsTo('ViewSpecification', 'guige_id', 'id')->cache(true, 60)
@@ -39,23 +49,4 @@ class KcRkTz extends Base
         return $this->belongsTo('Originarea', 'chandi_id', 'id')->cache(true, 60)
             ->field('id,originarea')->bind(['chandi' => 'originarea']);
     }
-    // 验证规则
-    public $rules = [
-
-    ];
-
-    // 验证错误信息
-    public $msg = [
-
-    ];
-
-    // 场景
-    public $scene = [
-
-    ];
-
-    // 表单-数据表字段映射
-    public $map = [
-
-    ];
 }

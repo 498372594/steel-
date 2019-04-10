@@ -18,7 +18,7 @@ class Steelmanagement extends Right
 
     public function productname()
     {
-        $list = model("productname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("productname")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -30,17 +30,17 @@ class Steelmanagement extends Right
                 $data['name'] = request()->post("name");
                 $data['sort'] = request()->post("sort");
                 $data['zjm'] = request()->post("zjm");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("productname")->save($data);
             } else {
                 $id = request()->post("id");
                 $data['name'] = request()->post("name");
                 $data['sort'] = request()->post("sort");
                 $data['zjm'] = request()->post("zjm");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("productname")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -75,7 +75,7 @@ class Steelmanagement extends Right
 
     public function texture()
     {
-        $list = model("texture")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("texture")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -87,17 +87,17 @@ class Steelmanagement extends Right
                 $data['texturename'] = request()->post("texturename");
                 $data['sort'] = request()->post("sort");
                 $data['zjm'] = request()->post("zjm");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("texture")->save($data);
             } else {
                 $id = request()->post("id");
                 $data['texturename'] = request()->post("texturename");
                 $data['sort'] = request()->post("sort");
                 $data['zjm'] = request()->post("zjm");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("texture")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -132,7 +132,7 @@ class Steelmanagement extends Right
 
     public function originarea()
     {
-        $list = model("originarea")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("originarea")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -144,17 +144,17 @@ class Steelmanagement extends Right
                 $data['originarea'] = request()->post("originarea");
                 $data['sort'] = request()->post("sort");
                 $data['zjm'] = request()->post("zjm");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("originarea")->save($data);
             } else {
                 $id = request()->post("id");
                 $data['originarea'] = request()->post("originarea");
                 $data['sort'] = request()->post("sort");
                 $data['zjm'] = request()->post("zjm");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("originarea")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -189,7 +189,7 @@ class Steelmanagement extends Right
 
     public function specification()
     {
-        $list = model("specification")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("specification")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -200,16 +200,16 @@ class Steelmanagement extends Right
             if (empty(request()->post("id"))) {
                 $data['specification'] = request()->post("specification");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("specification")->save($data);
             } else {
                 $id = request()->post("id");
                 $data['specification'] = request()->post("specification");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("specification")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -244,7 +244,7 @@ class Steelmanagement extends Right
 
     public function storage()
     {
-        $list = model("storage")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("storage")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -255,9 +255,9 @@ class Steelmanagement extends Right
             if (empty(request()->post("id"))) {
                 $data['storage'] = request()->post("storage");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("storage")->save($data);
                 $data['address'] = request()->post("address");
                 $data['contacts'] = request()->post("contacts");
@@ -267,8 +267,8 @@ class Steelmanagement extends Right
                 $id = request()->post("id");
                 $data['storage'] = request()->post("storage");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $data['address'] = request()->post("address");
                 $data['contacts'] = request()->post("contacts");
                 $data['phone'] = request()->post("phone");
@@ -307,7 +307,7 @@ class Steelmanagement extends Right
 
     public function unit()
     {
-        $list = model("unit")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("unit")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -318,16 +318,16 @@ class Steelmanagement extends Right
             if (empty(request()->post("id"))) {
                 $data['unit'] = request()->post("unit");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("unit")->save($data);
             } else {
                 $id = request()->post("id");
                 $data['unit'] = request()->post("unit");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("unit")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -362,7 +362,7 @@ class Steelmanagement extends Right
 
     public function classname()
     {
-        $list = model("classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("classname")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -374,16 +374,16 @@ class Steelmanagement extends Right
             if (empty(request()->post("id"))) {
 //                $data['classname'] = request()->post("classname");
 //                $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("classname")->save($data);
             } else {
                 $id = request()->post("id");
 //                $data['classname'] = request()->post("classname");
 //                $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("classname")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -416,12 +416,12 @@ class Steelmanagement extends Right
         }
     }
 //    public function ceshi(){
-//        $list['value']=model("classname")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("classname")->select();
+//        $list['value']=model("classname")->where("companyid",$this->getCompanyId())->field("classname")->select();
 //        return json($list);
 //    }
     public function product()
     {
-        $list = model("product")->alias("a")->join("classname b", "a.classid=b.id", "left")->field("a.*,b.classname")->where("a.companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("product")->alias("a")->join("classname b", "a.classid=b.id", "left")->field("a.*,b.classname")->where("a.companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -436,33 +436,33 @@ class Steelmanagement extends Right
                 if (!model("productname")->where("name", $data['productname'])->find()) {
                     $class['name'] = $data['productname'];
                     $class['zjm'] = request()->post("zjm");
-                    $class['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                    $class['add_name'] = Session::get("uinfo", "admin")['name'];
-                    $class['add_id'] = Session::get("uid", "admin");
+                    $class['companyid'] = $this->getCompanyId();
+                    $class['add_name'] = $this->getAccount()['name'];
+                    $class['add_id'] = $this->getAccountId();
                     model("productname")->save($class);
                 }
                 $data['texture'] = request()->post("texture");
                 if (!model("texture")->where("texturename", $data['texture'])->find()) {
                     $texture['texturename'] = $data['texture'];
-                    $texture['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                    $texture['add_name'] = Session::get("uinfo", "admin")['name'];
-                    $texture['add_id'] = Session::get("uid", "admin");
+                    $texture['companyid'] = $this->getCompanyId();
+                    $texture['add_name'] = $this->getAccount()['name'];
+                    $texture['add_id'] = $this->getAccountId();
                     model("texture")->save($texture);
                 }
                 $data['originarea'] = request()->post("originarea");
                 if (!model("originarea")->where("originarea", $data['originarea'])->find()) {
                     $orginarea['originarea'] = $data['originarea'];
-                    $orginarea['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                    $orginarea['add_name'] = Session::get("uinfo", "admin")['name'];
-                    $orginarea['add_id'] = Session::get("uid", "admin");
+                    $orginarea['companyid'] = $this->getCompanyId();
+                    $orginarea['add_name'] = $this->getAccount()['name'];
+                    $orginarea['add_id'] = $this->getAccountId();
                     model("originarea")->save($orginarea);
                 }
                 $data['specification'] = request()->post("specification");
                 if (!model("specification")->where("specification", $data['specification'])->find()) {
                     $specification['specification'] = $data['specification'];
-                    $specification['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                    $specification['add_name'] = Session::get("uinfo", "admin")['name'];
-                    $specification['add_id'] = Session::get("uid", "admin");
+                    $specification['companyid'] = $this->getCompanyId();
+                    $specification['add_name'] = $this->getAccount()['name'];
+                    $specification['add_id'] = $this->getAccountId();
                     model("specification")->save($specification);
                 }
                 $data['piece_weight'] = request()->post("piece_weight");
@@ -473,9 +473,9 @@ class Steelmanagement extends Right
                 $data['weight_alarm_val'] = request()->post("weight_alarm_val");
                 $data['pack_no'] = request()->post("pack_no");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("product")->save($data);
             } else {
                 $id = request()->post("id");
@@ -492,8 +492,8 @@ class Steelmanagement extends Right
                 $data['unit'] = request()->post("unit");
                 $data['pack_no'] = request()->post("pack_no");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("product")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -503,7 +503,7 @@ class Steelmanagement extends Right
             }
         } else {
             $id = request()->param("id");
-            $classlist = model("classname")->where("companyid", Session::get("uinfo", "admin")['companyid'])->field("id,classname")->select();
+            $classlist = model("classname")->where("companyid", $this->getCompanyId())->field("id,classname")->select();
             $classArr = ["" => ""];
             if ($classlist) {
                 foreach ($classlist as $k => $v) {
@@ -530,7 +530,7 @@ class Steelmanagement extends Right
 
     public function jsfs()
     {
-        $list = model("jsfs")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("jsfs")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -541,16 +541,16 @@ class Steelmanagement extends Right
             if (empty(request()->post("id"))) {
                 $data['jsfs'] = request()->post("jsfs");
                 $data['jjlx'] = request()->post("jjlx");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("jsfs")->save($data);
             } else {
                 $id = request()->post("id");
                 $data['jsfs'] = request()->post("jsfs");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("jsfs")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -589,7 +589,7 @@ class Steelmanagement extends Right
     }
     public function custom()
     {
-        $list = model("custom")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("custom")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -608,9 +608,9 @@ class Steelmanagement extends Right
                 $data['issupplier'] = request()->post("issupplier");
                 $data['other'] = request()->post("other");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("custom")->save($data);
             } else {
                 $id = request()->post("id");
@@ -624,8 +624,8 @@ class Steelmanagement extends Right
                 $data['issupplier'] = request()->post("issupplier");
                 $data['other'] = request()->post("other");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("custom")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -659,7 +659,7 @@ class Steelmanagement extends Right
     }
     public function transportation()
     {
-        $list = model("transportation")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("transportation")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
@@ -670,16 +670,16 @@ class Steelmanagement extends Right
             if (empty(request()->post("id"))) {
                 $data['transportation'] = request()->post("transportation");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("transportation")->save($data);
             } else {
                 $id = request()->post("id");
                 $data['transportation'] = request()->post("transportation");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("transportation")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -725,9 +725,9 @@ class Steelmanagement extends Right
                 $data['kaihuhang'] = request()->post("kaihuhang");
                 $data['bank'] = request()->post("bank");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("bank")->save($data);
             } else {
                 $id = request()->post("id");
@@ -737,8 +737,8 @@ class Steelmanagement extends Right
                 $data['kaihuhang'] = request()->post("kaihuhang");
                 $data['bank'] = request()->post("bank");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("bank")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -773,7 +773,7 @@ class Steelmanagement extends Right
     }
     public function bindex(){
         $model=request()->param('model');
-        $list = model("$model")->where("companyid", Session::get("uinfo", "admin")['companyid'])->select();
+        $list = model("$model")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view("$model");
     }
@@ -790,9 +790,9 @@ class Steelmanagement extends Right
                 $data['zjts'] = request()->post("zjts");
                 $data['description'] = request()->post("description");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("faxi")->save($data);
             } else {
                 $id = request()->post("id");
@@ -805,8 +805,8 @@ class Steelmanagement extends Right
                 $data['zjts'] = request()->post("zjts");
                 $data['description'] = request()->post("description");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("faxi")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -837,9 +837,9 @@ class Steelmanagement extends Right
                 $data['ticheng_price'] = request()->post("ticheng_price");
                 $data['huikuanxishu'] = request()->post("huikuanxishu");
                 $data['jsgs'] = request()->post("jsgs");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("faxi")->save($data);
             } else {
                 $id = request()->post("id");
@@ -850,8 +850,8 @@ class Steelmanagement extends Right
                 $data['ticheng_price'] = request()->post("ticheng_price");
                 $data['huikuanxishu'] = request()->post("huikuanxishu");
                 $data['jsgs'] = request()->post("jsgs");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("faxi")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -877,16 +877,16 @@ class Steelmanagement extends Right
             if (empty(request()->post("id"))) {
                 $data['jiesuanfangshi'] = request()->post("jiesuanfangshi");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("jiesuanfangshi")->save($data);
             } else {
                 $id = request()->post("id");
                 $data['jiesuanfangshi'] = request()->post("jiesuanfangshi");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("jiesuanfangshi")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -914,9 +914,9 @@ class Steelmanagement extends Right
                 $data['tax_rate'] = request()->post("tax_rate");
                 $data['second_name'] = request()->post("second_name");
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("pjlx")->save($data);
             } else {
                 $id = request()->post("id");
@@ -924,8 +924,8 @@ class Steelmanagement extends Right
                 $data['tax_rate'] = request()->post("tax_rate");
                 $data['second_name'] = request()->post("second_name");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("pjlx")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -953,15 +953,15 @@ class Steelmanagement extends Right
                 $data['class'] = request()->post("class");
                 if(!model("paymentclass")->where("name",$data['class'])->find()){
                     $data1['name']=$data['class'];
-                    $data1['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                    $data1['add_name'] = Session::get("uinfo", "admin")['name'];
-                    $data1['add_id'] = Session::get("uid", "admin");
+                    $data1['companyid'] = $this->getCompanyId();
+                    $data1['add_name'] = $this->getAccount()['name'];
+                    $data1['add_id'] = $this->getAccountId();
                     model("paymentclass")->save($data1);
                 }
                 $data['sort'] = request()->post("sort");
-                $data['companyid'] = Session::get("uinfo", "admin")['companyid'];
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['companyid'] = $this->getCompanyId();
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("paymenttype")->save($data);
             } else {
                 $id = request()->post("id");
@@ -969,8 +969,8 @@ class Steelmanagement extends Right
                 $data['type'] = request()->post("type");
                 $data['class'] = request()->post("class");
                 $data['sort'] = request()->post("sort");
-                $data['add_name'] = Session::get("uinfo", "admin")['name'];
-                $data['add_id'] = Session::get("uid", "admin");
+                $data['add_name'] = $this->getAccount()['name'];
+                $data['add_id'] = $this->getAccountId();
                 $result = model("paymenttype")->where("id", $id)->update($data);
             }
             if ($result) {
@@ -993,13 +993,13 @@ class Steelmanagement extends Right
     }
     public function paymenttype(){
         $type=request()->param("type");
-        $list = model("paymenttype")->where(array("companyid"=>Session::get("uinfo", "admin")['companyid'],'type'=>$type))->select();
+        $list = model("paymenttype")->where(array("companyid"=>$this->getCompanyId(),'type'=>$type))->select();
         $this->assign("list", $list);
         $this->assign("type", $type);
         return view();
     }
     public function paymentclass(){
-        $list['value']=model("paymentclass")->where("companyid",Session::get("uinfo", "admin")['companyid'])->field("id,name")->select();
+        $list['value']=model("paymentclass")->where("companyid",$this->getCompanyId())->field("id,name")->select();
         return json($list);
     }
 }

@@ -14,7 +14,7 @@ use think\{Db,
     response\Json,
     Session};
 
-class SalesTiaohuo extends Base
+class SalesTiaohuo extends Right
 {
     /**
      * 获取采购直发单列表
@@ -30,7 +30,7 @@ class SalesTiaohuo extends Base
         }
         $params = $request->param();
         $list = SalesMoshi::with(['custom', 'khpjData', 'khjsfsData'])
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('companyid', $this->getCompanyId())
             ->where('moshi_type', 2);
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
@@ -78,7 +78,7 @@ class SalesTiaohuo extends Base
             'details' => ['specification', 'cgJsfsData', 'cgPjData', 'storage', 'jsfs', 'wldwData'],
             'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]]
         ])
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('companyid', $this->getCompanyId())
             ->where('moshi_type', 2)
             ->where('id', $id)
             ->find();
@@ -98,7 +98,7 @@ class SalesTiaohuo extends Base
     public function add(Request $request)
     {
         if ($request->isPost()) {
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId = $this->getCompanyId();
             $count = SalesMoshi::whereTime('create_time', 'today')
                 ->where('moshi_type', 2)
                 ->where('companyid', $companyId)
@@ -106,7 +106,7 @@ class SalesTiaohuo extends Base
 
             //获取请求数据
             $data = $request->post();
-            $data['create_operator_id'] = Session::get("uid", "admin");
+            $data['create_operator_id'] = $this->getAccountId();
             $data['moshi_type'] = 2;
             $data['companyid'] = $companyId;
             $data['system_no'] = 'THXSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
@@ -271,8 +271,8 @@ class SalesTiaohuo extends Base
                 return returnFail('此单已审核');
             }
             $salesTiaohuo->status = 3;
-            $salesTiaohuo->audit_id = Session::get('uid', 'admin');
-            $salesTiaohuo->audit_name = Session::get('uinfo.name', 'admin');
+            $salesTiaohuo->audit_id = $this->getAccountId();
+            $salesTiaohuo->audit_name = $this->getAccount()['name'];
             $salesTiaohuo->save();
             (new Salesorder())->audit($request, $id, 3, false);
 

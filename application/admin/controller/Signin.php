@@ -140,7 +140,6 @@ class Signin extends Base
         }else{
             return Session::get('uid','admin');
         }
-
     }
 
     /**

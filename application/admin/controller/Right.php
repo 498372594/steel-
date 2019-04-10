@@ -155,6 +155,38 @@ class Right extends Signin
         if (!empty($params['chandi'])) {
             $list->where('chandi', $params['chandi']);
         }
+        //业务时间
+        if (!empty($params['ywsjStart'])) {
+            $list->where('yw_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        if (!empty($params['piaoju_id'])) {
+            $list->where('piaoju_id', $params['piaoju_id']);
+        }
+        //系统单号
+        if (!empty($params['system_number'])) {
+            $list->where('system_number', $params['system_number']);
+        }
+        //备注
+        if (!empty($params['beizhu'])) {
+            $list->where('beizhu', $params['beizhu']);
+        }
+        //创建时间
+        if (!empty($params['time_start'])) {
+            $list->where('create_time', '>=', $params['time_start']);
+        }
+        if (!empty($params['time_end'])) {
+            $list->where('create_time', '<=', date('Y-m-d', strtotime($params['time_end'] . ' +1 day')));
+        }
+        //应收应付初始化录入
+        if (!empty($params['type'])) {
+            $list->where('type', $params['type']);
+        }
+        if (!empty($params['create_operator_id'])) {
+            $list->where('create_operator_id', $params['create_operator_id']);
+        }
         return $list;
     }
 

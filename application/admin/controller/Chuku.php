@@ -44,7 +44,7 @@ class Chuku extends Right
             'jsfs',
             'specification',
             'storage',
-        ])->where('companyid', Session::get('uinfo.companyid', 'admin'));
+        ])->where('companyid', $this->getCompanyId());
         if (!empty($params['id'])) {
             $list->where('id', $params['id']);
         }
@@ -110,7 +110,7 @@ class Chuku extends Right
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = StockOut::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list = StockOut::where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -135,13 +135,12 @@ class Chuku extends Right
      * @param Request $request
      * @param array $data 出库数据
      * @param array $stockOutDetails 出库明细
-     * @param int $outType 出库类型
      * @param int $outMode 出库方式
      * @param bool $return 是否返回
      * @return array|bool|string|Json
      * @throws \think\Exception
      */
-    public function add(Request $request, $data = [], $stockOutDetails = [], $outType = 4, $outMode = 2, $return = false)
+    public function add(Request $request, $data = [], $stockOutDetails = [], $outMode = 2, $return = false)
     {
         if (!$request->isPost()) {
             if ($return) {
@@ -150,7 +149,7 @@ class Chuku extends Right
                 return returnFail('请求方式错误');
             }
         }
-        $companyId = Session::get('uinfo.companyid', 'admin');
+        $companyId = $this->getCompanyId();
         $count = StockOut::whereTime('create_time', 'today')
             ->where('companyid', $companyId)
             ->count();
@@ -161,8 +160,7 @@ class Chuku extends Right
         }
         $data['companyid'] = $companyId;
         $data['system_number'] = 'CKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-        $data['create_operator_id'] = Session::get("uid", "admin");
-        $data['out_type'] = $outType;
+        $data['create_operator_id'] = $this->getAccountId();
         $data['out_mode'] = $outMode;
 
         //数据验证
@@ -215,7 +213,7 @@ class Chuku extends Right
                     unset($detailsData['id'], $detailsData['create_time'], $detailsData['update_time'], $detailsData['delete_time']);
                     $detailsData['stock_out_id'] = $id;
                     $detailsData['kucun_cktz_id'] = $v['kucun_cktz_id'] <= 0 ? null : $v['kucun_cktz_id'];
-                    $detailsData['out_type'] = $outType;
+                    $detailsData['out_type'] = $detailsData['chuku_type'];
                     $detailsData['out_mode'] = $outMode;
                     $detailModel = new StockOutDetail();
                     $detailModel->allowField(true)->data($detailsData)->save();
@@ -238,7 +236,7 @@ class Chuku extends Right
                 $madan = $resource->getData();
                 unset($madan['id'], $madan['create_time'], $madan['update_time'], $madan['delete_time']);
                 $madan['stock_out_id'] = $id;
-                $madan['out_type'] = $outType;
+                $madan['out_type'] = $detailsData['chuku_type'];
                 $madan['out_mode'] = $outMode;
                 $madan['caizhi'] = $resource['caizhi_id'];
                 $madan['chandi'] = $resource['chandi_id'];
@@ -281,7 +279,7 @@ class Chuku extends Right
             'already' => ['specification', 'jsfs', 'spot', 'storage']
         ])
             ->where('id', $id)
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('companyid', $this->getCompanyId())
             ->find();
         return returnRes(!empty($data), '出库单不存在', $data);
     }
@@ -297,7 +295,7 @@ class Chuku extends Right
     {
         if ($request->isPut()) {
             $stockOut = StockOut::where('id', $id)
-                ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+                ->where('companyid', $this->getCompanyId())
                 ->find();
             if (empty($stockOut)) {
                 return returnFail('数据不存在');
@@ -309,7 +307,7 @@ class Chuku extends Right
                 return returnFail('此单已作废');
             }
             $stockOut->status = 3;
-            $stockOut->check_operator_id = Session::get('uid', 'admin');
+            $stockOut->check_operator_id = $this->getAccountId();
             $stockOut->save();
             return returnSuc();
         }
@@ -327,7 +325,7 @@ class Chuku extends Right
     {
         if ($request->isPut()) {
             $stockOut = StockOut::where('id', $id)
-                ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+                ->where('companyid', $this->getCompanyId())
                 ->find();
             if (empty($stockOut)) {
                 return returnFail('数据不存在或已作废');
@@ -361,11 +359,11 @@ class Chuku extends Right
 
             if ($isWeb) {
                 $stockOut = \app\admin\model\Salesorder::where('id', $id)
-                    ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+                    ->where('companyid', $this->getCompanyId())
                     ->find();
             } else {
                 $stockOut = \app\admin\model\Salesorder::where('data_id', $id)
-                    ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+                    ->where('companyid', $this->getCompanyId())
                     ->find();
             }
             if (empty($stockOut)) {
