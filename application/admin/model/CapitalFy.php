@@ -26,4 +26,9 @@ class CapitalFy extends Base
         return $this->belongsTo('Custom', 'customer_id', 'id')->cache(true, 60)
             ->field('id,custom')->bind(['dfdw_name' => 'custom']);
     }
+
+    public function details()
+    {
+        return $this->hasMany('CapitalFyhx', 'cap_fy_id', 'id');
+    }
 }

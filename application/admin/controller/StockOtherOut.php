@@ -32,7 +32,8 @@ class StockOtherOut extends Right
             'custom',
             'pjlxData',
             'jsfsData',
-        ])->where('companyid', $this->getCompanyId());
+        ])->where('companyid', $this->getCompanyId())
+            ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -248,9 +249,9 @@ class StockOtherOut extends Right
     public function cancel(Request $request, $id = 0)
     {
         if ($request->isPost()) {
-                $salesorder = \app\admin\model\StockOtherOut::where('id', $id)
-                    ->where('companyid', $this->getCompanyId())
-                    ->find();
+            $salesorder = \app\admin\model\StockOtherOut::where('id', $id)
+                ->where('companyid', $this->getCompanyId())
+                ->find();
             if (empty($salesorder)) {
                 return returnFail('数据不存在');
             }

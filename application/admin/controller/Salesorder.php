@@ -26,14 +26,18 @@ class Salesorder extends Right
      * @return Json
      * @throws DbException
      */
-    public function getlist(Request $request, $pageLimit = 10)
+    public function getList(Request $request, $pageLimit = 10)
     {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
         $params = $request->param();
         $list = \app\admin\model\Salesorder::with([
             'custom',
             'pjlxData',
             'jsfsData',
-        ])->where('companyid', $this->getCompanyId());
+        ])->where('companyid', $this->getCompanyId())
+            ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
@@ -408,6 +412,10 @@ class Salesorder extends Right
             }
             $salesorder->status = 2;
             $salesorder->save();
+            //费用单作废
+            foreach ($salesorder->other as $item) {
+                $item->mingxi->save(['status' => 2]);
+            }
             (new Chuku())->cancel($request, $id, false);
             return returnSuc();
         }

@@ -3,8 +3,14 @@
 namespace app\admin\controller;
 
 use app\admin\model\CapitalFy;
+use app\admin\model\CapitalFyhx;
 use Exception;
-use think\{Db, Request, response\Json, Session};
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    exception\DbException,
+    Request,
+    response\Json};
 
 class Feiyong extends Signin
 {
@@ -47,14 +53,11 @@ class Feiyong extends Signin
             $model = new CapitalFy();
             $model->allowField(true)->data($data)->save();
             $id = $model->getLastInsID();
-            $now = time();
             foreach ($data['details'] as $c => $v) {
                 $data['details'][$c]['companyid'] = $companyid;
                 $data['details'][$c]['cap_fy_id'] = $id;
-                $data['details'][$c]['create_time'] = $now;
-                $data['details'][$c]['update_time'] = $now;
             }
-            Db::name('CapitalFyhx')->insertAll($data['details']);
+            (new CapitalFyhx())->allowField(true)->saveAll($data['details']);
 
             if ($useTrans) {
                 Db::commit();
@@ -120,8 +123,6 @@ class Feiyong extends Signin
                     'customer_id' => $item['customer_id']
                 ]];
                 $item['yw_time'] = $yw_time;
-                $item['hxmoney'] = $item['money'] ?? 0;
-                $item['hxzhongliang'] = $item['zhongliang'] ?? 0;
 
                 //添加费用单
                 $res = $this->add($request, $item, ++$count, true, false);
@@ -139,5 +140,177 @@ class Feiyong extends Signin
             }
             return $e->getMessage();
         }
+    }
+
+    /**
+     * 获取费用单列表
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function getList(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $params = $request->param();
+        $list = CapitalFy::with([
+            'custom',
+            'pjlxData',
+            'szmcData',
+        ])->where('companyid', $this->getCompanyId())
+            ->order('create_time', 'desc');
+        if (!empty($params['ywsjStart'])) {
+            $list->where('yw_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        if (!empty($params['status'])) {
+            $list->where('status', $params['status']);
+        }
+        if (!empty($params['system_number'])) {
+            $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
+        }
+        if (!empty($params['customer_id'])) {
+            $list->where('customer_id', $params['customer_id']);
+        }
+        if (!empty($params['group_id'])) {
+            $list->where('group_id', $params['group_id']);
+        }
+        if (!empty($params['sale_operator_id'])) {
+            $list->where('sale_operator_id', $params['sale_operator_id']);
+        }
+        if (!empty($params['beizhu'])) {
+            $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
+        }
+        $list = $list->paginate($pageLimit);
+        return returnRes(true, '', $list);
+
+    }
+
+    /**
+     * 获取费用单详情
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
+     */
+    public function detail(Request $request, $id = 0)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $data = CapitalFy::with([
+            'custom',
+            'pjlxData',
+            'szmcData',
+            'details' => ['custom']
+        ])
+            ->where('companyid', $this->getCompanyId())
+            ->where('id', $id)
+            ->find();
+        if (empty($data)) {
+            return returnFail('数据不存在');
+        } else {
+            return returnRes(true, '', $data);
+        }
+    }
+
+    /**
+     * 审核
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     * @throws DbException
+     */
+    public function audit(Request $request, $id = 0)
+    {
+        if (!$request->isPut()) {
+            return returnFail('请求方式错误');
+        }
+        $capitalFy = CapitalFy::where('id', $id)
+            ->where('companyid', $this->getCompanyId())
+            ->find();
+        if (empty($capitalFy)) {
+            return returnFail('数据不存在');
+        }
+        if ($capitalFy->status == 3) {
+            return returnFail('此单已审核');
+        }
+        if ($capitalFy->status == 2) {
+            return returnFail('此单已作废');
+        }
+        $capitalFy->status = 3;
+        $capitalFy->check_operator_id = $this->getAccountId();
+        $capitalFy->save();
+        return returnSuc();
+    }
+
+    /**
+     * 反审核
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     * @throws DbException
+     */
+    public function unAudit(Request $request, $id = 0)
+    {
+        if ($request->isPut()) {
+            return returnFail('请求方式错误');
+
+        }
+        $capitalFy = CapitalFy::where('id', $id)
+            ->where('companyid', $this->getCompanyId())
+            ->find();
+        if (empty($capitalFy)) {
+            return returnFail('数据不存在或已作废');
+        }
+        if ($capitalFy->status == 1) {
+            return returnFail('此单未审核');
+        }
+        if ($capitalFy->status == 2) {
+            return returnFail('此单已作废');
+        }
+        $capitalFy->status = 1;
+        $capitalFy->check_operator_id = null;
+        $capitalFy->save();
+        return returnSuc();
+    }
+
+    /**
+     * 作废
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     * @throws DbException
+     */
+    public function cancel(Request $request, $id = 0)
+    {
+        if ($request->isPost()) {
+            $salesorder = CapitalFy::where('id', $id)
+                ->where('companyid', $this->getCompanyId())
+                ->find();
+            if (empty($salesorder)) {
+                return returnFail('数据不存在');
+            }
+            if ($salesorder->fymx_create_type != 2) {
+                return returnFail('业务生成费用单，请操作原单');
+            }
+            if ($salesorder->status == 3) {
+                return returnFail('此单已审核，禁止作废');
+            }
+            if ($salesorder->status == 2) {
+                return returnFail('此单已作废');
+            }
+            $salesorder->status = 2;
+            $salesorder->save();
+            (new Chuku())->cancel($request, $id, false);
+            return returnSuc();
+        }
+        return returnFail('请求方式错误');
     }
 }

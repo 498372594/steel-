@@ -105,13 +105,14 @@ class Chuku extends Right
      * @return Json
      * @throws DbException
      */
-    public function getlist(Request $request, $pageLimit = 10)
+    public function getList(Request $request, $pageLimit = 10)
     {
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = StockOut::where('companyid', $this->getCompanyId());
+        $list = StockOut::where('companyid', $this->getCompanyId())
+            ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
