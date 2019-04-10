@@ -15,8 +15,7 @@ use think\{Db,
     db\exception\ModelNotFoundException,
     exception\DbException,
     Request,
-    response\Json,
-    Session};
+    response\Json};
 
 class Salesorder extends Right
 {
@@ -27,14 +26,18 @@ class Salesorder extends Right
      * @return Json
      * @throws DbException
      */
-    public function getlist(Request $request, $pageLimit = 10)
+    public function getList(Request $request, $pageLimit = 10)
     {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
         $params = $request->param();
         $list = \app\admin\model\Salesorder::with([
             'custom',
             'pjlxData',
             'jsfsData',
-        ])->where('companyid', $this->getCompanyId());
+        ])->where('companyid', $this->getCompanyId())
+            ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
             $list->where('ywsj', '>=', $params['ywsjStart']);
         }
@@ -105,187 +108,188 @@ class Salesorder extends Right
      */
     public function add(Request $request, $ywlx = 1, $data = [], $return = false, $spotIds = [])
     {
-        if ($request->isPost()) {
-            $companyId = $this->getCompanyId();
-            $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
-                ->where('companyid', $companyId)
-                ->count();
-
-            //数据处理
-            if (empty($data)) {
-                $data = $request->post();
+        if (!$request->isPost()) {
+            if ($return) {
+                return '请求方式错误';
+            } else {
+                return returnFail('请求方式错误');
             }
-            $systemNumber = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            $data['add_name'] = $this->getAccount()['name'];
-            $data['add_id'] = $this->getAccountId();
-            $data['companyid'] = $companyId;
-            $data['system_no'] = $systemNumber;
-            $data['ywlx'] = $ywlx;
+        }
+        $companyId = $this->getCompanyId();
+        $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
+            ->where('companyid', $companyId)
+            ->count();
 
-            //数据验证
-            $validate = new \app\admin\validate\Salesorder();
-            if (!$validate->check($data)) {
-                if ($return) {
-                    return $validate->getError();
-                } else {
-                    return returnFail($validate->getError());
+        //数据处理
+        if (empty($data)) {
+            $data = $request->post();
+        }
+        $systemNumber = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+        $data['add_name'] = $this->getAccount()['name'];
+        $data['add_id'] = $this->getAccountId();
+        $data['companyid'] = $companyId;
+        $data['system_no'] = $systemNumber;
+        $data['ywlx'] = $ywlx;
+
+        //数据验证
+        $validate = new \app\admin\validate\Salesorder();
+        if (!$validate->check($data)) {
+            if ($return) {
+                return $validate->getError();
+            } else {
+                return returnFail($validate->getError());
+            }
+        }
+
+        if (!$return) {
+            Db::startTrans();
+        }
+        try {
+            $model = new \app\admin\model\Salesorder();
+            $model->allowField(true)->data($data)->save();
+
+            //处理明细
+            $id = $model->getLastInsID();
+            $num = 1;
+            $detailsValidate = new SalesorderDetails();
+            foreach ($data['details'] as $c => $v) {
+                $data['details'][$c]['companyid'] = $companyId;
+                $data['details'][$c]['order_id'] = $id;
+                if (!$detailsValidate->check($data['details'][$c])) {
+                    throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                 }
+                $num++;
             }
+            (new \app\admin\model\SalesorderDetails())->allowField(true)->saveAll($data['details']);
 
-            if (!$return) {
-                Db::startTrans();
-            }
-            try {
-                $model = new \app\admin\model\Salesorder();
-                $model->allowField(true)->data($data)->save();
+            $num = 1;
+            $otherValidate = new FeiyongDetails();
+            if (!empty($data['other'])) {
+                //处理其他费用
+                foreach ($data['other'] as $c => $v) {
+                    $data['other'][$c]['group_id'] = $data['department'] ?? '';
+                    $data['other'][$c]['sale_operator_id'] = $data['employer'] ?? '';
 
-                //处理明细
-                $id = $model->getLastInsID();
-                $num = 1;
-                $detailsValidate = new SalesorderDetails();
-                foreach ($data['details'] as $c => $v) {
-                    $data['details'][$c]['companyid'] = $companyId;
-                    $data['details'][$c]['order_id'] = $id;
-                    if (!$detailsValidate->check($data['details'][$c])) {
-                        throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                    if (!$otherValidate->check($data['other'][$c])) {
+                        throw new Exception('请检查第' . $num . '行' . $otherValidate->getError());
                     }
                     $num++;
                 }
-                (new \app\admin\model\SalesorderDetails())->allowField(true)->saveAll($data['details']);
-
-                $num = 1;
-                $otherValidate = new FeiyongDetails();
-                if (!empty($data['other'])) {
-                    //处理其他费用
-                    foreach ($data['other'] as $c => $v) {
-                        $data['other'][$c]['group_id'] = $data['department'] ?? '';
-                        $data['other'][$c]['sale_operator_id'] = $data['employer'] ?? '';
-
-                        if (!$otherValidate->check($data['other'][$c])) {
-                            throw new Exception('请检查第' . $num . '行' . $otherValidate->getError());
-                        }
-                        $num++;
-                    }
-                    $res = (new Feiyong())->addAll($data['other'], 1, $id, $data['ywsj'], false);
-                    if ($res !== true) {
-                        throw new Exception($res);
-                    }
-                }
-
-                if ($data['ckfs'] == 2) {
-                    //手动出库，添加出库通知单
-                    $notify = [];
-                    foreach ($data['details'] as $c => $v) {
-                        $notify[] = [
-                            'companyid' => $companyId,
-                            'chuku_type' => 4,
-                            'data_id' => $id,
-                            'guige_id' => $v['wuzi_id'],
-                            'caizhi' => $v['caizhi'] ?? '',
-                            'chandi' => $v['chandi'] ?? '',
-                            'jijiafangshi_id' => $v['jsfs_id'],
-                            'houdu' => $v['houdu'] ?? '',
-                            'kuandu' => $v['width'] ?? '',
-                            'changdu' => $v['length'] ?? '',
-                            'lingzhi' => $v['lingzhi'] ?? '',
-                            'jianshu' => $v['num'] ?? '',
-                            'zhijian' => $v['jzs'] ?? '',
-                            'counts' => $v['count'] ?? '',
-                            'zhongliang' => $v['weight'] ?? '',
-                            'price' => $v['price'] ?? '',
-                            'sumprice' => $v['total_fee'] ?? '',
-                            'shuie' => $v['tax'] ?? '',
-                            'shui_price' => $v['tax_rate'] ?? '',
-                            'sum_shui_price' => $v['price_and_tax'] ?? '',
-                            'remark' => $v['remark'] ?? '',
-                            'car_no' => $v['car_no'] ?? '',
-                            'pihao' => $v['batch_no'] ?? '',
-                            'cache_ywtime' => $data['ywsj'],
-                            'cache_data_pnumber' => $data['system_no'],
-                            'cache_customer_id' => $data['custom_id'],
-                            'store_id' => $v['storage_id'],
-                            'cache_create_operator' => $data['add_id'],
-                        ];
-                    }
-                    (new Chuku())->addNotify($notify);
-                } elseif ($data['ckfs'] == 1) {
-                    //自动出库，生成出库单
-                    $stockOutData = [
-                        'remark' => '销售单，' . $systemNumber,
-                        'yw_time' => $data['ywsj'],
-                        'department' => $data['department'],
-                        'sale_operator_id' => $data['add_id'],
-                        'details' => [],
-                        'data_id' => $id
-                    ];
-                    $stockOutDetail = [];
-                    $index = -1;
-                    foreach ($data['details'] as $v) {
-                        $v['index'] = $v['index'] ?? $index--;
-                        $spotId = $v['spot_id'] ?? $spotIds[$v['index']];
-                        $stockOutData['details'][] = [
-                            'zhongliang' => $v['weight'] ?? '',
-                            'kucun_cktz_id' => $v['index'],
-                            'kc_spot_id' => $spotId,
-                        ];
-                        $stockOutDetail[$v['index']] = [
-                            'companyid' => $companyId,
-                            'chuku_type' => 4,
-                            'data_id' => $id,
-                            'guige_id' => $v['wuzi_id'],
-                            'caizhi' => $v['caizhi'] ?? '',
-                            'chandi' => $v['chandi'] ?? '',
-                            'jijiafangshi_id' => $v['jsfs_id'],
-                            'houdu' => $v['houdu'] ?? '',
-                            'kuandu' => $v['width'] ?? '',
-                            'changdu' => $v['length'] ?? '',
-                            'lingzhi' => $v['lingzhi'] ?? '',
-                            'jianshu' => $v['num'] ?? '',
-                            'zhijian' => $v['jzs'] ?? '',
-                            'counts' => $v['count'] ?? '',
-                            'zhongliang' => $v['weight'] ?? '',
-                            'price' => $v['price'] ?? '',
-                            'sumprice' => $v['total_fee'] ?? '',
-                            'shuie' => $v['tax'] ?? '',
-                            'shui_price' => $v['tax_rate'] ?? '',
-                            'sum_shui_price' => $v['price_and_tax'] ?? '',
-                            'remark' => $v['remark'] ?? '',
-                            'car_no' => $v['car_no'] ?? '',
-                            'pihao' => $v['batch_no'] ?? '',
-                            'cache_ywtime' => $data['ywsj'],
-                            'cache_data_pnumber' => $data['system_no'],
-                            'cache_customer_id' => $data['custom_id'],
-                            'store_id' => $v['storage_id'],
-                            'cache_create_operator' => $data['add_id'],
-                        ];
-                    }
-                    $res = (new Chuku())->add($request, $stockOutData, $stockOutDetail, 1, true);
-                    if ($res !== true) {
-                        throw new Exception($res);
-                    }
-                } else {
-                    throw new Exception('出库方式错误');
-                }
-
-                if (!$return) {
-                    Db::commit();
-                    return returnRes(true, '', ['id' => $id]);
-                } else {
-                    return true;
-                }
-            } catch (Exception $e) {
-                if ($return) {
-                    return $e->getMessage();
-                } else {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
+                $res = (new Feiyong())->addAll($data['other'], 1, $id, $data['ywsj'], false);
+                if ($res !== true) {
+                    throw new Exception($res);
                 }
             }
-        }
-        if ($return) {
-            return '请求方式错误';
-        } else {
-            return returnFail('请求方式错误');
+
+            if ($data['ckfs'] == 2) {
+                //手动出库，添加出库通知单
+                $notify = [];
+                foreach ($data['details'] as $c => $v) {
+                    $notify[] = [
+                        'companyid' => $companyId,
+                        'chuku_type' => 4,
+                        'data_id' => $id,
+                        'guige_id' => $v['wuzi_id'],
+                        'caizhi' => $v['caizhi'] ?? '',
+                        'chandi' => $v['chandi'] ?? '',
+                        'jijiafangshi_id' => $v['jsfs_id'],
+                        'houdu' => $v['houdu'] ?? '',
+                        'kuandu' => $v['width'] ?? '',
+                        'changdu' => $v['length'] ?? '',
+                        'lingzhi' => $v['lingzhi'] ?? '',
+                        'jianshu' => $v['num'] ?? '',
+                        'zhijian' => $v['jzs'] ?? '',
+                        'counts' => $v['count'] ?? '',
+                        'zhongliang' => $v['weight'] ?? '',
+                        'price' => $v['price'] ?? '',
+                        'sumprice' => $v['total_fee'] ?? '',
+                        'shuie' => $v['tax'] ?? '',
+                        'shui_price' => $v['tax_rate'] ?? '',
+                        'sum_shui_price' => $v['price_and_tax'] ?? '',
+                        'remark' => $v['remark'] ?? '',
+                        'car_no' => $v['car_no'] ?? '',
+                        'pihao' => $v['batch_no'] ?? '',
+                        'cache_ywtime' => $data['ywsj'],
+                        'cache_data_pnumber' => $data['system_no'],
+                        'cache_customer_id' => $data['custom_id'],
+                        'store_id' => $v['storage_id'],
+                        'cache_create_operator' => $data['add_id'],
+                    ];
+                }
+                (new Chuku())->addNotify($notify);
+            } elseif ($data['ckfs'] == 1) {
+                //自动出库，生成出库单
+                $stockOutData = [
+                    'remark' => '销售单，' . $systemNumber,
+                    'yw_time' => $data['ywsj'],
+                    'department' => $data['department'],
+                    'sale_operator_id' => $data['add_id'],
+                    'details' => [],
+                    'data_id' => $id
+                ];
+                $stockOutDetail = [];
+                $index = -1;
+                foreach ($data['details'] as $v) {
+                    $v['index'] = $v['index'] ?? $index--;
+                    $spotId = $v['spot_id'] ?? $spotIds[$v['index']];
+                    $stockOutData['details'][] = [
+                        'zhongliang' => $v['weight'] ?? '',
+                        'kucun_cktz_id' => $v['index'],
+                        'kc_spot_id' => $spotId,
+                        'ylsh' => $v['ylsh_id'] ?? 0
+                    ];
+                    $stockOutDetail[$v['index']] = [
+                        'companyid' => $companyId,
+                        'chuku_type' => 4,
+                        'data_id' => $id,
+                        'guige_id' => $v['wuzi_id'],
+                        'caizhi' => $v['caizhi'] ?? '',
+                        'chandi' => $v['chandi'] ?? '',
+                        'jijiafangshi_id' => $v['jsfs_id'],
+                        'houdu' => $v['houdu'] ?? '',
+                        'kuandu' => $v['width'] ?? '',
+                        'changdu' => $v['length'] ?? '',
+                        'lingzhi' => $v['lingzhi'] ?? '',
+                        'jianshu' => $v['num'] ?? '',
+                        'zhijian' => $v['jzs'] ?? '',
+                        'counts' => $v['count'] ?? '',
+                        'zhongliang' => $v['weight'] ?? '',
+                        'price' => $v['price'] ?? '',
+                        'sumprice' => $v['total_fee'] ?? '',
+                        'shuie' => $v['tax'] ?? '',
+                        'shui_price' => $v['tax_rate'] ?? '',
+                        'sum_shui_price' => $v['price_and_tax'] ?? '',
+                        'remark' => $v['remark'] ?? '',
+                        'car_no' => $v['car_no'] ?? '',
+                        'pihao' => $v['batch_no'] ?? '',
+                        'cache_ywtime' => $data['ywsj'],
+                        'cache_data_pnumber' => $data['system_no'],
+                        'cache_customer_id' => $data['custom_id'],
+                        'store_id' => $v['storage_id'],
+                        'cache_create_operator' => $data['add_id'],
+                    ];
+                }
+                $res = (new Chuku())->add($request, $stockOutData, $stockOutDetail, 1, true);
+                if ($res !== true) {
+                    throw new Exception($res);
+                }
+            } else {
+                throw new Exception('出库方式错误');
+            }
+
+            if (!$return) {
+                Db::commit();
+                return returnRes(true, '', ['id' => $id]);
+            } else {
+                return true;
+            }
+        } catch (Exception $e) {
+            if ($return) {
+                return $e->getMessage();
+            } else {
+                Db::rollback();
+                return returnFail($e->getMessage());
+            }
         }
     }
 
@@ -408,6 +412,10 @@ class Salesorder extends Right
             }
             $salesorder->status = 2;
             $salesorder->save();
+            //费用单作废
+            foreach ($salesorder->other as $item) {
+                $item->mingxi->save(['status' => 2]);
+            }
             (new Chuku())->cancel($request, $id, false);
             return returnSuc();
         }

@@ -11,8 +11,7 @@ use think\{Db,
     db\exception\ModelNotFoundException,
     exception\DbException,
     Request,
-    response\Json,
-    Session};
+    response\Json};
 
 class Zhifa extends Right
 {
@@ -23,7 +22,7 @@ class Zhifa extends Right
      * @return Json
      * @throws DbException
      */
-    public function getlist(Request $request, $pageLimit = 10)
+    public function getList(Request $request, $pageLimit = 10)
     {
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
@@ -37,6 +36,7 @@ class Zhifa extends Right
             'gfjsfsData',
             'khjsfsData',
         ])->where('companyid', $this->getCompanyId())
+            ->order('create_time', 'desc')
             ->where('moshi_type', 1);
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);

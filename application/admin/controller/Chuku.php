@@ -3,12 +3,13 @@
 namespace app\admin\controller;
 
 use app\admin\model\KcSpot;
+use app\admin\model\KcYlSh;
 use app\admin\model\KucunCktz;
 use app\admin\model\StockOut;
 use app\admin\model\StockOutDetail;
 use app\admin\model\StockOutMd;
 use Exception;
-use think\{Db, exception\DbException, Request, response\Json, Session};
+use think\{Db, exception\DbException, Request, response\Json};
 
 class Chuku extends Right
 {
@@ -104,13 +105,14 @@ class Chuku extends Right
      * @return Json
      * @throws DbException
      */
-    public function getlist(Request $request, $pageLimit = 10)
+    public function getList(Request $request, $pageLimit = 10)
     {
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = StockOut::where('companyid', $this->getCompanyId());
+        $list = StockOut::where('companyid', $this->getCompanyId())
+            ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -220,16 +222,63 @@ class Chuku extends Right
 
                     $details[$v['kucun_cktz_id']] = $detailModel->id;
                 }
+
+                //判断库存
+
                 //根据码单内资源单id获取资源单
                 $resource = KcSpot::get($v['kc_spot_id']);
                 if (empty($resource)) {
                     throw new Exception('未找到库存资源');
                 }
-                if ($resource['zhongliang'] - $v['zhongliang'] < 0) {
-                    throw new Exception('不允许出现负库存');
+                if (!empty($v['ylsh_id'])) {
+                    //锁货资源释放
+                    $ylsh = KcYlSh::get($v['ylsh_id']);
+                    if (empty($ylsh)) {
+                        throw new Exception('未找到预留资源');
+                    }
+                    if ($ylsh->zhongliang < $v['zhongliang']) {
+                        throw new Exception('销售重量不得大于预留重量');
+                    }
+                    if ($ylsh->shuliang < $v['counts']) {
+                        throw new Exception('销售数量不得大于预留数量');
+                    }
+                    //更新预留数据
+                    $ylsh->zhongliang -= $v['zhongliang'];
+                    if ($v['counts'] != 0) {
+                        $ylsh->shuliang -= $v['counts'];
+                        if ($ylsh->zhijian != 0) {
+                            $ylsh->jianshu = floor($ylsh->shuliang / $ylsh->zhijian);
+                            $ylsh->lingzhi = $ylsh->shuliang - $ylsh->zhijian * $ylsh->jianshu;
+                        } else {
+                            $ylsh->lingzhi = $ylsh->shuliang;
+                        }
+                    }
+                    $ylsh->save();
+                } else {
+                    //判断库存
+                    $ylsh = KcYlSh::where('spot_id', $v['kc_spot_id'])
+                        ->whereTime('baoliu_time', '>', time())
+                        ->fieldRaw('sum(shuliang) as shuliang,sum(zhongliang) as zhongliang')
+                        ->find();
+                    if ($resource['zhongliang'] - $ylsh['zhongliang'] - $v['zhongliang'] < 0) {
+                        throw new Exception('不允许出现负库存');
+                    }
+
+                    if ($resource['counts'] - $ylsh['shuliang'] - $v['counts'] < 0) {
+                        throw new Exception('不允许出现负库存');
+                    }
                 }
                 //更新库存
                 $resource->zhongliang -= $v['zhongliang'];
+                if ($v['counts'] != 0) {
+                    $resource->counts -= $v['counts'];
+                    if ($resource->zhijian != 0) {
+                        $resource->jianshu = floor($resource->counts / $resource->zhijian);
+                        $resource->lingzhi = $resource->counts - $resource->zhijian * $resource->jianshu;
+                    } else {
+                        $resource->lingzhi = $resource->counts;
+                    }
+                }
                 $resource->save();
 
                 //生成码单
