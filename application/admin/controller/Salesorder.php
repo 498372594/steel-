@@ -152,9 +152,13 @@ class Salesorder extends Right
             $id = $model->getLastInsID();
             $num = 1;
             $detailsValidate = new SalesorderDetails();
+            $totalMoney = 0;
+            $totalWeight = 0;
             foreach ($data['details'] as $c => $v) {
                 $data['details'][$c]['companyid'] = $companyId;
                 $data['details'][$c]['order_id'] = $id;
+                $totalMoney += $v['total_fee'];
+                $totalWeight += $v['weight'];
                 if (!$detailsValidate->check($data['details'][$c])) {
                     throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                 }
@@ -163,8 +167,8 @@ class Salesorder extends Right
             (new \app\admin\model\SalesorderDetails())->allowField(true)->saveAll($data['details']);
 
             $num = 1;
-            $otherValidate = new FeiyongDetails();
             if (!empty($data['other'])) {
+                $otherValidate = new FeiyongDetails();
                 //处理其他费用
                 foreach ($data['other'] as $c => $v) {
                     $data['other'][$c]['group_id'] = $data['department'] ?? '';
@@ -276,6 +280,25 @@ class Salesorder extends Right
             } else {
                 throw new Exception('出库方式错误');
             }
+
+            //向货款单添加数据
+            $capitalHkData = [
+                'hk_type' => CapitalHk::SALES_ORDER,
+                'data_id' => $id,
+                'fangxiang' => 1,
+                'customer_id' => $data['custom_id'],
+                'jiesuan_id' => $data['jsfs'],
+                'system_number' => $data['system_no'],
+                'yw_time' => $data['ywsj'],
+                'beizhu' => $data['remark'],
+                'money' => $totalMoney,
+                'group_id' => $data['department'],
+                'sale_operator_id' => $data['employer'],
+                'create_operator_id' => $data['add_id'],
+                'zhongliang' => $totalWeight,
+                'cache_pjlx_id' => $data['pjlx'],
+            ];
+            (new CapitalHk())->add($capitalHkData);
 
             if (!$return) {
                 Db::commit();
