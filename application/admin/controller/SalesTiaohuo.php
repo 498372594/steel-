@@ -334,12 +334,19 @@ class SalesTiaohuo extends Right
             if ($cgzfd->status == 2) {
                 return returnFail('此单已作废');
             }
-            $cgzfd->status = 2;
-            $cgzfd->save();
-            (new Salesorder())->cancel($request, $id, 3, false);
+            Db::startTrans();
+            try {
+                $cgzfd->status = 2;
+                $cgzfd->save();
+                (new Salesorder())->cancel($request, $id, 3, false);
 
-            //todo 作废采购单
-            return returnSuc();
+                //todo 作废采购单
+                Db::commit();
+                return returnSuc();
+            } catch (Exception $e) {
+                Db::rollback();
+                return returnFail($e->getMessage());
+            }
         }
         return returnFail('请求方式错误');
     }

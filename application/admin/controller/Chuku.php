@@ -2,14 +2,14 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\KcSpot;
-use app\admin\model\KcYlSh;
-use app\admin\model\KucunCktz;
-use app\admin\model\StockOut;
-use app\admin\model\StockOutDetail;
-use app\admin\model\StockOutMd;
+use app\admin\model\{KcSpot, KcYlSh, KucunCktz, StockOut, StockOutDetail, StockOutMd};
 use Exception;
-use think\{Db, exception\DbException, Request, response\Json};
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    exception\DbException,
+    Request,
+    response\Json};
 
 class Chuku extends Right
 {
@@ -24,6 +24,16 @@ class Chuku extends Right
             return;
         }
         (new KucunCktz())->allowField(true)->saveAll($data);
+    }
+
+    /**
+     * 清理出库通知
+     * @param $dataId
+     * @param $type
+     */
+    public function cancelNotify($dataId, $type)
+    {
+        KucunCktz::where('kucun_type', $type)->where('data_id', $dataId)->delete();
     }
 
     /**
@@ -397,29 +407,40 @@ class Chuku extends Right
      * 作废
      * @param Request $request
      * @param int $id
-     * @param int $ywlx
-     * @param boolean $isWeb
-     * @return Json
+     * @param bool $isWeb
+     * @return bool|Json
      * @throws DbException
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws Exception
      */
     public function cancel(Request $request, $id = 0, $isWeb = true)
     {
         if ($request->isPost()) {
 
             if ($isWeb) {
-                $stockOut = \app\admin\model\Salesorder::where('id', $id)
+                $stockOut = StockOut::where('id', $id)
                     ->where('companyid', $this->getCompanyId())
                     ->find();
             } else {
-                $stockOut = \app\admin\model\Salesorder::where('data_id', $id)
+                $stockOut = StockOut::where('data_id', $id)
                     ->where('companyid', $this->getCompanyId())
                     ->find();
             }
             if (empty($stockOut)) {
                 return returnFail('数据不存在');
             }
-            if (!empty($stockOut->data_id) && $isWeb) {
-                return returnFail('此销售单禁止直接作废');
+            if (!empty($stockOut->data_id)) {
+                if ($isWeb) {
+                    return returnFail('此销售单禁止直接作废');
+                } else {
+                    $stockOut->status = 2;
+                    $stockOut->check_operator_id = null;
+                    $stockOut->save();
+                    return true;
+                }
+            } elseif (!$isWeb) {
+                throw new Exception('此单已有出库信息，禁止作废');
             }
             if ($stockOut->status == 3) {
                 return returnFail('此单已审核，禁止作废');

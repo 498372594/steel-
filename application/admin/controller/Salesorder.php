@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Administrator
- * Date: 2019/3/18
- * Time: 11:26
- */
 
 namespace app\admin\controller;
 
@@ -406,7 +400,7 @@ class Salesorder extends Right
      * @param int $id
      * @param int $ywlx
      * @param boolean $isWeb
-     * @return Json
+     * @return Json|string
      * @throws DbException
      */
     public function cancel(Request $request, $id = 0, $ywlx = 1, $isWeb = true)
@@ -433,14 +427,30 @@ class Salesorder extends Right
             if ($salesorder->status == 2) {
                 return returnFail('此单已作废');
             }
-            $salesorder->status = 2;
-            $salesorder->save();
-            //费用单作废
-            foreach ($salesorder->other as $item) {
-                $item->mingxi->save(['status' => 2]);
+            if ($isWeb) {
+                Db::startTrans();
             }
-            (new Chuku())->cancel($request, $id, false);
-            return returnSuc();
+            try {
+                $salesorder->status = 2;
+                $salesorder->save();
+                //货款单作废
+                (new CapitalHk())->cancel($id, CapitalHk::SALES_ORDER);
+                //费用单作废
+                (new Feiyong())->cancelByRelation($id, 1);
+                //出库单作废
+                (new Chuku())->cancel($request, $id, false);
+                //清理出库通知
+                (new Chuku())->cancelNotify($id, 4);
+                Db::commit();
+                return returnSuc();
+            } catch (Exception $e) {
+                if ($isWeb) {
+                    Db::rollback();
+                    return returnFail($e->getMessage());
+                } else {
+                    return $e->getMessage();
+                }
+            }
         }
         return returnFail('请求方式错误');
     }

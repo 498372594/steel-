@@ -313,4 +313,30 @@ class Feiyong extends Signin
         }
         return returnFail('请求方式错误');
     }
+
+    /**
+     * @param $dataId
+     * @param int $fyhxType 1-销售单，2-采购单
+     * @return bool|string
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public function cancelByRelation($dataId, $fyhxType)
+    {
+        $capFyIds = CapitalFyhx::where('data_id', $dataId)
+            ->where('fyhx_type', $fyhxType)
+            ->column('cap_fy_id');
+        $capitalFys = CapitalFy::where('id', 'in', $capFyIds)->select();
+        foreach ($capitalFys as $item) {
+            if ($item->hxmoney != 0 || $item->hxzhongliang != 0) {
+                throw new Exception('已有结算信息');
+            }
+            $item->status = 2;
+            $item->check_operator_id = null;
+            $item->save();
+        }
+        return true;
+    }
 }
