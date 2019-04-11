@@ -137,6 +137,7 @@ class Right extends Signin
         if (!empty($params['width_start'])) {
             $list->where('kuandu', '>=', $params['width_start']);
         }
+
         if (!empty($params['width_end'])) {
             $list->where('kuandu', '<=',$params['width_end']);
         }
@@ -148,12 +149,12 @@ class Right extends Signin
             $list->where('changdu', '<=',$params['length_end']);
         }
         //材质
-        if (!empty($params['caizhi'])) {
-            $list->where('caizhi', $params['caizhi']);
+        if (!empty($params['caizhi_id'])) {
+            $list->where('caizhi_id', $params['caizhi_id']);
         }
         //规格
-        if (!empty($params['chandi'])) {
-            $list->where('chandi', $params['chandi']);
+        if (!empty($params['chandi_id'])) {
+            $list->where('chandi_id', $params['chandi_id']);
         }
         //业务时间
         if (!empty($params['ywsjStart'])) {
@@ -165,13 +166,25 @@ class Right extends Signin
         if (!empty($params['piaoju_id'])) {
             $list->where('piaoju_id', $params['piaoju_id']);
         }
+        //往来单位
+        if (!empty($params['customer_id'])) {
+            $list->where('customer_id', $params['customer_id']);
+        }
+        //票据类型
+        if (!empty($params['piaoju_id'])) {
+            $list->where('piaoju_id', $params['piaoju_id']);
+        }
+        //批号
+        if (!empty($params['pihao'])) {
+            $list->where('pihao', $params['pihao']);
+        }
         //系统单号
         if (!empty($params['system_number'])) {
-            $list->where('system_number', $params['system_number']);
+            $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
         }
         //备注
         if (!empty($params['beizhu'])) {
-            $list->where('beizhu', $params['beizhu']);
+            $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
         }
         //创建时间
         if (!empty($params['time_start'])) {
@@ -179,6 +192,14 @@ class Right extends Signin
         }
         if (!empty($params['time_end'])) {
             $list->where('create_time', '<=', date('Y-m-d', strtotime($params['time_end'] . ' +1 day')));
+        }
+        //重量大于0
+        if (!empty($params['zhongliang'])) {
+            $list->where('zhongliang', '>=', 0);
+        }
+        //数量
+        if (!empty($params['counts'])) {
+            $list->where('counts', '>=', 0);
         }
         //应收应付初始化录入
         if (!empty($params['type'])) {

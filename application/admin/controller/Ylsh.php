@@ -18,9 +18,7 @@ class Ylsh extends Right
     public function kcspot()
     {
         $params = request()->param();
-        $list = \app\admin\model\KcSpot::with([
-            'specification', 'storage','pinmingData','caizhiData','chandiData','guigeData',
-        ])->where('companyid', $this->getCompanyId());
+        $list = model("ViewKcSpot")->where('companyid', $this->getCompanyId());
         $list =$this->getsearchcondition($params,$list);
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -223,6 +221,7 @@ class Ylsh extends Right
                 foreach ($data["detail"] as $c => $v) {
                     $dat['details'][$c]['id']=$v["id"];
                     $dat['details'][$c]['counts']=$v["old_counts"]-$v["counts"];
+                    $dat['details'][$c]['zhongliang']=$v["old_zhongliang"]-$v["zhongliang"];
                     $dat['details'][$c]['jianshu']= intval( floor($dat['details'][$c]['counts']/$v["zhijian"]));
                     $dat['details'][$c]['lingzhi']= $dat['details'][$c]['counts']%$v["zhijian"];
                     $data['details'][$c]['companyid'] = $companyId;

@@ -378,7 +378,7 @@ class Purchase extends Right
             'pjlxData',
             'jsfsData',
             'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData'],
-            'other',
+            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']],
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
