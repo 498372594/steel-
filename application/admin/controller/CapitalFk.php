@@ -3,15 +3,15 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{CapitalFy as CapitalFyModel,
+use app\admin\model\{CapitalFk as CapitalFkModel,
+    CapitalFkhx as CapitalFkhxModel,
+    CapitalFkjsfs as CapitalFkjsfsModel,
+    CapitalFy as CapitalFyModel,
     CapitalHk as CapitalHkModel,
-    CapitalOther as CapitalOtherModel,
-    CapitalSk as CapitalSkModel,
-    CapitalSkhx as CapitalSkhxModel,
-    CapitalSkjsfs as CapitalSkjsfsModel};
-use app\admin\validate\{CapitalSk as CapitalSkValidate,
-    CapitalSkhx as CapitalSkhxValidate,
-    CapitalSkJsfs as CapitalSkJsfsValidate};
+    CapitalOther as CapitalOtherModel};
+use app\admin\validate\{CapitalFk as CapitalFkValidate,
+    CapitalFkhx as CapitalFkhxValidate,
+    CapitalFkJsfs as CapitalFkJsfsValidate};
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -20,10 +20,10 @@ use think\{Db,
     Request,
     response\Json};
 
-class CapitalSk extends Right
+class CapitalFk extends Right
 {
     /**
-     * 获取收款单列表
+     * 获取付款单列表
      * @param Request $request
      * @param int $pageLimit
      * @return Json
@@ -35,7 +35,7 @@ class CapitalSk extends Right
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = CapitalSkModel::with([
+        $list = CapitalFkModel::with([
             'custom'
         ])->where('companyid', $this->getCompanyId())
             ->order('create_time', 'desc');
@@ -62,7 +62,7 @@ class CapitalSk extends Right
     }
 
     /**
-     * 添加收款单
+     * 添加付款单
      * @param Request $request
      * @return Json
      * @throws \think\Exception
@@ -70,44 +70,44 @@ class CapitalSk extends Right
     public function add(Request $request)
     {
         $companyid = $this->getCompanyId();
-        $count = CapitalSkModel::whereTime('create_time', 'today')->where('companyid', $companyid)->count() + 1;
+        $count = CapitalFkModel::whereTime('create_time', 'today')->where('companyid', $companyid)->count() + 1;
 
         $data = $request->post();
         $data['companyid'] = $companyid;
-        $data['system_number'] = 'SKD' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
+        $data['system_number'] = 'FKD' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
         $data['create_operator_id'] = $this->getAccountId();
-        $validate = new CapitalSkValidate();
+        $validate = new CapitalFkValidate();
         if (!$validate->check($data)) {
             return returnFail($validate->getError());
         }
         Db::startTrans();
         try {
-            $model = new CapitalSkModel();
+            $model = new CapitalFkModel();
             $model->allowField(true)->data($data)->save();
             $id = $model->getLastInsID();
 
             if (!empty($data['detaiils'])) {
                 //核销明细
-                $detailsValidate = new CapitalSkhxValidate();
+                $detailsValidate = new CapitalFkhxValidate();
                 foreach ($data['details'] as $c => $v) {
                     $v['companyid'] = $companyid;
-                    $v['sk_id'] = $id;
+                    $v['fk_id'] = $id;
                     if (!$detailsValidate->check($v)) {
                         throw new Exception($detailsValidate->getError());
                     }
-                    if ($v['skhx_type'] == CapitalHk::CAPITAL_OTHER) {
-                        $relation = CapitalOtherModel::where('fangxiang', 1)
+                    if ($v['fkhx_type'] == CapitalHk::CAPITAL_OTHER) {
+                        $relation = CapitalOtherModel::where('fangxiang', 2)
                             ->where('id', $v['data_id'])
                             ->where('status', '<>', '2')
                             ->find();
-                    } elseif ($v['skhx_type'] == CapitalHk::CAPITAL_COST) {
-                        $relation = CapitalFyModel::where('fang_xiang', 1)
+                    } elseif ($v['fkhx_type'] == CapitalHk::CAPITAL_COST) {
+                        $relation = CapitalFyModel::where('fang_xiang', 2)
                             ->where('id', $v['data_id'])
                             ->where('status', '<>', '2')
                             ->find();
                     } else {
                         $relation = CapitalHkModel::where('id', $v['data_id'])
-                            ->where('fangxiang', 1)
+                            ->where('fangxiang', 2)
                             ->where('status', '<>', '2')
                             ->find();
                     }
@@ -132,25 +132,25 @@ class CapitalSk extends Right
                     $v['hj_money'] = $relation->money;
                     $v['hj_zhongliang'] = $relation->zhongliang;
 
-                    (new CapitalSkhxModel())->allowField(true)->save($v);
+                    (new CapitalFkhxModel())->allowField(true)->save($v);
                 }
             }
 
             //款项明细
-            $shoukuanValidate = new CapitalSkJsfsValidate();
+            $shoukuanValidate = new CapitalFkJsfsValidate();
             $totalMoney = 0;
             foreach ($data['mingxi'] as $c => $v) {
                 $data['mingxi'][$c]['companyid'] = $companyid;
-                $data['mingxi'][$c]['sk_id'] = $id;
+                $data['mingxi'][$c]['fk_id'] = $id;
                 if (!$shoukuanValidate->check($data['mingxi'][$c])) {
                     throw new Exception($shoukuanValidate->getError());
                 }
                 $totalMoney += $v['money'];
             }
             if ($totalMoney != $data['money']) {
-                throw new Exception('收款金额必须等于本次收款');
+                throw new Exception('付款金额必须等于本次收款');
             }
-            (new CapitalSkjsfsModel())->allowField(true)->saveAll($data['mingxi']);
+            (new CapitalFkjsfsModel())->allowField(true)->saveAll($data['mingxi']);
 
             Db::commit();
             return returnSuc();
@@ -161,7 +161,7 @@ class CapitalSk extends Right
     }
 
     /**
-     * 获取收款单详情
+     * 获取付款单详情
      * @param Request $request
      * @param int $id
      * @return Json
@@ -174,7 +174,7 @@ class CapitalSk extends Right
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
-        $data = CapitalSkModel::with([
+        $data = CapitalFkModel::with([
             'custom',
             'mingxi' => ['jsfs', 'bank'],
             'details' => ['custom']
@@ -201,37 +201,37 @@ class CapitalSk extends Right
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
         }
-        $shoukuan = CapitalSkModel::where('id', $id)
+        $fukuan = CapitalFkModel::where('id', $id)
             ->where('companyid', $this->getCompanyId())
             ->find();
-        if (empty($shoukuan)) {
+        if (empty($fukuan)) {
             return returnFail('数据不存在');
         }
-        if ($shoukuan->status == 3) {
+        if ($fukuan->status == 3) {
             return returnFail('此单已审核，禁止作废');
         }
-        if ($shoukuan->status == 2) {
+        if ($fukuan->status == 2) {
             return returnFail('此单已作废');
         }
         Db::startTrans();
         try {
-            $shoukuan->status = 2;
-            $shoukuan->save();
+            $fukuan->status = 2;
+            $fukuan->save();
             //核销记录退回
-            foreach ($shoukuan->details as $item) {
-                if ($item['skhx_type'] == CapitalHk::CAPITAL_OTHER) {
-                    $relation = CapitalOtherModel::where('fangxiang', 1)
+            foreach ($fukuan->details as $item) {
+                if ($item['fkhx_type'] == CapitalHk::CAPITAL_OTHER) {
+                    $relation = CapitalOtherModel::where('fangxiang', 2)
                         ->where('id', $item['data_id'])
                         ->where('status', '<>', '2')
                         ->find();
-                } elseif ($item['skhx_type'] == CapitalHk::CAPITAL_COST) {
-                    $relation = CapitalFyModel::where('fang_xiang', 1)
+                } elseif ($item['fkhx_type'] == CapitalHk::CAPITAL_COST) {
+                    $relation = CapitalFyModel::where('fang_xiang', 2)
                         ->where('id', $item['data_id'])
                         ->where('status', '<>', '2')
                         ->find();
                 } else {
                     $relation = CapitalHkModel::where('id', $item['data_id'])
-                        ->where('fangxiang', 1)
+                        ->where('fangxiang', 2)
                         ->where('status', '<>', '2')
                         ->find();
                 }

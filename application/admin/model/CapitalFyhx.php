@@ -12,7 +12,7 @@ class CapitalFyhx extends Base
     public function mingxi()
     {
         return $this->belongsTo('CapitalFy', 'cap_fy_id', 'id')
-            ->field('id,customer_id,beizhu,fang_xiang,shouzhifenlei_id,shouzhimingcheng_id,danjia,money,zhongliang,piaoju_id,price_and_tax,tax_rate,tax');
+            ->field('id,customer_id,beizhu,fang_xiang,shouzhifenlei_id,shouzhimingcheng_id,danjia,money,zhongliang,piaoju_id,price_and_tax,tax_rate,tax,create_time');
     }
 
     public function custom()

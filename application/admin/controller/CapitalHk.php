@@ -114,7 +114,7 @@ class CapitalHk extends Right
                     break;
             }
         } elseif ($fangxiang == 2) {
-            switch ($params['sklx']) {
+            switch ($params['fklx']) {
                 case 1:
                 case 2:
                     $list->where('type_id', self::PURCHASE);
