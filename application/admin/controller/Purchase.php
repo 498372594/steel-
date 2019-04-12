@@ -263,19 +263,37 @@ class Purchase extends Right
                 ];
                 (new CapitalHk())->add($capitalHkData);
                 //iniv
+                if($data[piaoju_id]==1){
+
+                }
                 $iniv = [];
                 foreach ($data['details'] as $c => $v) {
                     $iniv[] = [
                         'companyid' => $companyId,
                         'fx_type'=>2,
-                        'yw_type'=>2,
-                        'yw_time'=>$v["yw_time"],
-                        'yw_type'=>2,
-                        'yw_type'=>2,
-                        'chandi_id' => $v['chandi_id'] ?? '',
+                        'yw_type'=>6,
+                        'yw_time'=>$v["yw_time"]?? '',
+                        'system_number'=>$v["system_number"]."1"?? '',
+                        'pinming_id'=>$v["pinming_id"]?? '',
+                        'guige_id'=>$v["guige_id"]?? '',
+                        'houdu'=>$v["houdu"]?? '',
+                        'changdu'=>$v["changdu"]?? '',
+                        'kuandu'=>$v["kuandu"]?? '',
+                        'zhongliang'=>$v["zhongliang"]?? '',
+                        'price'=>$v["price"]?? '',
+                        'price'=>$v["price"]?? '',
+                        'customer_id'=>$data["customer_id"]?? '',
+                        'jijiafangshi_id'=>$v["jijiafangshi_id"]?? '',
+                        'piaoju_id'=>$v["piaoju_id"]?? '',
+                        'yhx_zhongliang'=>0,
+                        'yhx_price'=>0,
+                        'data_id'=>$id,
+                        'shui_price'=>$v["shui_price"]?? '',
+                        'sum_price'=>$v["sum_price"]?? '',
 
                     ];
                 }
+                (new Iniv())->add($iniv);
                 if (!$return) {
                     Db::commit();
                     return returnRes(true, '', ['id' => $id]);
