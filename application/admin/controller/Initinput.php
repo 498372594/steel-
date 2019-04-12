@@ -424,7 +424,7 @@ class Initinput extends Right
         return returnRes(true, '', $list);
     }
     public function yskpmx($id=0){
-        $data = $list = \app\admin\model\InitYskp::with([ 'details',
+        $data = $list = \app\admin\model\InitYskp::with([ 'details'=>['customData','pjlxData'],
         ])
             ->where('companyid',$this->getCompanyId())
             ->where('id', $id)

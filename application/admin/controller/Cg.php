@@ -60,6 +60,8 @@ class Cg extends Right
             try {
                 model("CgTh")->allowField(true)->data($data)->save();
                 $id = model("CgTh")->getLastInsID();
+                $totalMoney = 0;
+                $totalWeight = 0;
                 foreach ($data["details"] as $c => $v) {
                     $info=db("kc_spot")->where("id",$v["spot_id"])->field("counts,zhongliang")->find();
 //                    dump($info);die;
@@ -69,6 +71,8 @@ class Cg extends Right
                     if($v["zhongliang"]>$info["zhongliang"]){
                         return returnFail('退货重量不得大于'.$info["zhongliang"]);
                     }
+                    $totalMoney += $v['sum_shui_price'];
+                    $totalWeight += $v['zhongliang'];
                     $dat['details'][$c]['counts']=$info["counts"]-$v["counts"];
                     $dat['details'][$c]['zhongliang']=$info["zhongliang"]-$v["zhongliang"];
                     $dat['details'][$c]['jianshu']= intval( floor($dat['details'][$c]['counts']/$v["zhijian"]));
@@ -98,6 +102,25 @@ class Cg extends Right
                         throw new Exception($res);
                     }
                 }
+                //向货款单添加数据
+                $capitalHkData = [
+                    'hk_type' => CapitalHk::PURCHASE_RETURN,
+                    'data_id' => $id,
+                    'fangxiang' => 2,
+                    'customer_id' => $data['customer_id'],
+                    'jiesuan_id' => $data['jiesuan_id'],
+                    'system_number' => $data['system_number'],
+                    'yw_time' => $data['yw_time'],
+                    'beizhu' => $data['beizhu'],
+                    'money' => $totalMoney,
+                    'group_id' => $data['group_id'],
+                    'sale_operator_id' => $data['sale_operator_id'],
+                    'create_operator_id' => $data['create_operator_id'],
+                    'zhongliang' => $totalWeight,
+                    'cache_pjlx_id' => $data['piaoju_id'],
+                ];
+                (new CapitalHk())->add($capitalHkData);
+
                 if (!$return) {
                     Db::commit();
                     return returnRes(true, '', ['id' => $id]);

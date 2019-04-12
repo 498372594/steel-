@@ -64,10 +64,14 @@ class Purchase extends Right
                 //处理明细
                 $id = $model->getLastInsID();
                 $num = 1;
+                $totalMoney = 0;
+                $totalWeight = 0;
                 $detailsValidate = new CgPurchaseMx();
                 foreach ($data['details'] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['purchase_id'] = $id;
+                    $totalMoney += $v['sum_shui_price'];
+                    $totalWeight += $v['zhongliang'];
                     if (!$detailsValidate->check($data['details'][$c])) {
                         throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                     }
@@ -238,8 +242,40 @@ class Purchase extends Right
                         $spotModel->allowField(true)->save($spot);
                         $spotIds[$v['index'] ?? -1] = $spotModel->id;
                     }
-                }
 
+                }
+                //向货款单添加数据
+                $capitalHkData = [
+                    'hk_type' => CapitalHk::PURCHASE,
+                    'data_id' => $id,
+                    'fangxiang' => 1,
+                    'customer_id' => $data['customer_id'],
+                    'jiesuan_id' => $data['jiesuan_id'],
+                    'system_number' => $data['system_number'],
+                    'yw_time' => $data['yw_time'],
+                    'beizhu' => $data['beizhu'],
+                    'money' => $totalMoney,
+                    'group_id' => $data['group_id'],
+                    'sale_operator_id' => $data['sale_operator_id'],
+                    'create_operator_id' => $data['create_operator_id'],
+                    'zhongliang' => $totalWeight,
+                    'cache_pjlx_id' => $data['piaoju_id'],
+                ];
+                (new CapitalHk())->add($capitalHkData);
+                //iniv
+                $iniv = [];
+                foreach ($data['details'] as $c => $v) {
+                    $iniv[] = [
+                        'companyid' => $companyId,
+                        'fx_type'=>2,
+                        'yw_type'=>2,
+                        'yw_time'=>$v["yw_time"],
+                        'yw_type'=>2,
+                        'yw_type'=>2,
+                        'chandi_id' => $v['chandi_id'] ?? '',
+
+                    ];
+                }
                 if (!$return) {
                     Db::commit();
                     return returnRes(true, '', ['id' => $id]);
@@ -261,6 +297,7 @@ class Purchase extends Right
             return returnFail('请求方式错误');
         }
     }
+
     /**
      * 获取大类列表
      * @return Json
@@ -531,6 +568,12 @@ class Purchase extends Right
     public function getproductname()
     {
         $list = model("productname")->where(array("companyid" => $this->getCompanyId()))->field("id,name")->select();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+
+    public function getzhiyuan()
+    {
+        $list = model("admin")->where(array("companyid" => $this->getCompanyId()))->field("id,originarea")->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 }

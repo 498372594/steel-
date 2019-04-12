@@ -13,24 +13,27 @@ class Resource extends Right
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function  xhbj($pageLimit = 10){
+    public function xhbj($pageLimit = 10)
+    {
         $params = request()->param();
         $list = \app\admin\model\ViewInstorageDetails::where('companyid', $this->getCompanyId());
-        $list=$this->getsearchcondition($params,$list);
-        $list=$list->paginate($pageLimit);
+        $list = $this->getsearchcondition($params, $list);
+        $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
+
     /**现货汇总查询
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function xhhz($pageLimit = 10){
+    public function xhhz($pageLimit = 10)
+    {
         $params = request()->param();
         $list = \app\admin\model\ViewInstorageDetails::where('companyid', $this->getCompanyId());
-        $list=$this->getsearchcondition($params,$list);
-        $juhe="store_id,pinming_id,guige_id,kuandu,changdu,houdu,classname";
-        $juhe=$juhe.$params("juhe");
-        $list=$list->field("storage,classname,pinming,guige,caizhi,chandi,houdu,kuandu,changdu,jianshu,sum(jianshu) as total_jianshu,sum(lingzhi) as total_lingzhi,sum(counts) as total_shuliang,sum(zhongliang) as total_zhongliang,sum(lisuanzongzhong) as total_lisuanzongzhong")
+        $list = $this->getsearchcondition($params, $list);
+        $juhe = "store_id,pinming_id,guige_id,kuandu,changdu,houdu,classname";
+        $juhe = $juhe . $params("juhe");
+        $list = $list->field("storage,classname,pinming,guige,caizhi,chandi,houdu,kuandu,changdu,jianshu,sum(jianshu) as total_jianshu,sum(lingzhi) as total_lingzhi,sum(counts) as total_shuliang,sum(zhongliang) as total_zhongliang,sum(lisuanzongzhong) as total_lisuanzongzhong")
             ->group("$juhe")
             ->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -40,12 +43,13 @@ class Resource extends Right
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function getinout(){
+    public function getinout()
+    {
         $params = request()->param();
         $list = \app\admin\model\ViewInstorageOrder::where('companyid', $this->getCompanyId());
-        $list=$this->getsearch($params,$list);
+        $list = $this->getsearch($params, $list);
 
-        $list=$list
+        $list = $list
             ->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
@@ -58,8 +62,8 @@ class Resource extends Right
     {
         $params = request()->param();
 
-        $list = \app\admin\model\KcRkTz::with(['storage','pinmingData','caizhiData','chandiData'])->where('companyid', $this->getCompanyId());
-        $list->where("jianshu",">",0)->where("lingzhi",">",0)->where("counts",">",0);
+        $list = \app\admin\model\KcRkTz::with(['storage', 'pinmingData', 'caizhiData', 'chandiData'])->where('companyid', $this->getCompanyId());
+        $list->where("jianshu", ">", 0)->where("lingzhi", ">", 0)->where("counts", ">", 0);
 
         if (!empty($params['ids'])) {
             $list->where("id", "in", $params['ids']);
@@ -103,15 +107,31 @@ class Resource extends Right
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
-
-    /**预留库存列表
-     * @return \think\response\Json
-     */
-    public function  reservedgoods(){
+    public function allspot($juhe="cate,pinming,cangku,guige,changdu,houdu")
+    {
         $params = request()->param();
-        $list = \app\admin\model\ViewReserved::where('companyid', $this->getCompanyId());
-        $list=$this->getsearch($params,$list);
-        $list=$list
+        $list = model("ViewTotalSpot")->alias("t1")->where('companyid', $this->getCompanyId());
+        $list = $this->getsearch($params, $list);
+        $list = $list
+            ->field("*,sum(t1.xhZhongliang - t1.ylZhongliang)       xhZhongliang,
+             sum(t1.ylZhongliang)                                   ylZhongliang,
+             sum(t1.ztZhongliang)                                   ztZhongliang,
+             sum(t1.xhcounts - t1.ylcounts)                         xhcounts,
+             sum(t1.ylcounts)                                       ylcounts,
+             sum(t1.ztcounts)                                       ztcounts,
+             sum(t1.xhlisuan_zhongliang - t1.yllisuan_zhongliang)   xhlisuanzhongliang,
+             sum(t1.yllisuan_zhongliang)                            yllisuanzhongliang,
+             sum(t1.ztlisuan_zhongliang)                            ztlisuanzhongliang,
+             sum(t1.xhguobang_zhongliang - t1.ylguobang_zhongliang) xhguobangzhongliang,
+             sum(t1.ylguobang_zhongliang)                           ylguobangzhongliang,
+             sum(t1.ztguobang_zhongliang)                           ztguobangzhongliang,
+             sum(t1.xhjianshu - t1.yljianshu)                       xhjianshu,
+             sum(t1.yljianshu)                                      yljianshu,
+             sum(t1.ztjianshu)                                      ztjianshu,
+             sum(t1.xhlingzhi - t1.yllingzhi)                       xhlingzhi,
+             sum(t1.yllingzhi)                                      yllingzhi,
+             sum(t1.ztlingzhi)                                      ztlingzhi")
+            ->group("$juhe")
             ->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }

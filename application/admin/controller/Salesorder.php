@@ -274,7 +274,6 @@ class Salesorder extends Right
             } else {
                 throw new Exception('出库方式错误');
             }
-
             //向货款单添加数据
             $capitalHkData = [
                 'hk_type' => CapitalHk::SALES_ORDER,
