@@ -124,10 +124,17 @@ class Invcgsp extends Right
                 model("InvCgsp")->allowField(true)->data($data)->save();
                 $id = model("InvCgsp")->getLastInsID();
                 foreach ($data["details"] as $c => $v) {
+                    $dat['details'][$c]['id'] = $v["inv_id"];
+                    $dat['details'][$c]['yhx_zhongliang'] = $v["yhx_zhongliang"]+$v["zhongliang"];
+                    $dat['details'][$c]['yhx_price'] = $v["yhx_zhongliang"]+$v["sum_shui_price"];
                     $data['details'][$c]['companyid'] = $companyId;
-                    $data['details'][$c]['ysfk_id'] = $id;
+                    $data['details'][$c]['cgsp_id'] = $id;
+                    $data['details'][$c]['yw_type'] = 2;
+                    $data['details'][$c]['data_id'] = $v["inv_id"];
+                    $data['details'][$c]['system_number']=$v["system_number"]."1";
                 }
-                model('InvCgspHx')->saveAll($data['details']);
+                model('Inv')->allowField(true)->saveAll($dat['details']);
+                model('InvCgspHx')->allowField(true)->saveAll($data['details']);
                 if (!$return) {
                     Db::commit();
                     return returnRes(true, '', ['id' => $id]);

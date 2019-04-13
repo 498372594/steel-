@@ -31,6 +31,9 @@ class Resource extends Right
         $params = request()->param();
         $list = \app\admin\model\ViewInstorageDetails::where('companyid', $this->getCompanyId());
         $list = $this->getsearchcondition($params, $list);
+        if (!empty($params['budengyuling'])) {
+            $list->where('counts', 'neq', 0);
+        }
         $juhe = "store_id,pinming_id,guige_id,kuandu,changdu,houdu,classname";
         $juhe = $juhe . $params("juhe");
         $list = $list->field("storage,classname,pinming,guige,caizhi,chandi,houdu,kuandu,changdu,jianshu,sum(jianshu) as total_jianshu,sum(lingzhi) as total_lingzhi,sum(counts) as total_shuliang,sum(zhongliang) as total_zhongliang,sum(lisuanzongzhong) as total_lisuanzongzhong")

@@ -3,10 +3,15 @@
 namespace app\admin\controller;
 
 use app\admin\library\traits\Backend;
-use think\Db;
-use think\Exception;
+
 use think\Session;
 use app\admin\validate\{FeiyongDetails, SalesorderDetails};
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    exception\DbException,
+    Request,
+    response\Json};
 
 class Cg extends Right
 {
@@ -44,7 +49,7 @@ class Cg extends Right
             return returnRes(true, '', $data);
         }
     }
-    public function addcgth($data = [], $return = false)
+    public function addcgth(Request $request,$data = [], $return = false)
     {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
@@ -81,8 +86,66 @@ class Cg extends Right
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['cg_th_id'] = $id;
                 }
-                model('KcSpot')->allowField(true)->saveAll($dat['details']);
+//                model('KcSpot')->allowField(true)->saveAll($dat['details']);
                 model('CgThMx')->allowField(true)->saveAll($data['details']);
+                $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
+                    ->where('companyid', $companyId)
+                    ->count();
+
+                $systemNumber = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                //自动出库，生成出库单
+                $stockOutData = [
+                    'remark' => '退货单，' . $systemNumber,
+                    'yw_time' => $data['yw_time'],
+                    'department' => $data['group_id'],
+                    'sale_operator_id' => $data['sale_operator_id'],
+                    'details' => [],
+                    'data_id' => $id
+                ];
+                $stockOutDetail = [];
+                $index = -1;
+                $spotIds = [];
+                foreach ($data['details'] as $v) {
+                    $v['index'] = $v['index'] ?? $index--;
+                    $spotId = $v['spot_id'] ?? $spotIds[$v['index']];
+                    $stockOutData['details'][] = [
+                        'zhongliang' => $v['zhongliang'] ?? '',
+                        'kucun_cktz_id' => $v['index'],
+                        'kc_spot_id' => $spotId,
+                        'ylsh' => $v['ylsh_id'] ?? 0
+                    ];
+                    $stockOutDetail[$v['index']] = [
+                        'companyid' => $companyId,
+                        'chuku_type' => 10,
+                        'data_id' => $id,
+                        'guige_id' => $v['guige_id'],
+                        'caizhi' => $v['caizhi'] ?? '',
+                        'chandi' => $v['chandi'] ?? '',
+                        'jijiafangshi_id' => $v['jijiafangshi_id'],
+                        'houdu' => $v['houdu'] ?? '',
+                        'kuandu' => $v['kuandu'] ?? '',
+                        'changdu' => $v['changdu'] ?? '',
+                        'lingzhi' => $v['lingzhi'] ?? '',
+                        'jianshu' => $v['jianshu'] ?? '',
+                        'zhijian' => $v['zhijian'] ?? '',
+                        'counts' => $v['counts'] ?? '',
+                        'zhongliang' => $v['zhongliang'] ?? '',
+                        'price' => $v['price'] ?? '',
+                        'sumprice' => $v['sumprice'] ?? '',
+                        'shuie' => $v['shuie'] ?? '',
+                        'shui_price' => $v['shui_price'] ?? '',
+                        'sum_shui_price' => $v['sum_shui_price'] ?? '',
+                        'remark' => $v['remark'] ?? '',
+                        'car_no' => $v['car_no'] ?? '',
+                        'pihao' => $v['pihao'] ?? '',
+                        'cache_ywtime' => $data['yw_time'],
+                        'cache_data_pnumber' => $data['system_number'],
+                        'cache_customer_id' => $data['customer_id'],
+                        'store_id' => $v['store_id'],
+                        'cache_create_operator' => $data['cache_create_operator'],
+                    ];
+                }
+                $res = (new Chuku())->add($request, $stockOutData, $stockOutDetail, 1, true);
                 //其他费用
                 $num = 1;
                 if (!empty($data['other'])) {
@@ -112,11 +175,11 @@ class Cg extends Right
                     'system_number' => $data['system_number'],
                     'yw_time' => $data['yw_time'],
                     'beizhu' => $data['beizhu'],
-                    'money' => $totalMoney,
+                    'money' => (-$totalMoney),
                     'group_id' => $data['group_id'],
                     'sale_operator_id' => $data['sale_operator_id'],
                     'create_operator_id' => $data['create_operator_id'],
-                    'zhongliang' => $totalWeight,
+                    'zhongliang' => (-$totalWeight),
                     'cache_pjlx_id' => $data['piaoju_id'],
                 ];
                 (new CapitalHk())->add($capitalHkData);
