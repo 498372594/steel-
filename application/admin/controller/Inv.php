@@ -11,7 +11,7 @@ use think\{db\exception\DataNotFoundException,
     Request,
     response\Json};
 
-class Iniv extends Right
+class Inv extends Right
 {
     public function add($data)
     {
@@ -36,6 +36,6 @@ class Iniv extends Right
                         'data_id'=>$id,
                         'shui_price'=>$v["shui_price"]?? '',
                         'sum_price'=>$v["sum_price"]?? '',};*/
-        model("iniv")->allowField(true)->saveALl($data);
+        model("inv")->allowField(true)->saveALl($data);
     }
 }

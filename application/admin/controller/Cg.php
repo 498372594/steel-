@@ -12,7 +12,7 @@ class Cg extends Right
 {
     public function cgth(){
         $params = request()->param();
-        $list = $list = \app\admin\model\CgTh::with(["jsfsData","customData","pjlxData"])->where('companyid', $this->getCompanyId());
+        $list = \app\admin\model\CgTh::with(["jsfsData","customData","pjlxData"])->where('companyid', $this->getCompanyId());
         //往来单位
         if (!empty($params['customer_id'])) {
             $list->where('customer_id', $params['customer_id']);

@@ -334,7 +334,7 @@ class Initinput extends Right
      */
     public function kcmx($id=0){
 
-        $data = $list = \app\admin\model\InitKc::with([ 'details' => ['specification', 'jsfs', 'storage','chandiData','caizhiData','pinmingData'],
+        $data =  \app\admin\model\InitKc::with([ 'details' => ['specification', 'jsfs', 'storage','chandiData','caizhiData','pinmingData'],
             'customData','jsfsData','pjlxData','storageData'])
             ->where('companyid',$this->getCompanyId())
             ->where('id', $id)
@@ -355,7 +355,7 @@ class Initinput extends Right
         return returnRes(true, '', $list);
     }
     public function ysfkmx($id=0){
-        $data = $list = \app\admin\model\InitYsfk::with([ 'details',
+        $data  = \app\admin\model\InitYsfk::with([ 'details',
           ])
             ->where('companyid',$this->getCompanyId())
             ->where('id', $id)
@@ -424,7 +424,7 @@ class Initinput extends Right
         return returnRes(true, '', $list);
     }
     public function yskpmx($id=0){
-        $data = $list = \app\admin\model\InitYskp::with([ 'details'=>['customData','pjlxData'],
+        $data = \app\admin\model\InitYskp::with([ 'details'=>['customData','pjlxData'],
         ])
             ->where('companyid',$this->getCompanyId())
             ->where('id', $id)

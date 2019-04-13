@@ -6,7 +6,7 @@ namespace app\admin\model;
 
 use traits\model\SoftDelete;
 
-class Iniv extends Base
+class Inv extends Base
 {
     use SoftDelete;
     protected $autoWriteTimestamp = true;
