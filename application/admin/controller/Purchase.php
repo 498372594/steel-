@@ -223,6 +223,7 @@ class Purchase extends Right
     public function zidongruku($id,$data,$ruku_type){
         //自动入库
         //采购单id
+
         $data['data_id'] = $id;
         //生成入库单
         $count2 = KcRk::whereTime('create_time', 'today')->count();
