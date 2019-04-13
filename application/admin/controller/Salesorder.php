@@ -151,6 +151,8 @@ class Salesorder extends Right
             foreach ($data['details'] as $c => $v) {
                 $data['details'][$c]['companyid'] = $companyId;
                 $data['details'][$c]['order_id'] = $id;
+                $data['details'][$c]['caizhi'] = empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']);
+                $data['details'][$c]['chandi'] = empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']);
                 $totalMoney += $v['total_fee'];
                 $totalWeight += $v['weight'];
                 if (!$detailsValidate->check($data['details'][$c])) {
@@ -188,8 +190,8 @@ class Salesorder extends Right
                         'chuku_type' => 4,
                         'data_id' => $id,
                         'guige_id' => $v['wuzi_id'],
-                        'caizhi' => $v['caizhi'] ?? '',
-                        'chandi' => $v['chandi'] ?? '',
+                        'caizhi' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
+                        'chandi' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
                         'jijiafangshi_id' => $v['jsfs_id'],
                         'houdu' => $v['houdu'] ?? '',
                         'kuandu' => $v['width'] ?? '',
@@ -241,8 +243,8 @@ class Salesorder extends Right
                         'chuku_type' => 4,
                         'data_id' => $id,
                         'guige_id' => $v['wuzi_id'],
-                        'caizhi' => $v['caizhi'] ?? '',
-                        'chandi' => $v['chandi'] ?? '',
+                        'caizhi' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
+                        'chandi' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
                         'jijiafangshi_id' => $v['jsfs_id'],
                         'houdu' => $v['houdu'] ?? '',
                         'kuandu' => $v['width'] ?? '',

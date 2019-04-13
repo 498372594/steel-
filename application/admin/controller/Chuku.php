@@ -297,8 +297,8 @@ class Chuku extends Right
                 $madan['stock_out_id'] = $id;
                 $madan['out_type'] = $detailsData['chuku_type'];
                 $madan['out_mode'] = $outMode;
-                $madan['caizhi'] = $resource['caizhi_id'];
-                $madan['chandi'] = $resource['chandi_id'];
+                $madan['caizhi'] = empty($resource['caizhi_id']) ? '' : $this->getCaizhiId($resource['caizhi_id']);
+                $madan['chandi'] = empty($resource['chandi_id']) ? '' : $this->getChandiId($resource['chandi_id']);
                 $madan['stock_out_detail_id'] = $details[$v['kucun_cktz_id']];
                 $madan = array_merge($madan, $v);
                 $madanModel = new StockOutMd();

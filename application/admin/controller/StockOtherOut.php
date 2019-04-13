@@ -128,6 +128,8 @@ class StockOtherOut extends Right
             foreach ($data['details'] as $c => $v) {
                 $data['details'][$c]['companyid'] = $companyId;
                 $data['details'][$c]['stock_other_out_id'] = $id;
+                $data['details'][$c]['caizhi'] = empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']);
+                $data['details'][$c]['chandi'] = empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']);
                 if (!$detailsValidate->check($data['details'][$c])) {
                     throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                 }
@@ -143,8 +145,8 @@ class StockOtherOut extends Right
                     'chuku_type' => 3,
                     'data_id' => $id,
                     'guige_id' => $v['guige_id'],
-                    'caizhi' => $v['caizhi'] ?? '',
-                    'chandi' => $v['chandi'] ?? '',
+                    'caizhi' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
+                    'chandi' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
                     'jijiafangshi_id' => $v['jijiafangshi_id'],
                     'houdu' => $v['houdu'] ?? '',
                     'kuandu' => $v['kuandu'] ?? '',

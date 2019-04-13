@@ -131,6 +131,8 @@ class SalesTiaohuo extends Right
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['moshi_id'] = $id;
                     $data['details'][$c]['index'] = $index--;
+                    $data['details'][$c]['caizhi'] = empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']);
+                    $data['details'][$c]['chandi'] = empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']);
 
                     if (!$detailsValidate->scene('tiaohuo')->check($data['details'][$c])) {
                         throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
@@ -158,8 +160,8 @@ class SalesTiaohuo extends Right
                     $purchases[$index]['details'][] = [
                         'pinming_id' => $v['pinming_id'],
                         'guige_id' => $v['guige_id'],
-                        'caizhi_id' => $v['caizhi'] ?? '',
-                        'chandi_id' => $v['chandi'] ?? '',
+                        'caizhi_id' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
+                        'chandi_id' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
                         'jijiafangshi_id' => $v['jijiafangshi_id'],
                         'houdu' => $v['houdu'] ?? '',
                         'kuandu' => $v['kuandu'] ?? '',
@@ -212,8 +214,8 @@ class SalesTiaohuo extends Right
                     $salesOrder['details'][] = [
                         'storage_id' => $v['store_id'],
                         'wuzi_id' => $v['guige_id'],
-                        'caizhi' => $v['caizhi'] ?? '',
-                        'chandi' => $v['chandi'] ?? '',
+                        'caizhi' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
+                        'chandi' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
                         'jsfs_id' => $v['jijiafangshi_id'],
                         'length' => $v['changdu'] ?? '',
                         'houdu' => $v['houdu'] ?? '',

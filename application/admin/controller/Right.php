@@ -1,5 +1,11 @@
 <?php
+
 namespace app\admin\controller;
+
+use app\admin\model\Originarea;
+use app\admin\model\Texture;
+use think\db\Query;
+use think\Model;
 
 /**
  * main区域需要一个模板布局
@@ -14,12 +20,14 @@ class Right extends Signin
         $this->view->engine->layout('common/layout');
     }
 
-    /**搜索条件
+    /**
+     * 搜索条件
      * @param $params
-     * @param $list
+     * @param Query|Model $list
      * @return mixed
      */
-    public function getsearch($params,$list){
+    public function getsearch($params, $list)
+    {
         //系统单号
         if (!empty($params['system_no'])) {
             $list->where('system_no', $params['system_no']);
@@ -62,21 +70,21 @@ class Right extends Signin
             $list->where('houdu_name', '>=', $params['houdu_start']);
         }
         if (!empty($params['houdu_end'])) {
-            $list->where('houdu_name', '<=',$params['houdu_end']);
+            $list->where('houdu_name', '<=', $params['houdu_end']);
         }
         //宽度
         if (!empty($params['width_start'])) {
             $list->where('width', '>=', $params['width_start']);
         }
         if (!empty($params['width_end'])) {
-            $list->where('width', '<=',$params['width_end']);
+            $list->where('width', '<=', $params['width_end']);
         }
         //长度
         if (!empty($params['length_start'])) {
             $list->where('length', '>=', $params['length_start']);
         }
         if (!empty($params['length_end'])) {
-            $list->where('length', '<=',$params['length_end']);
+            $list->where('length', '<=', $params['length_end']);
         }
         //材质
         if (!empty($params['texture'])) {
@@ -112,7 +120,14 @@ class Right extends Signin
         }
         return $list;
     }
-    public function getsearchcondition($params,$list){
+
+    /**
+     * @param $params
+     * @param Query|Model $list
+     * @return mixed
+     */
+    public function getsearchcondition($params, $list)
+    {
 
         //仓库
         if (!empty($params['store_id'])) {
@@ -131,7 +146,7 @@ class Right extends Signin
             $list->where('houdu', '>=', $params['houdu_start']);
         }
         if (!empty($params['houdu_end'])) {
-            $list->where('houdu', '<=',$params['houdu_end']);
+            $list->where('houdu', '<=', $params['houdu_end']);
         }
         //宽度
         if (!empty($params['width_start'])) {
@@ -139,14 +154,14 @@ class Right extends Signin
         }
 
         if (!empty($params['width_end'])) {
-            $list->where('kuandu', '<=',$params['width_end']);
+            $list->where('kuandu', '<=', $params['width_end']);
         }
         //长度
         if (!empty($params['length_start'])) {
             $list->where('changdu', '>=', $params['length_start']);
         }
         if (!empty($params['length_end'])) {
-            $list->where('changdu', '<=',$params['length_end']);
+            $list->where('changdu', '<=', $params['length_end']);
         }
         //材质
         if (!empty($params['caizhi_id'])) {
@@ -209,6 +224,73 @@ class Right extends Signin
             $list->where('create_operator_id', $params['create_operator_id']);
         }
         return $list;
+    }
+
+    /**
+     * 通过材质名获取材质id
+     * @param $caizhi
+     * @return mixed
+     */
+    protected function getCaizhiId($caizhi)
+    {
+        if (empty($caizhi)) {
+            return null;
+        }
+        $id = Texture::where('id', $caizhi)
+            ->where('companyid', $this->getCompanyId())
+            ->value('id');
+        if (!empty($id)) {
+            return $id;
+        }
+        $id = Texture::where('texturename', $caizhi)
+            ->cache(true, 60)
+            ->where('companyid', $this->getCompanyId())
+            ->value('id');
+        if (empty($id)) {
+            $model = new Texture();
+            $model->texturename = $caizhi;
+            $model->companyid = $this->getCompanyId();
+            $model->add_name = $this->getAccount()['name'];
+            $model->add_id = $this->getAccountId();
+            $model->remark = $caizhi;
+            $model->zjm = $caizhi;
+            $model->save();
+            $id = $model->id;
+        }
+        return $id;
+    }
+
+    /**
+     * 根据产地名获取产地id
+     * @param $chandi
+     * @return mixed
+     */
+    protected function getChandiId($chandi)
+    {
+        if (empty($chandi)) {
+            return null;
+        }
+        $id = Originarea::where('id', $chandi)
+            ->where('companyid', $this->getCompanyId())
+            ->value('id');
+        if (!empty($id)) {
+            return $id;
+        }
+        $id = Originarea::where('originarea', $chandi)
+            ->cache(true, 60)
+            ->where('companyid', $this->getCompanyId())
+            ->value('id');
+        if (empty($id)) {
+            $model = new Originarea();
+            $model->originarea = $chandi;
+            $model->companyid = $this->getCompanyId();
+            $model->add_name = $this->getAccount()['name'];
+            $model->add_id = $this->getAccountId();
+            $model->zjm = $chandi;
+            $model->save();
+            $id = $model->id;
+        }
+        return $id;
     }
 
 }
