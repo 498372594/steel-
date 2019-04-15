@@ -125,6 +125,7 @@ class Initinput extends Right
         }
     }
 
+
     /**银行账户余额初始录入添加修改
      * @param array $data
      * @param bool $return
@@ -135,6 +136,7 @@ class Initinput extends Right
     public function initbankadd($data = [], $return = false)
     {
         if (request()->isPost()) {
+
             $companyId = $this->getCompanyId();
             $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')->count();
             $data = request()->post();
@@ -381,18 +383,33 @@ class Initinput extends Right
             if($data["type"]=1){
                 $data['system_number'] = 'YSZKYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
-
+//            dump($data);die;
             if (!$return) {
                 Db::startTrans();
             }
             try {
-                model("InitYsfk")->allowField(true)->data($data)->save();
-                $id = model("InitYsfk")->getLastInsID();
+
+                if(empty($data["id"])){
+                    model("InitYsfk")->allowField(true)->isUpdate(false)->save($data);
+                    $id = model("InitYsfk")->getLastInsID();
+                }else{
+                    model("InitYsfk")->allowField(true)->save($data,$data["id"]);
+                    $id=$data["id"];
+                }
+                if(!empty($data["delete_id"])){
+                    model("InitYsfkMx")->where("id","in",$data["delete_id"])->delete();
+                }
                 foreach ($data["details"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['ysfk_id'] = $id;
+                    if(empty($v["id"])){
+//                        dump(1);die;
+                        model('InitYsfkMx')->allowField(true)->isUpdate(false)->data($data['details'][$c])->save();
+                    }else{
+                        model('InitYsfkMx')->allowField(true)->update($data['details'][$c]);
+                    }
+
                 }
-                model('InitYsfkMx')->saveAll($data['details']);
                 if (!$return) {
                     Db::commit();
                     return returnRes(true, '', ['id' => $id]);

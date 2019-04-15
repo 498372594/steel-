@@ -26,7 +26,7 @@ class Resource extends Right
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function xhhz($pageLimit = 10)
+    public function xhhz($pageLimit = 10,$juhe = "store_id,pinming_id,guige_id,kuandu,changdu,houdu,classname")
     {
         $params = request()->param();
         $list = \app\admin\model\ViewInstorageDetails::where('companyid', $this->getCompanyId());
@@ -34,8 +34,7 @@ class Resource extends Right
         if (!empty($params['budengyuling'])) {
             $list->where('counts', 'neq', 0);
         }
-        $juhe = "store_id,pinming_id,guige_id,kuandu,changdu,houdu,classname";
-        $juhe = $juhe . $params("juhe");
+
         $list = $list->field("storage,classname,pinming,guige,caizhi,chandi,houdu,kuandu,changdu,jianshu,sum(jianshu) as total_jianshu,sum(lingzhi) as total_lingzhi,sum(counts) as total_shuliang,sum(zhongliang) as total_zhongliang,sum(lisuanzongzhong) as total_lisuanzongzhong")
             ->group("$juhe")
             ->paginate(10);
@@ -136,6 +135,13 @@ class Resource extends Right
              sum(t1.ztlingzhi)                                      ztlingzhi")
             ->group("$juhe")
             ->paginate(10);
+        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+    }
+    public function xhzymx($pageLimit=10){
+        $params = request()->param();
+        $list = \app\admin\model\ViewSpotMx::where('companyid', $this->getCompanyId());
+        $list = $this->getsearchcondition($params, $list);
+        $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 }

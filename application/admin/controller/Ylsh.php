@@ -45,7 +45,7 @@ class Ylsh extends Right
     public function release(){
         if(request()->isPost()){
             $data=request()->post();
-            $res=model("KcYlSh")->allowField(true)->saveAll($data["data"]);
+            $res=model("KcYlSh")->allowField(true)->saveAll($data);
             return returnRes($res,'锁货释放失败');
         }
     }
@@ -71,7 +71,7 @@ class Ylsh extends Right
     public function postpone(){
         if(request()->isPost()){
             $data=request()->post();
-            $res=model("KcYlSh")->allowField(true)->saveAll($data["data"]);
+            $res=model("KcYlSh")->allowField(true)->saveAll($data);
             return returnRes($res,'锁货延迟失败');
         }
     }

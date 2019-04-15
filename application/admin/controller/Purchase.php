@@ -42,7 +42,8 @@ class Purchase extends Right
             $data['companyid'] = $companyId;
             $data['system_number'] = 'CGD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data['moshi_type'] = $moshi_type;
-
+            $data["delete_mx_id"]=request()->post("delete_id");
+            $data["delete_other_id"]=request()->post("delete_id");
             // 数据验证
             $validate = new \app\admin\validate\CgPurchase();
             if (!$validate->check($data)) {
@@ -58,11 +59,15 @@ class Purchase extends Right
             }
             try {
                 $model = new CgPurchase();
-                //添加采购单列表
-                $model->allowField(true)->data($data)->save();
-
+                //添加修改采购单列表
+                if(empty($data["id"])){
+                    $model->allowField(true)->isUpdate(false)->save($data);
+                    $id = $model->getLastInsID();
+                }else{
+                    $model->allowField(true)->save($data,$data["id"]);
+                    $id=$data["id"];
+                }
                 //处理明细
-                $id = $model->getLastInsID();
                 $num = 1;
                 $totalMoney = 0;
                 $totalWeight = 0;
@@ -77,7 +82,7 @@ class Purchase extends Right
                     }
                     $num++;
                 }
-                //t添加采购单明细
+                //添加采购单明细
                 model('CgPurchaseMx')->allowField(true)->saveAll($data['details']);
 
                 $num = 1;
@@ -464,8 +469,8 @@ class Purchase extends Right
      */
     public function getpaymenttype()
     {
-        $class = request()->param("paymentclass");
-        $paymentclass = model("paymenttype")->field("id,name")->where("class", $class)->select();
+        $class = request()->param("classid");
+        $paymentclass = model("paymenttype")->field("id,name")->where("classid", $class)->select();
         return returnRes($paymentclass, "没有相关数据", $paymentclass);
     }
 

@@ -167,6 +167,10 @@ class Right extends Signin
         if (!empty($params['caizhi_id'])) {
             $list->where('caizhi_id', $params['caizhi_id']);
         }
+        //资源号
+        if (!empty($params['resource_number'])) {
+            $list->where('resource_number', $params['resource_number']);
+        }
         //规格
         if (!empty($params['chandi_id'])) {
             $list->where('chandi_id', $params['chandi_id']);
