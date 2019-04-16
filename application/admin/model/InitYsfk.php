@@ -18,6 +18,6 @@ class InitYsfk extends Base
 
     public function details()
     {
-        return $this->hasMany('InitYsfk', 'bank_id', 'id');
+        return $this->hasMany('InitYsfkMx', 'ysfk_id', 'id');
     }
 }

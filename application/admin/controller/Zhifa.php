@@ -11,8 +11,7 @@ use think\{Db,
     db\exception\ModelNotFoundException,
     exception\DbException,
     Request,
-    response\Json,
-    Session};
+    response\Json};
 
 class Zhifa extends Right
 {
@@ -23,7 +22,7 @@ class Zhifa extends Right
      * @return Json
      * @throws DbException
      */
-    public function getlist(Request $request, $pageLimit = 10)
+    public function getList(Request $request, $pageLimit = 10)
     {
         if (!$request->isGet()) {
             return returnFail('请求方式错误');
@@ -37,6 +36,7 @@ class Zhifa extends Right
             'gfjsfsData',
             'khjsfsData',
         ])->where('companyid', $this->getCompanyId())
+            ->order('create_time', 'desc')
             ->where('moshi_type', 1);
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
@@ -142,6 +142,8 @@ class Zhifa extends Right
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['moshi_id'] = $id;
                     $data['details'][$c]['index'] = $index--;
+                    $data['details'][$c]['caizhi'] = empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']);
+                    $data['details'][$c]['chandi'] = empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']);
 
                     if (!$detailsValidate->scene('zhifa')->check($data['details'][$c])) {
                         throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
@@ -166,8 +168,8 @@ class Zhifa extends Right
                     $purchase['details'][] = [
                         'pinming_id' => $v['pinming_id'],
                         'guige_id' => $v['guige_id'],
-                        'caizhi_id' => $v['caizhi'] ?? '',
-                        'chandi_id' => $v['chandi'] ?? '',
+                        'caizhi_id' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
+                        'chandi_id' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
                         'jijiafangshi_id' => $v['jijiafangshi_id'],
                         'houdu' => $v['houdu'] ?? '',
                         'kuandu' => $v['kuandu'] ?? '',
@@ -217,8 +219,8 @@ class Zhifa extends Right
                     $salesOrder['details'][] = [
                         'storage_id' => $v['store_id'],
                         'wuzi_id' => $v['guige_id'],
-                        'caizhi' => $v['caizhi'] ?? '',
-                        'chandi' => $v['chandi'] ?? '',
+                        'caizhi' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
+                        'chandi' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
                         'jsfs_id' => $v['jijiafangshi_id'],
                         'length' => $v['changdu'] ?? '',
                         'houdu' => $v['houdu'] ?? '',
@@ -339,12 +341,19 @@ class Zhifa extends Right
             if ($cgzfd->status == 2) {
                 return returnFail('此单已作废');
             }
-            $cgzfd->status = 2;
-            $cgzfd->save();
-            (new Salesorder())->cancel($request, $id, 2, false);
+            Db::startTrans();
+            try {
+                $cgzfd->status = 2;
+                $cgzfd->save();
+                (new Salesorder())->cancel($request, $id, 2, false);
 
-            //todo 作废采购单
-            return returnSuc();
+                //todo 作废采购单
+                Db::commit();
+                return returnSuc();
+            } catch (Exception $e) {
+                Db::rollback();
+                return returnFail($e->getMessage());
+            }
         }
         return returnFail('请求方式错误');
     }

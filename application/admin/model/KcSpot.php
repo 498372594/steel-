@@ -37,6 +37,29 @@ class KcSpot extends Base
         return $this->belongsTo('Originarea', 'chandi_id', 'id')->cache(true, 60)
             ->field('id,originarea')->bind(['chandi' => 'originarea']);
     }
+    public function getRealcountsAttr($value,$data){
+        $count=model("KcYlsh")->where("spot_id",$data['id'])->sum("counts");
+        $count=$data["counts"]-$count;
+        return $count;
+    }
+    public function getReallingzhiAttr($value,$data){
+        $count=model("KcYlsh")->where("spot_id",$data['id'])->sum("counts");
+        $count=$data["counts"]-$count;
+        $lingzhi=$count/$data["zhijian"];
+        return $lingzhi;
+    }
+    public function getRealjianshuAttr($value,$data){
+        $count=model("KcYlsh")->where("spot_id",$data['id'])->sum("counts");
+        $count=$data["counts"]-$count;
+        $jianshu=intval(floor($count / $data["zhijian"]));
+        return $jianshu;
+    }
+    public function getRealzhongliangAttr($value,$data){
+        $zhongliang=model("KcYlsh")->where("spot_id",$data['id'])->sum("zhongliang");
+        $zhongliang=$data["zhongliang"]-$zhongliang;
+        return $zhongliang;
+    }
+
     // 验证规则
     public $rules = [
 

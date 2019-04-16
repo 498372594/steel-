@@ -39,6 +39,11 @@ class KcRkMx extends Base
         return $this->belongsTo('Originarea', 'chandi_id', 'id')->cache(true, 60)
             ->field('id,originarea')->bind(['chandi' => 'originarea']);
     }
+    public function customData()
+    {
+        return $this->belongsTo('custom', 'cache_customer', 'id')->cache(true, 60)
+            ->field('id,custom')->bind(['custom_name' => 'custom']);
+    }
     // 验证规则
     public $rules = [
 
