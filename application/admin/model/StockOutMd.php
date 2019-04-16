@@ -36,7 +36,8 @@ class StockOutMd extends Base
             ->field('id,storage')->bind(['storage_name' => 'storage']);
     }
 
-    public  function mainData(){
-        return $this->belongsTo('StockOut','stock_out_id','id');
+    public function mainData()
+    {
+        return $this->belongsTo('StockOut', 'stock_out_id', 'id');
     }
 }

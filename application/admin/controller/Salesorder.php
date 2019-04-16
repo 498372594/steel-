@@ -79,7 +79,7 @@ class Salesorder extends Right
             'pjlxData',
             'jsfsData',
             'details' => ['specification', 'jsfs', 'storage'],
-            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom','szflData']]
+            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']]
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
@@ -455,5 +455,221 @@ class Salesorder extends Right
             }
         }
         return returnFail('请求方式错误');
+    }
+
+    /**
+     * @param Request $request
+     * @param array $data
+     * @param int $ywlx
+     * @return \app\admin\model\Salesorder|array|false|\PDOStatement|string|\think\Model|Json
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws \think\Exception
+     * @throws \Exception
+     */
+    public function edit(Request $request, $data = [], $ywlx = 1)
+    {
+        if (empty($data)) {
+            $data = $request->post();
+        }
+
+        $validate = new \app\admin\validate\Salesorder();
+        if (!$validate->check($data)) {
+            return returnFail($validate->getError());
+        }
+
+        $addList = [];
+        $updateList = [];
+
+        $detailValidate = new SalesorderDetails();
+        $num = 1;
+        foreach ($data['details'] as $item) {
+            if (!$detailValidate->check($item)) {
+                return returnFail('请检查第' . $num . '行' . $data['details']);
+            }
+            $item['caizhi'] = $this->getCaizhiId($item['caizhi']);
+            $item['chandi'] = $this->getChandiId($item['chandi']);
+            if (empty($item['id'])) {
+                $addList[] = $item;
+            } else {
+                $updateList[] = $item;
+            }
+            $num++;
+        }
+        $companyId = $this->getCompanyId();
+        if (empty($data['id'])) {
+            $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
+                ->where('companyid', $companyId)
+                ->count();
+
+            //数据处理
+            $systemNumber = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+            $data['add_id'] = $this->getAccountId();
+            $data['companyid'] = $companyId;
+            $data['system_no'] = $systemNumber;
+            $data['ywlx'] = $ywlx;
+
+            $xs = new \app\admin\model\Salesorder();
+            $xs->allowField(true)->data($data)->save();
+
+            if ($data['ckfs'] == 1) {
+                $ck = (new StockOut())->insertChuku($xs['id'], "4", $xs['ywsj'], $xs['department'], $xs['system_no'], $xs['employer'], $this->getAccountId(), $this->getCompanyId());
+            }
+        } else {
+            $xs = \app\admin\model\Salesorder::where('companyid', $companyId)->where('id', $data['id'])->find();
+            if (empty($xs)) {
+                throw new Exception('数据不存在');
+            }
+            if ($xs['status'] == 2) {
+                throw new Exception('该单据已作废');
+            }
+            if ($xs['ywlx'] != 1) {
+                throw new Exception('此销售单是由其他单据自动生成的，禁止直接修改！');
+            }
+            if ($xs['ckfs'] == 2) {
+                $mxList = \app\admin\model\SalesorderDetails::where('order_id', $data['id'])->select();
+                if (!empty($mxList)) {
+                    foreach ($mxList as $item) {
+                        $mdList = StockOutMd::where('data_id', $item['id'])->count();
+                        if ($mdList > 0) {
+                            throw new Exception("该单据已经出库，禁止操作！");
+                        }
+                    }
+                }
+            }
+            $data['changer'] = $this->getAccountId();
+            $xs->allowField(true)->data($data)->save();
+            if ($data['ckfs'] == 1) {
+                throw new Exception('自动出库单禁止修改');
+            }
+            $mxList = \app\admin\model\SalesorderDetails::where('order_id', $data['id'])->select();
+            if (!empty($mxList)) {
+                foreach ($mxList as $mx) {
+                    $invList = \app\admin\model\Inv::where('data_id', $mx['id'])
+                        ->where('yw_type', 3)
+                        ->select();
+                    foreach ($invList as $item) {
+                        $item->yw_time = $xs['ywsj'];
+                        $item->piaoju_id = $xs['pjlx'];
+                        $item->customer_id = $xs['custom_id'];
+                        $item->save();
+                    }
+                    $tzList = KucunCktz::where('data_id', $mx['id'])->select();
+                    foreach ($tzList as $tz) {
+                        $tz->cache_ywtime = $xs['ywsj'];
+                        $tz->cache_customer_id = $xs['custom_id'];
+                        $tz->save();
+                    }
+                }
+            }
+        }
+        if (empty($deleteIds)) {
+            $deleteIds = $request->post('deleteIds');
+        }
+        $deleteList = \app\admin\model\SalesorderDetails::where('id', 'in', $deleteIds)->select();
+        foreach ($deleteList as $mx) {
+            if ($xs['ckfs'] == 1) {
+                throw new Exception('自动出库单禁止修改');
+            } else {
+                (new KucunCktz())->deleteByDataIdAndChukuType($mx['id'], 4);
+            }
+            (new \app\admin\model\Inv())->deleteInv($mx['id'], 3);
+            $mx->delete();
+        }
+        foreach ($updateList as $mjo) {
+            $thMxList = SalesReturnDetails::where('xs_sale_mx_id', $mjo['id'])->select();
+            if (!empty($thMxList)) {
+                throw new Exception("该销售单已有退货信息，禁止该操作！");
+            }
+            $jjfs = \app\admin\model\SalesorderDetails::alias('mx')
+                ->join('__JSFS__ jjfs', 'mx.jsfs=jjfs.id')
+                ->where('id', $mjo['id'])
+                ->value('jj_type');
+            if (($jjfs != 2) && empty($mjo['count'])) {
+                throw new Exception("数量必须大于“0”！");
+            }
+            $mx = \app\admin\model\SalesorderDetails::where('id', $mjo['id'])->find();
+            $mx->allowField(true)->data($mjo)->isUpdate(true)->save();
+            if (1 == $xs['ckfs']) {
+                throw new Exception('自动出库单禁止修改');
+            } else {
+                (new KucunCktz())->updateChukuTz($mx['id'], "4", $mx['wuzi_id'], $mx['caizhi'], $mx['chandi'], $mx['jsfs_id'], $mx['storage_id'], $mx['houdu'],
+                    $mx['length'], $mx['width'], $mx['count'], $mx['num'], $mx['lingzhi'], $mx['jzs'], $mx['weight'], $mx['tax_rate'], $mx['total_fee'], $mx['price_and_tax'],
+                    $mx['price'], $mx['batch_no'], $xs['remark'], $mx['car_no'], $xs['ywsj'], $xs['system_no'], $xs['custom_id']);
+            }
+            (new \app\admin\model\Inv())->updateInv($mx['id'], "3", null, $xs['custom_id'], $xs['ywsj'], $mx['length'], $mx['width'], $mx['houdu'],
+                $mx['wuzi_id'], $mx['jsfs_id'], $xs['pjlx'], '', $mx['weight'], $mx['price'], $mx['total_fee'], $mx['price_and_tax'], $mx['tax_rate']);
+        }
+        if (!empty($addList)) {
+            $trumpet = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->max('trumpet');
+            foreach ($addList as $mjo) {
+                $trumpet++;
+                $jjfs = Jsfs::where('id', $mjo['jsfs_id'])->value('jj_type');
+                if ($jjfs != 2 && empty($mjo['count'])) {
+                    throw new Exception("数量必须大于“0”！");
+                }
+                $mjo['trumpet'] = $trumpet;
+                $mx = new \app\admin\model\SalesorderDetails();
+                $mx->allowField(true)->data($mjo)->save();
+                $spot = KcSpot::get($mx['kc_spot_id']);
+                $cbPrice = null;
+                if (empty($spot)) {
+                    $cbPrice = null;
+                } else {
+                    $cbPrice = $spot['cb_price'];
+                }
+                if ($xs['ckfs'] == 1) {
+                    (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'], $mx['id'], "4", $xs['ywsj'],
+                        $xs['system_no'], $xs['custom_id'], $mx['wuzi_id'], $mx['caizhi'], $mx['chandi'], $mx['jsfs_id'],
+                        $mx['storage_id'], $mx['houdu'], $mx['width'], $mx['length'], $mx['jzs'], $mx['lingzhi'], $mx['num'], $mx['count'],
+                        $mx['weight'], $mx['price'], $mx['total_fee'], $mx['tax_rate'], $mx['price_and_tax'], $mx['tax'],
+                        null, null, $cbPrice, '', $this->getAccount(), $this->getCompanyId());
+                } else {
+                    (new KucunCktz())->insertChukuTz($mx['id'], 4, $mx['wuzi_id'], $mx['caizhi'], $mx['chandi'],
+                        $mx['jsfs_id'], $mx['storage_id'], $mx['houdu'], $mx['length'], $mx['width'], $mx['count'], $mx['num'],
+                        $mx['lingzhi'], $mx['jzs'], $mx['weight'], $mx['tax_rate'], $mx['total_fee'], $mx['price_and_tax'],
+                        $mx['price'], $mx['pihao'], $mx['remark'], $mx['car_no'], $xs['ywsj'], $xs['system_no'], $xs['custom_id'], $this->getAccountId(), $this->getCompanyId());
+                }
+                (new \app\admin\model\Inv())->insertInv($mx['id'], 3, 1, $mx['length'], $mx['houdu'],
+                    $mx['width'], $mx['wuzi_id'], $mx['jsfs_id'], $xs['pjlx'],
+                    $xs['system_no'] . "." . $mx['trumpet'], $xs['custom_id'], $xs['ywsj'], $mx['price'],
+                    $mx['tax_rate'], $mx['total_fee'], $mx['price_and_tax'], $mx['weight'], $this->getCompanyId());
+            }
+        }
+        //todo 费用明细
+//        this . fymxDaoImpl . fymxSave(fyJson, xs . getId(), xs . getYwTime(), "1", xs . getGroupId(), xs . getSaleOperatorId(), user, jigou, zhangtao, su, null);
+        $mxList = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->select();
+
+        if (!empty($mxList)) {
+            foreach ($mxList as $mx) {
+                $spot = KcSpot::where('id', $mx['kc_spot_id'])->select();
+                if (!empty($spot) && !empty($spot['cb_price'])) {
+                    $mdList = StockOutMd::where('kc_spot_id', $spot['id'])->select();
+                    if (!empty($mdList)) {
+                        foreach ($mdList as $md) {
+                            $md->cb_price = $spot['cb_price'];
+                            $jjfs = Jsfs::get($mx['jsfs_id']);
+                            if ($jjfs['jj_type'] == 1 || $jjfs['jj_type'] == 2) {
+                                $md->cb_sum_shuiprice = $md->cb_price * $md->zhongliang;
+                            } elseif ($jjfs['jj_type'] == 3) {
+                                $md->cb_sum_shuiprice = $md->cb_price * $md->counts;
+                            }
+                            $md->save();
+                        }
+                    }
+                }
+            }
+        }
+        $sumMoney = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->sum('price_and_tax');
+        $sumZhongliang = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->sum('weight');
+        if (empty($data['id'])) {
+            (new \app\admin\model\CapitalHk())->insertHk($xs['id'], "12", $xs['system_no'], $xs['remark'],
+                $xs['custom_id'], "1", $xs['ywsj'], $xs['jsfs'], $xs['pjlx'], $sumMoney, $sumZhongliang, $xs['department'], $xs['employer'], $this->getAccountId());
+        } else {
+            (new \app\admin\model\CapitalHk())->updateHk($xs['id'], "12", $xs['remark'], $xs['custom_id'], $xs['ywsj'],
+                $xs['jsfs'], $xs['pjlx'], $sumMoney, $sumZhongliang, $xs['department'], $xs['employer']);
+        }
+        return $xs;
     }
 }

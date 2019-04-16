@@ -75,7 +75,7 @@ class Chuku extends Right
             $list->where('cache_create_operator', $params['add_id']);
         }
         if (!empty($params['is_done'])) {
-            $list->where('is_done', $params['id_done'] - 1);
+            $list->where('is_done', $params['is_done'] - 1);
         }
         if (!empty($params['weight_gt_0'])) {
             $list->where('zhongliang', '>', 0);
@@ -294,6 +294,7 @@ class Chuku extends Right
                 //生成码单
                 $madan = $resource->getData();
                 unset($madan['id'], $madan['create_time'], $madan['update_time'], $madan['delete_time']);
+                $madan['data_id']=$stockOutDetails[$v['kucun_cktz_id']];
                 $madan['stock_out_id'] = $id;
                 $madan['out_type'] = $detailsData['chuku_type'];
                 $madan['out_mode'] = $outMode;

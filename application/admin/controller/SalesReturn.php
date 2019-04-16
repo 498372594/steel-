@@ -74,7 +74,7 @@ class SalesReturn extends Right
             "jsfsData",
             "custom",
             "pjlxData",
-            'details' => ['specification', 'jsfs', 'storage', 'pinmingData'],
+            'details' => ['jsfs', 'storage', 'pinmingData', 'caizhi', 'chandi'],
             'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
@@ -199,7 +199,6 @@ class SalesReturn extends Right
             return returnRes(true, '', ['id' => $id]);
         } catch (\Exception $e) {
             Db::rollback();
-            throw $e;
             return returnFail($e->getMessage());
         }
     }
