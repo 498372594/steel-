@@ -17,6 +17,8 @@
     ],
     "require": {
         "php": ">=7.0.0",
+        "ext-json": "*",
+        "ext-pdo": "*",
         "topthink/framework": "~5.0.21",
         "qt/qframe-auth": "^1.0",
         "topthink/think-captcha": "^1.0",

@@ -4,8 +4,7 @@
 namespace app\admin\model;
 
 use Exception;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\ModelNotFoundException;
+use think\db\exception\{DataNotFoundException, ModelNotFoundException};
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -90,7 +89,9 @@ class KucunCktz extends Base
      * @throws ModelNotFoundException
      * @throws Exception
      */
-    public function updateChukuTz($dataId, $chukuType, $guigeId, $caizhiId, $chandiId, $jijiafangshiId, $storeId, $houdu, $changdu, $kuandu, $counts, $jianshu, $lingzhi, $zhijian, $zhongliang, $shuiPrice, $sumprice, $sumShuiPrice, $price, $pihao, $beizhu, $chehao, $cacheYwtime, $cacheDataPnumber, $cacheCustomerId)
+    public function updateChukuTz($dataId, $chukuType, $guigeId, $caizhiId, $chandiId, $jijiafangshiId, $storeId, $houdu,
+                                  $changdu, $kuandu, $counts, $jianshu, $lingzhi, $zhijian, $zhongliang, $shuiPrice,
+                                  $sumprice, $sumShuiPrice, $price, $pihao, $beizhu, $chehao, $cacheYwtime, $cacheDataPnumber, $cacheCustomerId)
     {
         $this->ifCkMdMxExists($dataId, $chukuType);
 
@@ -204,8 +205,8 @@ class KucunCktz extends Base
         $cktz->price = $price;
         $cktz->shuie = $cktz->sum_shui_price - $cktz->sumprice;
         $cktz->pihao = $pihao;
-        $cktz->beizhu = $beizhu;
-        $cktz->chehao = $chehao;
+        $cktz->remark = $beizhu;
+        $cktz->car_no = $chehao;
         $cktz->cache_ywtime = $cacheYwtime;
         $cktz->cache_data_pnumber = $cacheDataPnumber;
         $cktz->cache_customer_id = $cacheCustomerId;

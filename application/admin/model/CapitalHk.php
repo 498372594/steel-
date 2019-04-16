@@ -4,6 +4,10 @@
 namespace app\admin\model;
 
 
+use Exception;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\ModelNotFoundException;
+use think\exception\DbException;
 use traits\model\SoftDelete;
 
 class CapitalHk extends Base
@@ -14,25 +18,41 @@ class CapitalHk extends Base
     public function insertHk($dataId, $ywType, $systemNumber, $beizhu, $customerId, $fangxiang, $ywTime, $jiesuanId, $piaojuId, $money, $zhongliang, $groupId, $saleOperatorId, $userId)
     {
         $hk = new self();
-        $hk->systemNumber = $systemNumber;
+        $hk->system_number = $systemNumber;
         $hk->beizhu = $beizhu;
-        $hk->createOperatorId = $userId;
-        $hk->customerId = $customerId;
-        $hk->dataId = $dataId;
+        $hk->create_operator_id = $userId;
+        $hk->customer_id = $customerId;
+        $hk->data_id = $dataId;
         $hk->fangxiang = $fangxiang;
-        $hk->groupId = $groupId;
-        $hk->hkType = $ywType;
-        $hk->ywTime = $ywTime;
-        $hk->jiesuanId = $jiesuanId;
+        $hk->group_id = $groupId;
+        $hk->hk_type = $ywType;
+        $hk->yw_time = $ywTime;
+        $hk->jiesuan_id = $jiesuanId;
         $hk->money = $money;
         $hk->zhongliang = $zhongliang;
-        $hk->saleOperatorId = $saleOperatorId;
-        $hk->cachePjlxId = $piaojuId;
-        $hk->saleOperatorId = $saleOperatorId;
+        $hk->sale_operator_id = $saleOperatorId;
+        $hk->cache_pjlx_id = $piaojuId;
+        $hk->sale_operator_id = $saleOperatorId;
         $hk->save();
     }
 
-
+    /**
+     * @param $dataId
+     * @param $ywType
+     * @param $beizhu
+     * @param $customerId
+     * @param $ywTime
+     * @param $jiesuanId
+     * @param $piaojuId
+     * @param $money
+     * @param $zhongliang
+     * @param $groupId
+     * @param $saleOperatorId
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
+     * @throws Exception
+     */
     public function updateHk($dataId, $ywType, $beizhu, $customerId, $ywTime, $jiesuanId, $piaojuId, $money, $zhongliang, $groupId, $saleOperatorId)
     {
         $obj = self::where('data_id', $dataId)->where('hk_type', $ywType)->find();
@@ -41,14 +61,14 @@ class CapitalHk extends Base
                 throw new Exception("已经有结算信息!");
             }
             $obj->beizhu = $beizhu;
-            $obj->customerId = $customerId;
-            $obj->ywTime = $ywTime;
-            $obj->jiesuanId = $jiesuanId;
+            $obj->customer_id = $customerId;
+            $obj->yw_time = $ywTime;
+            $obj->jiesuan_id = $jiesuanId;
             $obj->money = $money;
             $obj->zhongliang = $zhongliang;
-            $obj->groupId = $groupId;
-            $obj->cachePjlxId = $piaojuId;
-            $obj->saleOperatorId = $saleOperatorId;
+            $obj->group_id = $groupId;
+            $obj->cache_pjlx_id = $piaojuId;
+            $obj->sale_operator_id = $saleOperatorId;
             $obj->save();
         }
     }

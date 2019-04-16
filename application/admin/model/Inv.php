@@ -5,8 +5,7 @@ namespace app\admin\model;
 
 
 use Exception;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\ModelNotFoundException;
+use think\db\exception\{DataNotFoundException, ModelNotFoundException};
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -57,8 +56,10 @@ class Inv extends Base
      * @throws DataNotFoundException
      * @throws DbException
      * @throws ModelNotFoundException
+     * @throws Exception
      */
-    public function updateInv($dataId, $ywType, $fangxiang, $customerId, $ywTime, $changdu, $kuandu, $houdu, $guigeId, $jijiafangshiId, $piaojuId, $pinmingId, $zhongliang, $price, $sumPrice, $sumShuiPrice, $shuiPrice)
+    public function updateInv($dataId, $ywType, $fangxiang, $customerId, $ywTime, $changdu, $kuandu, $houdu, $guigeId,
+                              $jijiafangshiId, $piaojuId, $pinmingId, $zhongliang, $price, $sumPrice, $sumShuiPrice, $shuiPrice)
     {
         $obj = self::where('data_id', $dataId)->where('yw_type', $ywType)->find();
         if (!empty($list)) {
@@ -99,29 +100,30 @@ class Inv extends Base
         }
     }
 
-    public function insertInv($dataId, $ywType, $fangxiang, $changdu, $houdu, $kuandu, $guigeId, $jijiafangshiId, $piaojuId,
-                               $systemNumber, $customerId, $ywTime, $price, $shuiPrice, $sumPrice, $sumShuiPrice, $zhongliang, $companyId)
+    public function insertInv($dataId, $ywType, $fangxiang, $changdu, $houdu, $kuandu, $guigeId, $jijiafangshiId, $piaojuId, $pinmingId,
+                              $systemNumber, $customerId, $ywTime, $price, $shuiPrice, $sumPrice, $sumShuiPrice, $zhongliang, $companyId)
     {
         $i = new self();
-        $i->systemNumber = $systemNumber;
-        $i->customerId = $customerId;
-        $i->ywTime = $ywTime;
-        $i->ywType = $ywType;
+        $i->system_number = $systemNumber;
+        $i->customer_id = $customerId;
+        $i->yw_time = $ywTime;
+        $i->yw_type = $ywType;
         $i->changdu = $changdu;
         $i->kuandu = $kuandu;
-        $i->fxType = $fangxiang;
-        $i->guigeId = $guigeId;
+        $i->fx_type = $fangxiang;
+        $i->guige_id = $guigeId;
         $i->houdu = $houdu;
-        $i->jijiafangshiId = $jijiafangshiId;
-        $i->piaojuId = $piaojuId;
+        $i->jijiafangshi_id = $jijiafangshiId;
+        $i->piaoju_id = $piaojuId;
+        $i->pinming_id = $pinmingId;
         $i->price = $price;
-        $i->shuiPrice = $shuiPrice;
-        $i->sumPrice = $sumPrice;
-        $i->sumShuiPrice = $sumShuiPrice;
+        $i->shui_price = $shuiPrice;
+        $i->sum_price = $sumPrice;
+        $i->sum_shui_price = $sumShuiPrice;
         $i->zhongliang = $zhongliang;
-        $i->yhxPrice = 0;
-        $i->yhxZhongliang = 0;
-        $i->dataId = $dataId;
+        $i->yhx_price = 0;
+        $i->yhx_zhongliang = 0;
+        $i->data_id = $dataId;
         $i->companyid = $companyId;
         $i->save();
     }
