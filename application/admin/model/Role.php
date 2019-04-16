@@ -9,7 +9,25 @@
 namespace app\admin\model;
 
 
-class Role
+use think\Model;
+
+class Role extends Model
 {
+    // 定义时间戳字段名
+    protected $createTime = 'create_time';
+
+    protected $updateTime = 'update_time';
+
+    protected $autoWriteTimestamp = 'datetime';
+
+    public function getDepartmentIdAttr($value)
+    {
+         return getDropdownList('department',$value);
+    }
+
+    public function getAuthorityAttr($value)
+    {
+        return explode(',',$value);
+    }
 
 }
