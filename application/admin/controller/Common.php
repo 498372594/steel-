@@ -24,6 +24,7 @@ class Common extends  Right
     }
 
     /**
+     * 获取当前公司职员
      * @return \think\response\Json
      * @throws \think\db\exception\DataNotFoundException
      * @throws \think\db\exception\ModelNotFoundException
