@@ -5,6 +5,7 @@ namespace app\admin\model;
 
 use Exception;
 use think\db\exception\{DataNotFoundException, ModelNotFoundException};
+use think\db\Query;
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -141,9 +142,10 @@ class KucunCktz extends Base
         if (empty($list)) {
             throw new Exception("对象不存在");
         }
-        self::where('data_id', $dataId)
-            ->where('chuku_type', $chukuType)
-            ->delete();
+        self::destroy(function (Query $query) use ($dataId, $chukuType) {
+            $query->where('data_id', $dataId)
+                ->where('chuku_type', $chukuType);
+        });
     }
 
     /**

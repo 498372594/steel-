@@ -7,6 +7,7 @@ use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
+    db\Query,
     exception\DbException,
     Request,
     response\Json};
@@ -33,7 +34,10 @@ class Chuku extends Right
      */
     public function cancelNotify($dataId, $type)
     {
-        KucunCktz::where('kucun_type', $type)->where('data_id', $dataId)->delete();
+        KucunCktz::destroy(function (Query $query) use ($type, $dataId) {
+            $query->where('kucun_type', $type)
+                ->where('data_id', $dataId);
+        });
     }
 
     /**
@@ -294,7 +298,7 @@ class Chuku extends Right
                 //生成码单
                 $madan = $resource->getData();
                 unset($madan['id'], $madan['create_time'], $madan['update_time'], $madan['delete_time']);
-                $madan['data_id']=$stockOutDetails[$v['kucun_cktz_id']];
+                $madan['data_id'] = $stockOutDetails[$v['kucun_cktz_id']];
                 $madan['stock_out_id'] = $id;
                 $madan['out_type'] = $detailsData['chuku_type'];
                 $madan['out_mode'] = $outMode;

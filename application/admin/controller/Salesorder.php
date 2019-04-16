@@ -252,7 +252,7 @@ class Salesorder extends Right
 
             $validate = new \app\admin\validate\Salesorder();
             if (!$validate->check($data)) {
-                return returnFail($validate->getError());
+                throw new Exception($validate->getError());
             }
 
             $addList = [];
@@ -260,12 +260,14 @@ class Salesorder extends Right
 
             $detailValidate = new SalesorderDetails();
             $num = 1;
+            $companyId = $this->getCompanyId();
             foreach ($data['details'] as $item) {
                 if (!$detailValidate->check($item)) {
-                    return returnFail('请检查第' . $num . '行' . $data['details']);
+                    throw new Exception('请检查第' . $num . '行' . $data['details']);
                 }
                 $item['caizhi'] = $this->getCaizhiId($item['caizhi'] ?? '');
                 $item['chandi'] = $this->getChandiId($item['chandi'] ?? '');
+                $item['companyid'] = $companyId;
                 if (empty($item['id'])) {
                     $addList[] = $item;
                 } else {
@@ -273,7 +275,6 @@ class Salesorder extends Right
                 }
                 $num++;
             }
-            $companyId = $this->getCompanyId();
             if (empty($data['id'])) {
                 $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
@@ -340,8 +341,8 @@ class Salesorder extends Right
                     }
                 }
             }
-            if (!empty($data['details']['deleteIds'])) {
-                $deleteList = \app\admin\model\SalesorderDetails::where('id', 'in', $data['details']['deleteIds'])->select();
+            if (!empty($data['deleteMxIds'])) {
+                $deleteList = \app\admin\model\SalesorderDetails::where('id', 'in', $data['deleteMxIds'])->select();
                 foreach ($deleteList as $mx) {
                     if ($xs['ckfs'] == 1) {
                         throw new Exception('自动出库单禁止修改');

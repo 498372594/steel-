@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 
+use app\admin\model\CgPurchaseMx;
 use think\Config;
 use think\Controller;
 use think\Session;
@@ -14,6 +15,11 @@ use think\Session;
 class Base extends Controller
 {
     protected $pageSize;
+
+    public function test(){
+        $model=new CgPurchaseMx();
+        dump($model->where('id',6));
+    }
 
     public function __construct()
     {
