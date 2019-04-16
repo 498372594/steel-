@@ -9,7 +9,9 @@
 namespace app\admin\model;
 
 
-class Dropdown
+use think\Model;
+
+class Dropdown extends Model
 {
 
 }

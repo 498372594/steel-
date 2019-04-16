@@ -47,7 +47,10 @@ class User extends Base
 
         // 登录
         $admin = Db::table("admin")
+            ->field('a.*,r.authority')
+            ->alias('a')
             ->where("account", $account)
+            ->join('role r','r.companyid = a.companyid and r.department_id = a.department_id','LEFT')
             ->find();
 
         if ($admin) {
@@ -62,11 +65,13 @@ class User extends Base
                     if($authorization){
                         $token = $this->getToken([
                             'id' => $admin['id'],
-                            'account' => $admin['account']
+                            'account' => $admin['account'],
+                            'department_id' => $admin['department_id']
                         ]);
                         $token_expire = config('token.expire');
                         Cache::set($token,$admin,$token_expire);
-                        $data = $token;
+                        $data['token'] = $token;
+                        $data['authority'] = explode(',',$admin['authority']);
                     }else{
                         Session::set('uid', $admin['id'], 'admin');
                         Session::set('uinfo', $admin, 'admin');
@@ -100,15 +105,16 @@ class User extends Base
             $code = -1;
             $msg  = "登录日志写入失败！";
         }
+
         unset($admin['password']);
         unset($admin['reserved_pwd']);
-        return info($code, $msg,$data);
+        return info($code, $msg,isset($data)?$data:'');
     }
 
     protected function getToken($params)
     {
-        //用户id-用户账号-有效期-登录时间
+        //用户id-用户账号-有效期-登录时间-角色
         $expire = config('token.expire')==0?0:time()+config('token.expire');
-        return base64_encode($params['id'] . '-' . $params['account'] . '-'. $expire . '-' . time());
+        return base64_encode($params['id'] . '-' . $params['account'] . '-'. $expire . '-' . time() . '-' . $params['department_id']);
     }
 }

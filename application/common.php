@@ -295,7 +295,6 @@ function getDropdownList($module = '', $code = '', $hasEmpty = true)
 
         // 是否包含空值
         if ($hasEmpty) {
-
             $dropdownList = array("" => "");
             $dropdownList = $dropdownList + $dropdown[$module];
             return $dropdownList;

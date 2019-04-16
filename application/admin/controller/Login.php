@@ -1,6 +1,7 @@
 <?php
 namespace app\admin\controller;
 
+use think\Cache;
 use think\Loader;
 use think\Session;
 use think\Url;
@@ -26,10 +27,10 @@ class Login extends Base
     public function login()
     {
         if (request()->isPost()) {
-                $account  = input("account");
-                $password = input("password");
-                $ret = Loader::model('User')->login($account, $password);
-                return returnRes($ret['code'] == 1,'登录失败',$ret['data']);
+            $account  = input("account");
+            $password = input("password");
+            $ret = Loader::model('User')->login($account, $password);
+            return returnRes($ret['code'] == 1,'登录失败',$ret['data']);
         } else {
             $this->error("请求方式错误！");
         }
@@ -40,11 +41,19 @@ class Login extends Base
      */
     public function logOut()
     {
-        Session::set("uid", NULL, "admin");
-        Session::set('uinfo', NULL, 'admin');
-        $this->success("退出成功！", Url::build('/admin/login/index'));
+        $authorization = request()->header('Authorization');
+        if($authorization){
+            if(request()->isPost()){
+                $token = explode(' ',$authorization)[1];
+                if($token){
+                    Cache::rm($token);
+                }
+                return returnSuc('退出成功');
+            }
+        }else{
+            Session::set("uid", NULL, "admin");
+            Session::set('uinfo', NULL, 'admin');
+            $this->success("退出成功！", Url::build('/admin/login/index'));
+        }
     }
-
-
-
 }

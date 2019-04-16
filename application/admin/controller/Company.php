@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 
+use app\admin\model\Role;
 use think\Db;
 use think\Request;
 use app\admin\model\Company as CompanyModel;
@@ -60,6 +61,22 @@ class Company extends Right
             if(!$res2){
                 Db::rollback();
                 return returnFail('创建失败：账号信息创建失败');
+            }
+            $role_data = [
+                [
+                    'companyid' => $company->id,
+                    'department_id' => 1
+                ],
+                [
+                    'companyid' => $company->id,
+                    'department_id' => 2
+                ]
+            ];
+            $role = new Role();
+            $res3 = $role->saveAll($role_data);
+            if(!$res3){
+                Db::rollback();
+                return returnFail('创建失败：角色创建失败');
             }
             Db::commit();
             return returnSuc();
