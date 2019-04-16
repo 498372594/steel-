@@ -41,24 +41,28 @@ class Signin extends Base
             if (1 == $account['isdisable']) {
                 die(json_encode(['code' => -1, 'msg' => '该账号已被禁用！']));
             }
-
-            // 是否拥有访问权限(超级管理员除外)
-            if (!in_array($account['id'], Config::get("supermanager"))) {
-                if (!$this->authCheck()) {
-                    die(json_encode(['code' => -1, 'msg' => '无权限访问！']));
+            if(isset($this->role)){
+                if($this->role !== $account['department_id']){
+                    die(json_encode(['code' => -1, 'msg' => '您无权访问！']));
                 }
             }
+            // 是否拥有访问权限(超级管理员除外)
+//            if (!in_array($account['id'], Config::get("supermanager"))) {
+//                if (!$this->authCheck()) {
+//                    die(json_encode(['code' => -1, 'msg' => '无权限访问！']));
+//                }
+//            }
         }else{
             // 账号是否被禁用
             if (1 == Session::get("uinfo", "admin")['isdisable']) {
                 $this->error("该账号已被禁用！");
             }
             // 是否拥有访问权限(超级管理员除外)
-            if (!in_array(Session::get("uid", "admin"), Config::get("supermanager"))) {
-                if (!$this->authCheck()) {
-                    $this->error("无权限访问！");
-                }
-            }
+//            if (!in_array(Session::get("uid", "admin"), Config::get("supermanager"))) {
+//                if (!$this->authCheck()) {
+//                    $this->error("无权限访问！");
+//                }
+//            }
             // 登录账号信息输出到模板 get_curr_time_section
             $this->assign([
                 "account" => Session::get("uinfo", "admin"),

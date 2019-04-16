@@ -31,8 +31,19 @@ class Admin extends Base
         return (string) $value;
     }
 
+    /**
+     * @return \think\model\relation\HasOne
+     */
     public function company()
     {
         return $this->hasOne('company','id','companyid');
+    }
+
+    /**
+     * @return \think\model\relation\HasOne
+     */
+    public function role()
+    {
+        return $this->hasOne(Dropdown::class,'code','department_id')->where(['module' => 'role'])->field('val,code');
     }
 }
