@@ -2,6 +2,7 @@
 
 namespace app\admin\controller;
 
+use app\admin\model\{Jsfs, KcSpot, KucunCktz, SalesReturnDetails, StockOut, StockOutMd};
 use app\admin\validate\{FeiyongDetails, SalesorderDetails};
 use Exception;
 use think\{Db,
@@ -78,7 +79,7 @@ class Salesorder extends Right
             'pjlxData',
             'jsfsData',
             'details' => ['specification', 'jsfs', 'storage'],
-            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]
+            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom','szflData']]
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)

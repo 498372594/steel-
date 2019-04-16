@@ -12,7 +12,13 @@ class CapitalFy extends Base
     public function szmcData()
     {
         return $this->belongsTo('Paymenttype', 'shouzhimingcheng_id', 'id')->cache(true, 60)
-            ->field('id,class,name')->bind(['szfl_name' => 'class', 'szmc_name' => 'name']);
+            ->field('id,name')->bind(['szmc_name' => 'name']);
+    }
+
+    public function szflData()
+    {
+        return $this->belongsTo('Paymentclass', 'shouzhifenlei_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['szfl_name' => 'name']);
     }
 
     public function pjlxData()
