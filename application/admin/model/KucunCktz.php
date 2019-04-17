@@ -60,6 +60,7 @@ class KucunCktz extends Base
     }
 
     /**
+     * 更新出库通知
      * @param $dataId
      * @param $chukuType
      * @param $guigeId
@@ -180,6 +181,36 @@ class KucunCktz extends Base
         }
     }
 
+    /**
+     * 插入出库通知
+     * @param $dataId
+     * @param $chukuType
+     * @param $guigeId
+     * @param $caizhiId
+     * @param $chandiId
+     * @param $jijiafangshiId
+     * @param $storeId
+     * @param $houdu
+     * @param $changdu
+     * @param $kuandu
+     * @param $counts
+     * @param $jianshu
+     * @param $lingzhi
+     * @param $zhijian
+     * @param $zhongliang
+     * @param $shuiPrice
+     * @param $sumprice
+     * @param $sumShuiPrice
+     * @param $price
+     * @param $pihao
+     * @param $beizhu
+     * @param $chehao
+     * @param $cacheYwtime
+     * @param $cacheDataPnumber
+     * @param $cacheCustomerId
+     * @param $userId
+     * @param $companyId
+     */
     public function insertChukuTz($dataId, $chukuType, $guigeId, $caizhiId, $chandiId, $jijiafangshiId,
                                   $storeId, $houdu, $changdu, $kuandu, $counts, $jianshu, $lingzhi, $zhijian,
                                   $zhongliang, $shuiPrice, $sumprice, $sumShuiPrice, $price, $pihao, $beizhu,
@@ -216,5 +247,32 @@ class KucunCktz extends Base
         $cktz->companyid = $companyId;
 
         $cktz->save();
+    }
+
+    public function subtractTzById($tzid, $counts, $zhongliang)
+    {
+        if (empty($counts) && empty($zhongliang)) {
+            throw new Exception("请传入数量,重量等");
+        }
+
+        $counts = $counts ?? 0;
+        $zhongliang = $zhongliang ?? 0;
+        $tz = self::get($tzid);
+
+        if ($counts != 0) {
+            $newCounts = $tz['counts'] - $counts;
+            if ($tz['zhijian'] == 0) {
+                $tz['lingzhi'] = $newCounts;
+            } else {
+                $tz['jianshu'] = floor($newCounts / $tz['zhijian']);
+                $tz['lingzhi'] = $newCounts % $tz['zhijian'];
+            }
+            $tz['counts'] = $newCounts;
+        }
+
+        if ($zhongliang != 0) {
+            $tz['zhongliang'] = $tz['zhongliang'] - $zhongliang;
+        }
+        $tz->save();
     }
 }

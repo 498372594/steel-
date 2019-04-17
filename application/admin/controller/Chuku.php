@@ -2,7 +2,7 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{KcSpot, KcYlSh, KucunCktz, StockOut, StockOutDetail, StockOutMd};
+use app\admin\model\{Jsfs, KcSpot, KucunCktz, StockOut, StockOutDetail, StockOutMd};
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -146,183 +146,319 @@ class Chuku extends Right
         return returnRes(true, '', $list);
     }
 
-    /**
-     * 添加出库单
-     * @param Request $request
-     * @param array $data 出库数据
-     * @param array $stockOutDetails 出库明细
-     * @param int $outMode 出库方式
-     * @param bool $return 是否返回
-     * @return array|bool|string|Json
-     * @throws \think\Exception
-     */
-    public function add(Request $request, $data = [], $stockOutDetails = [], $outMode = 2, $return = false)
+    public function add(Request $request)
     {
         if (!$request->isPost()) {
-            if ($return) {
-                return '请求方式错误';
-            } else {
-                return returnFail('请求方式错误');
-            }
-        }
-        $companyId = $this->getCompanyId();
-        $count = StockOut::whereTime('create_time', 'today')
-            ->where('companyid', $companyId)
-            ->count();
-
-        //数据处理
-        if (empty($data)) {
-            $data = $request->post();
-        }
-        $data['companyid'] = $companyId;
-        $data['system_number'] = 'CKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-        $data['create_operator_id'] = $this->getAccountId();
-        $data['out_mode'] = $outMode;
-
-        //数据验证
-        $validate = new \app\admin\validate\StockOut();
-        if (!$validate->check($data)) {
-            if ($return) {
-                return $validate->getError();
-            } else {
-                return returnFail($validate->getError());
-            }
+            return returnFail('请求方式错误');
         }
 
-        if (!$return) {
-            Db::startTrans();
-        }
+        Db::startTrans();
         try {
-            $model = new StockOut();
-            $model->allowField(true)->data($data)->save();
+            $data = $request->post();
 
-            //处理明细
-            $id = $model->getLastInsID();
+            $validate = new \app\admin\validate\StockOut();
+            if (!$validate->check($data)) {
+                throw new Exception($validate->getError());
+            }
 
-            //明细单id列表
-            $details = [];
-            foreach ($data['details'] as $c => $v) {
-                if (empty($v['zhongliang'])) {
-                    throw new Exception('请填写重量');
-                }
+            $addMxList = [];
+            $updateMxList = [];
 
-                //前端上传码单数据，包括出库通知单id
-                if (empty($stockOutDetails[$v['kucun_cktz_id']])) {
-                    //获取出库通知单
-                    $stockOutNotify = KucunCktz::get($v['kucun_cktz_id']);
-                    if (empty($stockOutNotify)) {
-                        throw new Exception('未找到出库通知单');
-                    }
-                    //判断是否超重出库
-                    if ($v['zhongliang'] > $stockOutNotify['zhongliang']) {
-                        throw new Exception('禁止超重出库');
-                    }
-                    //减少待出库重量
-                    $stockOutNotify->zhongliang -= $v['zhongliang'];
-                    $stockOutNotify->save();
-                    $stockOutDetails[$v['kucun_cktz_id']] = $stockOutNotify->getData();
-                }
+            $addMdList = [];
+            $updateMdList = [];
 
-                if (!isset($details[$v['kucun_cktz_id']])) {
-                    //根据出库通知单数据生成明细单
-                    $detailsData = $stockOutDetails[$v['kucun_cktz_id']];
-                    unset($detailsData['id'], $detailsData['create_time'], $detailsData['update_time'], $detailsData['delete_time']);
-                    $detailsData['stock_out_id'] = $id;
-                    $detailsData['kucun_cktz_id'] = $v['kucun_cktz_id'] <= 0 ? null : $v['kucun_cktz_id'];
-                    $detailsData['out_type'] = $detailsData['chuku_type'];
-                    $detailsData['out_mode'] = $outMode;
-                    $detailModel = new StockOutDetail();
-                    $detailModel->allowField(true)->data($detailsData)->save();
+            $ja = $data['ckmx'];
+            $ja1 = $data['ckmd'];
 
-                    $details[$v['kucun_cktz_id']] = $detailModel->id;
-                }
-
-                //判断库存
-
-                //根据码单内资源单id获取资源单
-                $resource = KcSpot::get($v['kc_spot_id']);
-                if (empty($resource)) {
-                    throw new Exception('未找到库存资源');
-                }
-                if (!empty($v['ylsh_id'])) {
-                    //锁货资源释放
-                    $ylsh = KcYlSh::get($v['ylsh_id']);
-                    if (empty($ylsh)) {
-                        throw new Exception('未找到预留资源');
-                    }
-                    if ($ylsh->zhongliang < $v['zhongliang']) {
-                        throw new Exception('销售重量不得大于预留重量');
-                    }
-                    if ($ylsh->shuliang < $v['counts']) {
-                        throw new Exception('销售数量不得大于预留数量');
-                    }
-                    //更新预留数据
-                    $ylsh->zhongliang -= $v['zhongliang'];
-                    if ($v['counts'] != 0) {
-                        $ylsh->shuliang -= $v['counts'];
-                        if ($ylsh->zhijian != 0) {
-                            $ylsh->jianshu = floor($ylsh->shuliang / $ylsh->zhijian);
-                            $ylsh->lingzhi = $ylsh->shuliang - $ylsh->zhijian * $ylsh->jianshu;
-                        } else {
-                            $ylsh->lingzhi = $ylsh->shuliang;
-                        }
-                    }
-                    $ylsh->save();
-                } else {
-                    //判断库存
-                    $ylsh = KcYlSh::where('spot_id', $v['kc_spot_id'])
-                        ->whereTime('baoliu_time', '>', time())
-                        ->fieldRaw('sum(shuliang) as shuliang,sum(zhongliang) as zhongliang')
-                        ->find();
-                    if ($resource['zhongliang'] - $ylsh['zhongliang'] - $v['zhongliang'] < 0) {
-                        throw new Exception('不允许出现负库存');
-                    }
-
-                    if ($resource['counts'] - $ylsh['shuliang'] - $v['counts'] < 0) {
-                        throw new Exception('不允许出现负库存');
-                    }
-                }
-                //更新库存
-                $resource->zhongliang -= $v['zhongliang'];
-                if ($v['counts'] != 0) {
-                    $resource->counts -= $v['counts'];
-                    if ($resource->zhijian != 0) {
-                        $resource->jianshu = floor($resource->counts / $resource->zhijian);
-                        $resource->lingzhi = $resource->counts - $resource->zhijian * $resource->jianshu;
+            $companyId = $this->getCompanyId();
+            if (!empty($ja)) {
+                foreach ($ja as $object) {
+                    $object['companyid'] = $companyId;
+                    if (empty($object['id'])) {
+                        $addMxList[] = $object;
                     } else {
-                        $resource->lingzhi = $resource->counts;
+                        $updateMxList[] = $object;
                     }
                 }
-                $resource->save();
+            }
+            if (!empty($ja1)) {
+                foreach ($ja1 as $object) {
+                    if (empty($object['zhongliang'])) {
+                        throw new Exception("重量不能为空");
+                    }
 
-                //生成码单
-                $madan = $resource->getData();
-                unset($madan['id'], $madan['create_time'], $madan['update_time'], $madan['delete_time']);
-                $madan['data_id'] = $stockOutDetails[$v['kucun_cktz_id']];
-                $madan['stock_out_id'] = $id;
-                $madan['out_type'] = $detailsData['chuku_type'];
-                $madan['out_mode'] = $outMode;
-                $madan['caizhi'] = empty($resource['caizhi_id']) ? '' : $this->getCaizhiId($resource['caizhi_id']);
-                $madan['chandi'] = empty($resource['chandi_id']) ? '' : $this->getChandiId($resource['chandi_id']);
-                $madan['stock_out_detail_id'] = $details[$v['kucun_cktz_id']];
-                $madan = array_merge($madan, $v);
-                $madanModel = new StockOutMd();
-                $madanModel->allowField(true)->data($madan)->save();
+                    if (empty($object['id'])) {
+                        $addMdList[] = $object;
+                    } else {
+                        $updateMdList[] = $object;
+                    }
+                }
             }
 
-            if (!$return) {
-                Db::commit();
-                return returnRes(true, '', ['id' => $id]);
+            if (empty($data['id'])) {
+                $count = StockOut::whereTime('create_time', 'today')
+                    ->where('companyid', $companyId)
+                    ->count();
+
+                $data['companyid'] = $companyId;
+                $data['system_number'] = 'CKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $data['create_operator_id'] = $this->getAccountId();
+                $data['out_mode'] = 2;
+
+                $ck = new StockOut();
+                $ck->allowField(true)->data($data)->save();
             } else {
-                return true;
+                throw new Exception('出库单禁止修改');
+//            ck = (TbKcCk) getDao() . selectByPrimaryKey(id);
+//            if (ck == null) {
+//                throw new ValidateException("对象不存在");
+//            }
+//            if (!ck . getUserId() . equals(ck . getUserId())) {
+//                throw new ValidateException("对象不存在");
+//            }
+//            if ("1" . equals(ck . getStatus())) {
+//                throw new ValidateException("该单据已经作废");
+//            }
+//            if ("1" . equals(ck . getChukuFangshi())) {
+//                throw new ValidateException("自动出库单据不允许修改");
+//            }
+//            ck . setBeizhu(beizhu);
+//            ck . setCustomerId(customerId);
+//            ck . setGroupId(group);
+//            ck . setSaleOperatorId(saleOperator);
+//            ck . setUpdateOperatorId(su . getId());
+//            ck . setYwTime(DateUtil . parseDate(ywTime, "yyyy-MM-dd HH:mm:ss"));
+//            getDao() . updateByPrimaryKeySelective(ck);
             }
+
+            if (!empty($data['deleteMxIds']) || !empty($data['deleteMdIds'])) {
+                throw new Exception('出库单禁止修改');
+//            for (TbKcCkMx_Ex mx : deleteMxList) {
+//                TbKcCkMx mx1 = new TbKcCkMx();
+//            mx1 . setId(mx . getId());
+//
+//            this . mxDao . deleteByPrimaryKey(mx1);
+//        }
+//        for (TbKcCkMd tmd : deleteMdList) {
+//            Example e = new Example(TbKcCkMd .class);
+//            e . selectProperties(new String[]{
+//            "id", "kcSpotId", "lingzhi", "jianshu", "jianzhishu", "counts", "zhongliang", "kcCkTzId"});
+//            e . createCriteria() . andCondition("id=", tmd . getId());
+//            List<TbKcCkMd > mdList = this . mdDao . selectByExample(e);
+//            TbKcCkMd md = (TbKcCkMd) mdList . get(0);
+//            this . spotDao . adjustSpotById(md . getKcSpotId(), true, md . getCounts(), md . getZhongliang(), md . getJijiafangshiId());
+//            this . ckTzDao . addTzById(md . getKcCkTzId(), md . getCounts(), md . getZhongliang());
+//            this . mdDao . deleteByPrimaryKey(md);
+//        }
+            }
+
+            foreach ($addMxList as &$mx) {
+                foreach ($addMdList as $md) {
+                    if ($mx['kucun_cktz_id'] == $md['kucun_cktz_id']) {
+                        $mx['mdList'][] = $md;
+                    }
+                }
+            }
+            unset($mx, $md);
+
+//        TbKcCkMx_Ex mx;
+//        $newMdList = [];
+//        foreach ($addMdList as $md1){
+//            $flag = true;
+//            foreach ($addMxList as $mx){
+//                if ($mx['kucun_cktz_id']==$md1['kucun_cktz_id']) {
+//                    $flag = false;
+//                    break;
+//                }
+//            }
+//            if ($flag) {
+//                $newMdList[]=$md1;
+//            }
+//        }
+//
+//        foreach($newMdList as $tmd){
+//            TbKcCkMx mx = (TbKcCkMx) this . mxDao . selectByPrimaryKey(tmd . getChukuMxId());
+//            $s=KcSpot::get($tmd['kc_spot_id']);
+//
+//            $tmd['stock_out_id']=$ck['id'];
+////            md . setChukuMxId(tmd . getChukuMxId());
+//            md . setKcSpotId(tmd . getKcSpotId());
+//            md . setDataId(mx . getDataId());
+//            md . setChukuType(mx . getChukuType());
+//            md . setChukuFangshi("2");
+//
+//            md . setPinmingId(s . getPinmingId());
+//            md . setCaizhiId(s . getCaizhiId());
+//            md . setChandiId(s . getChandiId());
+//            md . setJijiafangshiId(s . getJijiafangshiId());
+//            md . setGuigeId(s . getGuigeId());
+//            md . setHoudu(s . getHoudu());
+//            md . setKuandu(s . getKuandu());
+//            md . setChangdu(s . getChangdu());
+//            md . setCounts(tmd . getCounts());
+//            md . setJianshu(tmd . getJianshu());
+//            md . setLingzhi(tmd . getLingzhi());
+//            md . setZhijian(tmd . getZhijian());
+//            md . setZhongliang(tmd . getZhongliang());
+//
+//            md . setPrice(s . getPrice());
+//            md . setCbPrice(s . getCbPrice());
+//            md . setShuiprice(s . getShuiprice());
+//            md . setMizhong(mx . getMizhong());
+//            md . setJianzhong(mx . getJianzhong());
+//            TbBaseJijiafangshi jjfs = (TbBaseJijiafangshi) this . jjfsDao . selectByPrimaryKey(mx . getJijiafangshiId());
+//            if ((jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_1)) || (jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_2))) {
+//                md . setSumShuiPrice(md . getPrice() . multiply(md . getZhongliang()));
+//                md . setCbSumShuiPrice(md . getCbPrice() . multiply(md . getZhongliang()));
+//            } else if (jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_3)) {
+//                md . setSumShuiPrice(md . getPrice() . multiply(md . getCounts()));
+//                md . setCbSumShuiPrice(md . getCbPrice() . multiply(md . getCounts()));
+//            }
+//            md . setSumprice(WuziUtil . calSumPrice(md . getSumShuiPrice(), md . getShuiprice()));
+//            md . setShuie(WuziUtil . calShuie(md . getSumShuiPrice(), md . getShuiprice()));
+//            md . setCbSumPrice(WuziUtil . calSumPrice(md . getCbSumShuiPrice(), md . getShuiprice()));
+//            md . setCbShuie(WuziUtil . calShuie(md . getCbSumShuiPrice(), md . getShuiprice()));
+//            md . setFySz(md . getCbSumShuiPrice() . subtract(md . getSumShuiPrice()));
+//
+//            md . setHuohao(s . getHuohao());
+//            md . setChehao(s . getChehao());
+//            md . setPihao(s . getPihao());
+//            md . setIsDelete("0");
+//            md . setBeizhu(s . getBeizhu());
+//
+//            this . mdDao . insertSelective(md);
+//
+//            this . spotDao . adjustSpotById(md . getKcSpotId(), false, md . getCounts(), md . getZhongliang(), md . getJijiafangshiId());
+//
+//            this . ckTzDao . subtractTzById(md . getKcCkTzId(), md . getCounts(), md . getZhongliang());
+//        }
+
+            if (!empty($addMxList)) {
+                $addNumberCount = empty($data['id']) ? 0 : StockOutDetail::where('kc_ck_id', $ck['id'])->max('system_number');
+                foreach ($addMxList as $mjo) {
+                    $addNumberCount++;
+//                TbKcCkTz tz = (TbKcCkTz) this . tzDao . selectByPrimaryKey(mjo . getKcCkTzId());
+                    $tz = KucunCktz::get($mjo['kucun_cktz_id']);
+                    $mjo['stock_out_id'] = $ck['id'];
+                    $mjo['out_mode'] = 2;
+                    $mjo['cache_ywtime'] = $tz['cache_ywtime'];
+                    $mjo['cache_data_pnumber'] = $tz['cache_data_pnumber'];
+                    $mjo['cache_customer_id'] = $tz['cache_customer_id'];
+                    $mjo['data_id'] = $tz['data_id'];
+//                $mjo['pinming_id'] = $tz['pinming_id'];
+                    $mjo['guige_id'] = $tz['guige_id'];
+                    $mjo['caizhi'] = $tz['caizhi'];
+                    $mjo['chandi'] = $tz['chandi'];
+                    $mjo['jijiafangshi_id'] = $tz['jijiafangshi_id'];
+                    $mjo['store_id'] = $tz['store_id'];
+                    $mjo['cache_create_operator'] = $tz['cache_create_operator'];
+                    $mjo['changdu'] = $tz['changdu'];
+                    $mjo['houdu'] = $tz['houdu'];
+                    $mjo['kuandu'] = $tz['kuandu'];
+                    $mjo['lingzhi'] = $tz['lingzhi'];
+                    $mjo['jianshu'] = $tz['jianshu'];
+                    $mjo['counts'] = $tz['counts'];
+                    $mjo['zhongliang'] = $tz['zhongliang'];
+                    $mjo['zhijian'] = $tz['zhijian'];
+                    $mjo['price'] = $tz['price'];
+                    $mjo['sumprice'] = $tz['sumprice'];
+                    $mjo['shuiprice'] = $tz['shui_price'];
+                    $mjo['sum_shui_price'] = $tz['sum_shui_price'];
+                    $mjo['shuie'] = $tz['shuie'];
+                    $mjo['system_number'] = $addNumberCount;
+
+                    $mx = new StockOutDetail();
+                    $mx->allowField(true)->data($mjo)->save();
+
+                    foreach ($mjo['mdList'] as $tmd) {
+                        $s = KcSpot::get($tmd['kc_spot_id']);
+
+                        $tmd['stock_out_id'] = $ck['id'];
+                        $tmd['chuku_mx_id'] = $mx['id'];
+                        $tmd['data_id'] = $mx['data_id'];
+                        $tmd['chuku_type'] = $mx['chuku_type'];
+                        $tmd['out_mode'] = 2;
+
+                        $tmd['pinming_id'] = $s['pinming_id'];
+                        $tmd['caizhi'] = $s['caizhi_id'];
+                        $tmd['chandi'] = $s['chandi_id'];
+                        $tmd['guige_id'] = $s['guige_id'];
+                        $tmd['houdu'] = $s['houdu'];
+                        $tmd['kuandu'] = $s['kuandu'];
+                        $tmd['changdu'] = $s['changdu'];
+                        $tmd['tax_rate'] = $s['shui_price'];
+                        $tmd['mizhong'] = $mx['mizhong'];
+                        $tmd['jianzhong'] = $mx['jianzhong'];
+                        $jjfs = Jsfs::where('id', $tmd['jijiafangshi_id'])->cache(true, 60)->value('jj_type');
+                        if ($jjfs == 1 || $jjfs == 2) {
+                            $tmd['sum_shui_price'] = $tmd['price'] * $tmd['zhongliang'];
+                            $tmd['cb_sum_shuiprice'] = $tmd['cb_price'] * $tmd['zhongliang'];
+                        } elseif ($jjfs == 3) {
+                            $tmd['sum_shui_price'] = $tmd['price'] * $tmd['counts'];
+                            $tmd['cb_sum_shuiprice'] = $tmd['cb_price'] * $tmd['counts'];
+                        }
+//                    $tmd['sumprice'](WuziUtil . calSumPrice(md . getSumShuiPrice(), md . getShuiprice()));
+//                    $tmd['shuie'](WuziUtil . calShuie(md . getSumShuiPrice(), md . getShuiprice()));
+//                    $tmd['cb_sum_price'](WuziUtil . calSumPrice(md . getCbSumShuiPrice(), md . getShuiprice()));
+//                    $tmd['cb_shuie'](WuziUtil . calShuie(md . getCbSumShuiPrice(), md . getShuiprice()));
+//                    $tmd['fy_sz'](md . getCbSumShuiPrice() . subtract(md . getSumShuiPrice()));
+
+                        $tmd['huohao'] = $s['huohao'];
+                        $tmd['chehao'] = $s['chehao'];
+                        $tmd['pihao'] = $s['pihao'];
+                        $tmd['beizhu'] = $s['beizhu'];
+                        $tmd['store_id'] = $mx['store_id'];
+                        $md = new StockOutMd();
+                        $md->allowField(true)->data($data)->save();
+
+                        (new KcSpot())->adjustSpotById($md['kc_spot_id'], false, $md['counts'], $md['zhongliang'], $md['jijiafangshi_id'], $md['cb_shuie'] ?? 0);
+//                    this . spotDao . adjustSpotById(md . getKcSpotId(), false, md . getCounts(), md . getZhongliang(), md . getJijiafangshiId());
+
+                        (new KucunCktz())->subtractTzById($md['kucun_cktz_id'], $md['counts'], $md['zhongliang']);
+                    }
+                }
+            }
+            if (!empty($updateMdList)) {
+                throw new Exception('出库单禁止修改');
+            }
+//        TbKcCkMx mx;
+//        for (TbKcCkMd tmd : updateMdList) {
+//            TbKcCkMd md = (TbKcCkMd) this . mdDao . selectByPrimaryKey(tmd . getId());
+//            BigDecimal mdCounts = md . getCounts();
+//            BigDecimal mdZhongliang = md . getZhongliang();
+//            md . setCounts(tmd . getCounts());
+//            md . setJianshu(tmd . getJianshu());
+//            md . setLingzhi(tmd . getLingzhi());
+//            md . setZhijian(tmd . getZhijian());
+//            md . setZhongliang(tmd . getZhongliang());
+//            $tmd['jijiafangshi_id'](tmd . getJijiafangshiId());
+//
+//            TbBaseJijiafangshi jjfs = (TbBaseJijiafangshi) this . jjfsDao . selectByPrimaryKey(tmd . getJijiafangshiId());
+//            if ((jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_1)) || (jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_2))) {
+//                $tmd['sum_shui_price'](md . getPrice() . multiply(md . getZhongliang()));
+//                md . setCbSumShuiPrice(md . getCbPrice() . multiply(md . getZhongliang()));
+//            } else if (jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_3)) {
+//                $tmd['sum_shui_price'](md . getPrice() . multiply(md . getCounts()));
+//                md . setCbSumShuiPrice(md . getCbPrice() . multiply(md . getCounts()));
+//            }
+//            md . setSumprice(WuziUtil . calSumPrice(md . getSumShuiPrice(), md . getShuiprice()));
+//            md . setShuie(WuziUtil . calShuie(md . getSumShuiPrice(), md . getShuiprice()));
+//            $tmd['cb_sum_price'](WuziUtil . calSumPrice(md . getCbSumShuiPrice(), md . getShuiprice()));
+//            $tmd['cb_shuie'](WuziUtil . calShuie(md . getCbSumShuiPrice(), md . getShuiprice()));
+//            $tmd['fy_sz'](md . getCbSumShuiPrice() . subtract(md . getSumShuiPrice()));
+//
+//            this . mdDao . updateByPrimaryKeySelective(md);
+//
+//            this . spotDao . upjustSpotByCk(md . getId(), mdCounts, md . getCounts(), mdZhongliang, md . getZhongliang());
+//
+//            this . ckTzDao . upjustTzById(md . getKcCkTzId(), mdCounts, md . getCounts(), mdZhongliang, md . getZhongliang());
+//        }
+
+            Db::commit();
+            return returnSuc();
         } catch (Exception $e) {
-            if ($return) {
-                return $e->getMessage();
-            } else {
-                Db::rollback();
-                return returnFail($e->getMessage());
-            }
+            Db::rollback();
+            return returnFail($e->getMessage());
         }
     }
 
