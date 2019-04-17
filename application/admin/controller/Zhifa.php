@@ -141,6 +141,8 @@ class Zhifa extends Right
                     if (!$detailsValidate->scene('zhifa')->check($object)) {
                         throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                     }
+                    $object['caizhi'] = $this->getCaizhiId($object['caizhi'] ?? '');
+                    $object['chandi'] = $this->getCaizhiId($object['chandi'] ?? '');
                     if (empty($object['id'])) {
                         $addList[] = $object;
                     } else {
@@ -231,7 +233,7 @@ class Zhifa extends Right
 //            }
             }
 
-            if (!empty($data['deleteIds']) || !empty($updateList)) {
+            if (!empty($data['deleteMxIds']) || !empty($updateList)) {
                 throw new Exception('采购直发单禁止修改');
 //            for (TbMoshiMx_Ex mjo : deleteList) {
 //                TbMoshiMx mx = new TbMoshiMx();

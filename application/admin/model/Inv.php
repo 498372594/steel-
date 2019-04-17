@@ -116,6 +116,14 @@ class Inv extends Base
         $i->jijiafangshi_id = $jijiafangshiId;
         $i->piaoju_id = $piaojuId;
         $i->pinming_id = $pinmingId;
+
+        if (empty($pinmingId)) {
+            $gg = ViewSpecification::where('id', $guigeId)->cache(true, 60)->find();
+            $i->pinming_id = $gg['productname_id'] ?? '';
+        } else {
+            $i->pinming_id = $pinmingId;
+        }
+
         $i->price = $price;
         $i->shui_price = $shuiPrice;
         $i->sum_price = $sumPrice;
