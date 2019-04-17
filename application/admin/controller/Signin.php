@@ -1,4 +1,5 @@
 <?php
+
 namespace app\admin\controller;
 
 use app\admin\library\traits\Buildparams;
@@ -27,22 +28,22 @@ class Signin extends Base
         $authorization = request()->header('Authorization');
         // 是否登录
         if (!$this->isLogin()) {
-            if($authorization){
+            if ($authorization) {
                 die(json_encode(['code' => -2, 'msg' => '未登录']));
-            }else{
+            } else {
                 die("<script>window.parent.location.href = '/admin/login/index';</script>");
             }
         }
 
-        if($authorization){
-            $token = explode(' ',$authorization)[1];
+        if ($authorization) {
+            $token = explode(' ', $authorization)[1];
             $account = Cache::get($token);
             // 账号是否被禁用
             if (1 == $account['isdisable']) {
                 die(json_encode(['code' => -1, 'msg' => '该账号已被禁用！']));
             }
-            if(isset($this->role)){
-                if($this->role !== $account['department_id']){
+            if (isset($this->role)) {
+                if ($this->role !== $account['department_id']) {
                     die(json_encode(['code' => -1, 'msg' => '您无权访问！']));
                 }
             }
@@ -52,7 +53,7 @@ class Signin extends Base
 //                    die(json_encode(['code' => -1, 'msg' => '无权限访问！']));
 //                }
 //            }
-        }else{
+        } else {
             // 账号是否被禁用
             if (1 == Session::get("uinfo", "admin")['isdisable']) {
                 $this->error("该账号已被禁用！");
@@ -75,13 +76,13 @@ class Signin extends Base
      * 验证是否登录
      * @return bool
      */
-    protected function  isLogin()
+    protected function isLogin()
     {
         $authorization = request()->header('Authorization');
-        if($authorization) {
-            $token = explode(' ',$authorization)[1];
-            return Cache::get($token)?true:false;
-        }else{
+        if ($authorization) {
+            $token = explode(' ', $authorization)[1];
+            return Cache::get($token) ? true : false;
+        } else {
             $uid = Session::get("uid", "admin");
             if (!$uid) {
                 return false;
@@ -98,10 +99,10 @@ class Signin extends Base
     protected function authCheck()
     {
         $controller = request()->controller();
-        $action     = request()->action();
+        $action = request()->action();
         $auth = new Auth();
         // 首页 登出 无需权限检测
-        $url = strtolower($controller.'/'.$action);
+        $url = strtolower($controller . '/' . $action);
         if (!in_array($url, $this->unblock)) {
             if (!$auth->check($url, Session::get('uid', "admin"))) {
                 return false;
@@ -113,14 +114,14 @@ class Signin extends Base
     /**
      * 获取菜单
      */
-    protected function getMenu ()
+    protected function getMenu()
     {
         // 所有菜单
         $menu = Db::table("authrule")->field('id,name,title,status,pid,faicon')->select();
         // 拥有权限菜单
         $auth = new Authority();
-        $uid  = Session::get("uid", "admin");
-        $ruleList = $auth->getAuthList($uid,1);
+        $uid = Session::get("uid", "admin");
+        $ruleList = $auth->getAuthList($uid, 1);
 
         if (in_array($uid, Config::get("supermanager"))) {
             // 超级管理员
@@ -137,13 +138,17 @@ class Signin extends Base
      */
     public function getAccountId()
     {
-        $authorization = request()->header('Authorization');
-        if($authorization){
-            $token = explode(' ',$authorization)[1];
-            return Cache::get($token)?Cache::get($token)['id']:'';
-        }else{
-            return Session::get('uid','admin');
+        static $uid = null;
+        if (empty($uid)) {
+            $authorization = request()->header('Authorization');
+            if ($authorization) {
+                $token = explode(' ', $authorization)[1];
+                $uid = Cache::get($token) ? Cache::get($token)['id'] : '';
+            } else {
+                $uid = Session::get('uid', 'admin');
+            }
         }
+        return $uid;
     }
 
     /**
@@ -153,11 +158,11 @@ class Signin extends Base
     public function getAccount()
     {
         $authorization = request()->header('Authorization');
-        if($authorization){
-            $token = explode(' ',$authorization)[1];
+        if ($authorization) {
+            $token = explode(' ', $authorization)[1];
             return Cache::get($token);
-        }else{
-            return Session::get('uinfo','admin');
+        } else {
+            return Session::get('uinfo', 'admin');
         }
     }
 
@@ -167,12 +172,16 @@ class Signin extends Base
      */
     public function getCompanyId()
     {
-        $authorization = request()->header('Authorization');
-        if($authorization) {
-            $token = explode(' ',$authorization)[1];
-            return Cache::get($token)['companyid'];
-        }else{
-            return Session::get('uinfo','admin')['companyid'];
+        static $companyid = null;
+        if (empty($companyid)) {
+            $authorization = request()->header('Authorization');
+            if ($authorization) {
+                $token = explode(' ', $authorization)[1];
+                $companyid = Cache::get($token)['companyid'];
+            } else {
+                $companyid = Session::get('uinfo', 'admin')['companyid'];
+            }
         }
+        return $companyid;
     }
 }

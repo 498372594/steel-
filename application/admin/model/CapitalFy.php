@@ -42,7 +42,8 @@ class CapitalFy extends Base
     }
 
     /**
-     * @param $fyJson
+     * @param $fyLists
+     * @param $deleteIds
      * @param $dataId
      * @param $ywTime
      * @param $ywType
@@ -57,16 +58,20 @@ class CapitalFy extends Base
      * @throws ModelNotFoundException
      * @throws Exception
      */
-    public function fymxSave($fyJson, $dataId, $ywTime, $ywType, $groupId, $saleOperatorId, $beizhu, $userId, $companyId)
+    public function fymxSave($fyLists, $deleteIds, $dataId, $ywTime, $ywType, $groupId, $saleOperatorId, $beizhu, $userId, $companyId)
     {
         $addFyList = [];
         $updateFyList = [];
 
         $flag = true;
-        if (!empty($fyJson)) {
-            foreach ($fyJson as $index => $jo) {
+        if (!empty($fyLists)) {
+            $validate = new \app\admin\validate\CapitalFy();
+            foreach ($fyLists as $index => $jo) {
                 if ($index == 'deleteIds') {
                     continue;
+                }
+                if (!$validate->check($jo)) {
+                    throw new Exception($validate->getError());
                 }
                 if (empty($jo['id'])) {
                     $addFyList[] = $jo;
@@ -78,8 +83,8 @@ class CapitalFy extends Base
             $flag = false;
         }
 
-        if (!empty($fyJson['deleteIds'])) {
-            $deleteList = self::where('id', 'in', $fyJson['deleteIds'])->select();
+        if (!empty($deleteIds)) {
+            $deleteList = self::where('id', 'in', $deleteIds)->select();
             foreach ($deleteList as $obj) {
                 $this->deleteFyMx($obj);
             }

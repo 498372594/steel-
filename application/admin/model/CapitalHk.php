@@ -15,9 +15,10 @@ class CapitalHk extends Base
     use SoftDelete;
     protected $autoWriteTimestamp = true;
 
-    public function insertHk($dataId, $ywType, $systemNumber, $beizhu, $customerId, $fangxiang, $ywTime, $jiesuanId, $piaojuId, $money, $zhongliang, $groupId, $saleOperatorId, $userId)
+    public function insertHk($dataId, $ywType, $systemNumber, $beizhu, $customerId, $fangxiang, $ywTime, $jiesuanId, $piaojuId, $money, $zhongliang, $groupId, $saleOperatorId, $userId, $companyId)
     {
         $hk = new self();
+        $hk->companyid = $companyId;
         $hk->system_number = $systemNumber;
         $hk->beizhu = $beizhu;
         $hk->create_operator_id = $userId;
