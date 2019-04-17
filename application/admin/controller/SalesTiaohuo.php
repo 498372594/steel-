@@ -129,7 +129,10 @@ class SalesTiaohuo extends Right
             }
 
             if (empty($data['id'])) {
-                $count = SalesMoshi::withTrashed()->where('moshi_type', 1)->where('companyid', $companyId)->count();
+                $count = SalesMoshi::withTrashed()->where('moshi_type', 1)
+                    ->where('create_time', 'today')
+                    ->where('companyid', $companyId)
+                    ->count();
                 $data['moshi_type'] = 1;
                 $data['create_operator_id'] = $this->getAccountId();
                 $data['system_number'] = "THXSD" . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
@@ -451,8 +454,7 @@ class SalesTiaohuo extends Right
                 $saleMx = (new \app\admin\model\Salesorder())->insertMx($xs, $mx['id'], 1, $mx['guige_id'], $mx['caizhi'],
                     $mx['chandi'], $mx['store_id'], $mx['jijiafangshi_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['lingzhi'],
                     $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
-                    $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId, $this->getAccountId());
-
+                    $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId);
 
                 (new StockOut())->insertCkMxMd($ck, $spot['id'], $saleMx['id'], 4, $ms['yw_time'], $xs['system_no'],
                     $xs['custom_id'], $mx['guige_id'], $mx['caizhi'], $mx['chandi'], $mx['jijiafangshi_id'], $mx['store_id'],

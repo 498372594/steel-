@@ -64,9 +64,10 @@ class Salesorder extends Base
      */
     public function insertSale($dataId, $moshiType, $ywTime, $customerId, $piaojuId, $jiesuanId, $beizhu, $groupId, $saleOperatorId, $lxr, $telephone, $chehao, $userId, $companyId)
     {
-        $count = self::withTrashed()->where('companyid', $companyId)->count();
-
-//this . jsqxDaoImpl . IsOpenSalesByCustomerId(customerId, DateUtil . dateToString(ywTime, "yyyy-MM-dd"), user, jg, zt);
+        $count = self::withTrashed()
+            ->whereTime('create_time','today')
+            ->where('companyid', $companyId)
+            ->count();
 
         $xs = new self();
         $xs->companyid = $companyId;
@@ -127,6 +128,34 @@ class Salesorder extends Base
         return $xs;
     }
 
+    /**
+     * @param Salesorder $sale
+     * @param $dataId
+     * @param $moshiType
+     * @param $guigeId
+     * @param $caizhiId
+     * @param $chandId
+     * @param $storeId
+     * @param $jijiafangshiId
+     * @param $houdu
+     * @param $kuandu
+     * @param $changdu
+     * @param $lingzhi
+     * @param $jianshu
+     * @param $zhijian
+     * @param $counts
+     * @param $zhongliang
+     * @param $price
+     * @param $sumPrice
+     * @param $shuiPrice
+     * @param $sumShuiPrice
+     * @param $pihao
+     * @param $beizhu
+     * @param $chehao
+     * @param $shuie
+     * @param $companyId
+     * @return SalesorderDetails
+     */
     public function insertMx(Salesorder $sale, $dataId, $moshiType, $guigeId, $caizhiId, $chandId, $storeId, $jijiafangshiId,
                              $houdu, $kuandu, $changdu, $lingzhi, $jianshu, $zhijian, $counts, $zhongliang, $price, $sumPrice,
                              $shuiPrice, $sumShuiPrice, $pihao, $beizhu, $chehao, $shuie, $companyId)

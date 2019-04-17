@@ -144,7 +144,10 @@ class CapitalFy extends Base
         $fy->customer_id = $customerId;
         $fy->group_id = $groupId;
         $fy->sale_operator_id = $saleOperatorId;
-        $count = self::withTrashed()->where('companyid', $companyId)->count();
+        $count = self::withTrashed()
+            ->whereTime('create_time', 'today')
+            ->where('companyid', $companyId)
+            ->count();
         $fy->system_number = "FYD" . date('Ymd') . str_pad($count++, 3, '0', STR_PAD_LEFT);
         $fy->yw_time = $ywTime;
         $fy->fymx_create_type = "1";

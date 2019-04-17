@@ -86,7 +86,10 @@ class StockOut extends Base
         $ck->create_operator_id = $userId;
         $ck->department = $groupId;
         $ck->sale_operator_id = $saleOperatorId;
-        $count = self::withTrashed()->where('companyid', $companyId)->whereTime('create_time', 'today')->count();
+        $count = self::withTrashed()
+            ->where('companyid', $companyId)
+            ->whereTime('create_time', 'today')
+            ->count();
         $ck->system_number = 'CKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
         $ck->yw_time = $ywTime;
         $ck->out_mode = "1";

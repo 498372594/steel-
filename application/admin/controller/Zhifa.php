@@ -2,14 +2,7 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\CapitalFy;
-use app\admin\model\Jsfs;
-use app\admin\model\KcSpot;
-use app\admin\model\SalesMoshi;
-use app\admin\model\SalesMoshiMx;
-use app\admin\model\SalesorderDetails;
-use app\admin\model\StockOut;
-use app\admin\model\StockOutMd;
+use app\admin\model\{CapitalFy, Jsfs, KcSpot, SalesMoshi, SalesMoshiMx, SalesorderDetails, StockOut, StockOutMd};
 use app\admin\validate\{SalesMoshiDetails};
 use Exception;
 use think\{Db,
@@ -153,7 +146,10 @@ class Zhifa extends Right
             }
 
             if (empty($data['id'])) {
-                $count = SalesMoshi::withTrashed()->where('companyid', $companyId)->where('moshi_type', 2)->count();
+                $count = SalesMoshi::withTrashed()->where('companyid', $companyId)
+                    ->whereTime('create_time', 'today')
+                    ->where('moshi_type', 2)
+                    ->count();
                 $data['create_operator_id'] = $this->getAccountId();
                 $data['moshi_type'] = 2;
                 $data['companyid'] = $companyId;
@@ -396,7 +392,7 @@ class Zhifa extends Right
                 $xsmx = (new \app\admin\model\Salesorder())->insertMx($sale, $mx['id'], 2, $mx['guige_id'], $mx['caizhi'],
                     $mx['chandi'], $mx['store_id'], $mx['jijiafangshi_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['lingzhi'],
                     $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
-                    $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId, $this->getAccountId());
+                    $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId);
 
                 (new StockOut())->insertCkMxMd($ck, $spot['id'], $xsmx['id'], 4, $ms['yw_time'], $sale['system_no'],
                     $sale['custom_id'], $mx['guige_id'], $mx['caizhi'], $mx['chandi'], $mx['jijiafangshi_id'], $mx['store_id'],

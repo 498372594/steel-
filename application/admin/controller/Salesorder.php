@@ -276,7 +276,8 @@ class Salesorder extends Right
                 $num++;
             }
             if (empty($data['id'])) {
-                $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
+                $count = \app\admin\model\Salesorder::withTrashed()
+                    ->whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
                     ->count();
 

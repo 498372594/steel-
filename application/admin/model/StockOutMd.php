@@ -49,10 +49,6 @@ class StockOutMd extends Base
      * @param $spotId
      * @param $dataId
      * @param $chukuType
-     * @param $ywTime
-     * @param $dataPnumber
-     * @param $dataNumber
-     * @param $customerId
      * @param $pinmingId
      * @param $guigeId
      * @param $caizhiId
@@ -67,15 +63,10 @@ class StockOutMd extends Base
      * @param $jianshu
      * @param $counts
      * @param $zhongliang
-     * @param $price
-     * @param $sumPrice
-     * @param $shuiPrice
-     * @param $sumShuiPrice
      * @param $mizhong
      * @param $jianzhong
      * @param $cbPrice
      * @param $beizhu
-     * @param $userId
      * @param $companyId
      * @throws DbException
      * @throws Exception
@@ -142,5 +133,24 @@ class StockOutMd extends Base
         $md->save();
 
         (new KcSpot())->adjustSpotById($spotId, false, $md['counts'], $md['zhongliang'], $md['jijiafangshi_id'], $shuie);
+    }
+
+    public static function findCountsByDataId($dataId)
+    {
+        return self::alias('md')
+            ->join('__STOCK_OUT__ ck', 'ck.id=md.stock_out_id')
+            ->where('md.data_id', $dataId)
+            ->where('ck.status', '<>', 2)
+            ->max('md.counts');
+    }
+
+    public static function findZhongliangByDataId($dataId)
+    {
+        return self::alias('md')
+            ->join('__STOCK_OUT__ ck','ck.id=md.stock_out_id')
+            ->where('md.data_id',$dataId)
+            ->where('ck.status','<>',2)
+            ->max('md.zhongliang');
+
     }
 }
