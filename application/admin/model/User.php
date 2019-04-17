@@ -105,7 +105,6 @@ class User extends Base
             $code = -1;
             $msg  = "登录日志写入失败！";
         }
-
         unset($admin['password']);
         unset($admin['reserved_pwd']);
         return info($code, $msg,isset($data)?$data:'');
