@@ -3,11 +3,11 @@
 namespace app\admin\model;
 
 use PDOStatement;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\ModelNotFoundException;
-use think\Exception;
-use think\exception\DbException;
-use think\Model;
+use think\{db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    Exception,
+    exception\DbException,
+    Model};
 use traits\model\SoftDelete;
 
 class Salesorder extends Base

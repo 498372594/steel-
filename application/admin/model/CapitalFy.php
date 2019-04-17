@@ -3,7 +3,7 @@
 namespace app\admin\model;
 
 use Exception;
-use think\db\exception\{DataNotFoundException, ModelNotFoundException};
+use think\db\{exception\DataNotFoundException, exception\ModelNotFoundException, Query};
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -235,9 +235,6 @@ class CapitalFy extends Base
 
     /**
      * @param CapitalFy $fy
-     * @throws DataNotFoundException
-     * @throws ModelNotFoundException
-     * @throws DbException
      * @throws Exception
      */
     public function deleteFyMx(CapitalFy $fy)
@@ -250,12 +247,9 @@ class CapitalFy extends Base
                 throw new Exception("已经有结算信息!");
             }
 
-            $hxList = CapitalFyhx::where('cap_fy_id', $fy->id)->select();
-            if (!empty($hxList)) {
-                foreach ($hxList as $tbCapitalFyhx) {
-                    $tbCapitalFyhx->delete();
-                }
-            }
+            CapitalFyhx::destroy(function (Query $query) use ($fy) {
+                $query->where('cap_fy_id', $fy->id);
+            });
 
             $fy->delete();
         } else {
@@ -265,9 +259,8 @@ class CapitalFy extends Base
 
     /**
      * @param $id
-     * @throws DataNotFoundException
      * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws Exception
      */
     public function deleteFyMxById($id)
     {
