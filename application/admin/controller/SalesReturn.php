@@ -121,7 +121,7 @@ class SalesReturn extends Right
                     ->where('companyid', $companyId)
                     ->count();
                 $data['companyid'] = $companyId;
-                $data['system_number'] = 'XSTHD' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
+                $data['system_number'] = 'XSTHD' . date('Ymd') . str_pad(++$count, 3, 0, STR_PAD_LEFT);
                 $data['create_operator_id'] = $this->getAccountId();
                 $th = new \app\admin\model\SalesReturn();
                 $th->allowField(true)->data($data)->save();

@@ -196,6 +196,12 @@ class KcRk extends Base
 //        if (empty($price)) {
 //            this . log . debug("价格为空");
 //        }
+
+        if (empty($pinmingId)) {
+            $gg = ViewSpecification::where('id', $guigeId)->cache(true, 60)->find();
+            $pinmingId = $gg['productname_id'] ?? '';
+        }
+
         $addNumberCount = empty($rk['id']) ? 1 : CgPurchaseMx::where('kc_rk_id', $rk['id'])->max('system_number');
         $mx->companyid = $companyId;
         $mx->kc_rk_id = $rk["id"];

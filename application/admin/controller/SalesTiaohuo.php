@@ -5,6 +5,7 @@ namespace app\admin\controller;
 use app\admin\model\{CapitalFy,
     CgPurchase,
     Jsfs,
+    KcRk,
     KcSpot,
     SalesMoshi,
     SalesMoshiMx,
@@ -442,23 +443,28 @@ class SalesTiaohuo extends Right
                     $cbPrice = $spot1['cb_price'];
                 }
 
-                //todo 采购入库相关
+                $cgScCounts = CgPurchase::findCgScCountsByMsMxId($ms['id'], $mx['cg_customer_id'], 1, $mx['cg_piaoju_id']);
+                if ($cgScCounts == 0) {
+                    $cg = (new CgPurchase())->insertCaigou($mx['id'], 1, $xs['ywsj'], $mx['cg_customer_id'],
+                        null, 1, $mx['cg_piaoju_id'], $ms['remark'], $ms['department'], $ms['employer'], $this->getAccountId(), $companyId);
+                } else {
+                    $caigouId = CgPurchase::findCgIdByMsMxId($ms['id'], $mx['cg_customer_id'], 1, $mx['cg_piaoju_id']);
+                    $cg = CgPurchase::get($caigouId);
+                }
+                $cgmx = (new CgPurchase())->insertMx($cg, $mx['id'], 1, $mx['guige_id'], $mx['store_id'],
+                    $mx['caizhi'], $mx['chandi'], null, $mx['cg_jijiafangshi_id'], $mx['changdu'], $mx['houdu'],
+                    $mx['kuandu'], $mx['cg_tax'], $mx['lingzhi'], $mx['jianshu'], $mx['zhijian'], $mx['counts'],
+                    $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'], $mx['cg_sum_shui_price'],
+                    null, $mx['pihao'], $mx['huohao'], $mx['beizhu'], $mx['chehao'], $mx['mizhong'], $mx['jianzhong'], $companyId);
 
-                CgPurchase::
-//            Integer cgScCounts = this . cgDao . findCgScCountsByMsMxId(ms . getId(), mx . getCgCustomerId(), "1", mx . getCgPiaoJuId());
-//            if (cgScCounts . intValue() == 0) {
-//                cg = this . cgDaoImpl . insertCaigou(mx . getId(), "1", xs . getYwTime(), mx . getCgCustomerId(), null, "1", mx . getCgPiaoJuId(), beizhu, groupId, saleOperatorId, user, su, jigou, zhangtao);
-//            } else {
-//                String caigouId = this . cgDao . findCgIdByMsMxId(ms . getId(), mx . getCgCustomerId(), "1", mx . getCgPiaoJuId());
-//                cg = (TbCgPurchase) this . cgDao . selectByPrimaryKey(caigouId);
-//            }
-//            cgmx = this . cgDaoImpl . insertMx(cg, mx . getId(), "1", mx . getGuigeId(), mx . getStoreId(), mx . getCaizhiId(), mx . getChandiId(), mx . getPinmingId(), mx . getCgJijiafangshiId(), mx . getChangdu(), mx . getHoudu(), mx . getKuandu(), mx . getCgShuie(), mx . getLingzhi(), mx . getJianshu(), mx . getZhijian(), mx . getCounts(), mx . getCgZhongliang(), mx . getCgPrice(), mx . getCgSumprice(), mx . getCgShuiprice(), mx . getCgSumShuiPrice(), mx . getFySz(), mx . getPihao(), mx . getHuohao(), mx . getBeizhu(), mx . getChehao(), mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8(), mx . getMizhong(), mx . getJianzhong());
-//
-//
-//            TbKcRk rk = this . rkDaoImpl . insertRuku(cg . getId(), "4", cg . getSystemNumber(), xs . getYwTime(), groupId, user, jigou, zhangtao, su, saleOperatorId);
-//            String cgmxDataNumber = null;
-                $spot = ['id' => null];//fixme 删除
-//            TbKcSpot spot = this . rkDaoImpl . insertRkMxMd(rk, cgmx . getId(), "4", xs . getYwTime(), cg . getSystemNumber(), cgmxDataNumber, mx . getCgCustomerId(), mx . getPinmingId(), mx . getGuigeId(), mx . getCaizhiId(), mx . getChandiId(), mx . getCgJijiafangshiId(), mx . getStoreId(), mx . getPihao(), mx . getHuohao(), mx . getChehao(), mx . getGgBm(), mx . getBeizhu(), mx . getCgPiaoJuId(), mx . getHoudu(), mx . getKuandu(), mx . getChangdu(), mx . getZhijian(), mx . getLingzhi(), mx . getJianshu(), mx . getCounts(), mx . getCgZhongliang(), mx . getCgPrice(), mx . getCgSumprice(), mx . getCgShuiprice(), mx . getCgSumShuiPrice(), mx . getCgSumShuiPrice() . subtract(mx . getCgSumprice()), mx . getMizhong(), mx . getJianzhong(), cbPrice, null, su, user, zhangtao, jigou, mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8());
+                $rk = (new KcRk())->insertRuku($cg['id'], 4, $cg['system_number'], $xs['ywsj'], $ms['department'], $ms['employer'], $this->getAccountId(), $companyId);
+                $cgmxDataNumber = null;
+                $spot = (new KcRk())->insertRkMxMd($rk, $cgmx['id'], 4, $xs['ywsj'], $cg['system_number'],
+                    null, $mx['cg_customer_id'], null, $mx['guige_id'], $mx['caizhi'], $mx['chandi'],
+                    $mx['cg_jijiafangshi_id'], $mx['store_id'], $mx['pihao'], $mx['huohao'], $mx['chehao'], $mx['beizhu'],
+                    $mx['cg_piaoju_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['lingzhi'],
+                    $mx['jianshu'], $mx['counts'], $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'],
+                    $mx['cg_sum_shui_price'], $mx['tax'], $mx['mizhong'], $mx['jianzhong'], $this->getAccountId(), $companyId);
 
 
                 $saleMx = (new \app\admin\model\Salesorder())->insertMx($xs, $mx['id'], 1, $mx['guige_id'], $mx['caizhi'],
@@ -476,15 +482,18 @@ class SalesTiaohuo extends Right
                     $saleMx['width'], $saleMx['wuzi_id'], $saleMx['jsfs_id'], $xs['pjlx'], null, $xs['system_no'] . '.' . $saleMx['trumpet'],
                     $xs['custom_id'], $xs['ywsj'], $saleMx['price'], $saleMx['tax_rate'], $saleMx['total_fee'], $saleMx['price_and_tax'], $saleMx['weight'], $companyId);
 
-                //todo 采购发票
-//            this . invDaoImpl . insertInv(cgmx . getId(), "2", "2", cgmx . getChangdu(), cgmx . getHoudu(), cgmx . getKuandu(), cgmx . getGuigeId(), cgmx . getJijiafangshiId(), cg . getPiaojuId(), cgmx . getPinmingId(), cg . getSystemNumber() + "." + cgmx . getTrumpet(), beizhu, cg . getCustomerId(), cg . getYwTime(), cgmx . getPrice(), cgmx . getShuiPrice(), cgmx . getSumprice(), cgmx . getSumShuiPrice(), cgmx . getZhongliang(), cg . getGroupId(), user, jigou, zhangtao, su, mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8());
+                (new \app\admin\model\Inv())->insertInv($cgmx['id'], 2, 2, $cgmx['changdu'], $cgmx['houdu'],
+                    $cgmx['kuandu'], $cgmx['guige_id'], $cgmx['jijiafangshi_id'], $cg['piaoju_id'], $cgmx['pinming_id'],
+                    $cg['system_number'] . '.' . $cgmx['trumpet'], $cg['customer_id'], $cg['yw_time'],
+                    $cgmx['price'], $cgmx['shui_price'], $cgmx['sumprice'], $cgmx['sum_shui_price'], $cgmx['zhongliang'], $companyId);
 
-                //todo 采购相关
-//            if (cgScCounts . intValue() == 0) {
-//                this . hkDaoImpl . insertHk(cg . getId(), "11", cg . getSystemNumber(), cg . getBeizhu(), cg . getCustomerId(), "2", cg . getYwTime(), cg . getJiesuanId(), cg . getPiaojuId(), cgmx . getSumShuiPrice(), cgmx . getZhongliang(), cg . getGroupId(), user, jigou, zhangtao, su, cg . getSaleOperateId());
-//            } else {
-//                this . hkDaoImpl . addHk(cg . getId(), "11", cg . getBeizhu(), cg . getCustomerId(), cg . getYwTime(), cg . getJiesuanId(), cg . getPiaojuId(), cgmx . getSumShuiPrice(), cgmx . getZhongliang(), cg . getGroupId());
-//            }
+                if ($cgScCounts == 0) {
+                    (new \app\admin\model\CapitalHk())->insertHk($cg['id'], 11, $cg['system_number'], $cg['beizhu'],
+                        $cg['customer_id'], 2, $cg['yw_time'], $cg['jiesuan_id'], $cg['piaoju_id'], $cgmx['sum_shui_price'],
+                        $cgmx['zhongliang'], $cg['group_id'], $cg['sale_operate_id'], $this->getAccountId(), $companyId);
+                } else {
+                    (new \app\admin\model\CapitalHk())->addHk($cg['id'], 11, $cg['beizhu'], $cg['customer_id'], $cg['yw_time'], $cg['jiesuan_id'], $cg['piaoju_id'], $cgmx['sum_shui_price'], $cgmx['zhongliang'], $cg['group_id']);
+                }
             }
 
             (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $xs['id'], $xs['ywsj'], 1,

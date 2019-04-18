@@ -100,6 +100,30 @@ class Inv extends Base
         }
     }
 
+    /**
+     * @param $dataId
+     * @param $ywType
+     * @param $fangxiang
+     * @param $changdu
+     * @param $houdu
+     * @param $kuandu
+     * @param $guigeId
+     * @param $jijiafangshiId
+     * @param $piaojuId
+     * @param $pinmingId
+     * @param $systemNumber
+     * @param $customerId
+     * @param $ywTime
+     * @param $price
+     * @param $shuiPrice
+     * @param $sumPrice
+     * @param $sumShuiPrice
+     * @param $zhongliang
+     * @param $companyId
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
     public function insertInv($dataId, $ywType, $fangxiang, $changdu, $houdu, $kuandu, $guigeId, $jijiafangshiId, $piaojuId, $pinmingId,
                               $systemNumber, $customerId, $ywTime, $price, $shuiPrice, $sumPrice, $sumShuiPrice, $zhongliang, $companyId)
     {
@@ -115,8 +139,6 @@ class Inv extends Base
         $i->houdu = $houdu;
         $i->jijiafangshi_id = $jijiafangshiId;
         $i->piaoju_id = $piaojuId;
-        $i->pinming_id = $pinmingId;
-
         if (empty($pinmingId)) {
             $gg = ViewSpecification::where('id', $guigeId)->cache(true, 60)->find();
             $i->pinming_id = $gg['productname_id'] ?? '';
