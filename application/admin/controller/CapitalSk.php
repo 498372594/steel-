@@ -11,9 +11,7 @@ use app\admin\model\{Bank,
     CapitalSk as CapitalSkModel,
     CapitalSkhx,
     CapitalSkjsfs};
-use app\admin\validate\{CapitalSk as CapitalSkValidate,
-    CapitalSkhx as CapitalSkhxValidate,
-    CapitalSkJsfs as CapitalSkJsfsValidate};
+use app\admin\validate\{CapitalSk as CapitalSkValidate, CapitalSkJsfs as CapitalSkJsfsValidate};
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -68,101 +66,7 @@ class CapitalSk extends Right
      * 添加收款单
      * @param Request $request
      * @return Json
-     * @throws \think\Exception
      */
-    public function add(Request $request)
-    {
-        $companyid = $this->getCompanyId();
-        $count = CapitalSkModel::whereTime('create_time', 'today')->where('companyid', $companyid)->count() + 1;
-
-        $data = $request->post();
-        $data['companyid'] = $companyid;
-        $data['system_number'] = 'SKD' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
-        $data['create_operator_id'] = $this->getAccountId();
-        $validate = new CapitalSkValidate();
-        if (!$validate->check($data)) {
-            return returnFail($validate->getError());
-        }
-        Db::startTrans();
-        try {
-            $model = new CapitalSkModel();
-            $model->allowField(true)->data($data)->save();
-            $id = $model->getLastInsID();
-
-            if (!empty($data['detaiils'])) {
-                //核销明细
-                $detailsValidate = new CapitalSkhxValidate();
-                foreach ($data['details'] as $c => $v) {
-                    $v['companyid'] = $companyid;
-                    $v['sk_id'] = $id;
-                    if (!$detailsValidate->check($v)) {
-                        throw new Exception($detailsValidate->getError());
-                    }
-                    if ($v['skhx_type'] == CapitalHk::CAPITAL_OTHER) {
-                        $relation = CapitalOtherModel::where('fangxiang', 1)
-                            ->where('id', $v['data_id'])
-                            ->where('status', '<>', '2')
-                            ->find();
-                    } elseif ($v['skhx_type'] == CapitalHk::CAPITAL_COST) {
-                        $relation = CapitalFy::where('fang_xiang', 1)
-                            ->where('id', $v['data_id'])
-                            ->where('status', '<>', '2')
-                            ->find();
-                    } else {
-                        $relation = CapitalHkModel::where('id', $v['data_id'])
-                            ->where('fangxiang', 1)
-                            ->where('status', '<>', '2')
-                            ->find();
-                    }
-                    if (empty($relation)) {
-                        throw new Exception('未找到对应源单');
-                    }
-                    if (($relation->money < 0 && $v['hx_money'] > 0) ||
-                        abs($v['hx_money']) > abs($relation->money - $relation->hxmoney)) {
-                        throw new Exception('核销金额不能大于未核销金额');
-                    }
-                    if (($relation->zhongliang < 0 && $v['hx_zhongliang']) ||
-                        (abs($v['hx_zhongliang']) > abs($relation->zhongliang - $relation->hxzhongliang))) {
-                        throw new Exception('核销重量不能大于未核销金额');
-                    }
-                    $relation->hxmoney += $v['hx_money'];
-                    $relation->hxzhongliang += $v['hx_zhongliang'];
-                    $relation->save();
-
-                    $v['customer_id'] = $relation->customer_id;
-                    $v['cache_ywtime'] = $relation->yw_time;
-                    $v['cache_systemnumber'] = $relation->system_number;
-                    $v['hj_money'] = $relation->money;
-                    $v['hj_zhongliang'] = $relation->zhongliang;
-
-                    (new CapitalSkhx())->allowField(true)->save($v);
-                }
-            }
-
-            //款项明细
-            $shoukuanValidate = new CapitalSkJsfsValidate();
-            $totalMoney = 0;
-            foreach ($data['mingxi'] as $c => $v) {
-                $data['mingxi'][$c]['companyid'] = $companyid;
-                $data['mingxi'][$c]['sk_id'] = $id;
-                if (!$shoukuanValidate->check($data['mingxi'][$c])) {
-                    throw new Exception($shoukuanValidate->getError());
-                }
-                $totalMoney += $v['money'];
-            }
-            if ($totalMoney != $data['money']) {
-                throw new Exception('收款金额必须等于本次收款');
-            }
-            (new CapitalSkjsfs())->allowField(true)->saveAll($data['mingxi']);
-
-            Db::commit();
-            return returnSuc();
-        } catch (Exception $e) {
-            Db::rollback();
-            return returnFail($e->getMessage());
-        }
-    }
-
     public function doSave(Request $request)
     {
         if (!$request->isPost()) {
