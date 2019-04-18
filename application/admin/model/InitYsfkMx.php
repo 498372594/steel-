@@ -16,5 +16,9 @@ class InitYsfkMx extends Base
     protected $deleteTime = 'delete_time';
     protected $autoWriteTimestamp = 'datetime';
 
-
+    public function createoperatordata()
+    {
+        return $this->belongsTo('admin', 'create_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator' => 'name']);
+    }
 }
