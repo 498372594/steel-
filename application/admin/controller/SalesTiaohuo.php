@@ -2,7 +2,15 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{CapitalFy, Jsfs, KcSpot, SalesMoshi, SalesMoshiMx, SalesorderDetails, StockOut, StockOutMd};
+use app\admin\model\{CapitalFy,
+    CgPurchase,
+    Jsfs,
+    KcSpot,
+    SalesMoshi,
+    SalesMoshiMx,
+    SalesorderDetails,
+    StockOut,
+    StockOutMd};
 use app\admin\validate\{SalesMoshiDetails};
 use Exception;
 use think\{Db,
@@ -435,6 +443,8 @@ class SalesTiaohuo extends Right
                 }
 
                 //todo 采购入库相关
+
+                CgPurchase::
 //            Integer cgScCounts = this . cgDao . findCgScCountsByMsMxId(ms . getId(), mx . getCgCustomerId(), "1", mx . getCgPiaoJuId());
 //            if (cgScCounts . intValue() == 0) {
 //                cg = this . cgDaoImpl . insertCaigou(mx . getId(), "1", xs . getYwTime(), mx . getCgCustomerId(), null, "1", mx . getCgPiaoJuId(), beizhu, groupId, saleOperatorId, user, su, jigou, zhangtao);

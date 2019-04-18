@@ -2,27 +2,17 @@
 
 namespace app\admin\controller;
 
-use app\admin\library\traits\Backend;
-
-use app\admin\model\CapitalFy;
-use app\admin\model\CgPurchaseMx;
-use app\admin\model\KcRk;
-use app\admin\model\KcRkTz;
-use think\Session;
-use app\admin\validate\{FeiyongDetails, SalesorderDetails};
-use think\{Db,
-    db\exception\DataNotFoundException,
-    db\exception\ModelNotFoundException,
-    exception\DbException,
-    Request,
-    response\Json};
+use app\admin\model\{CapitalFy, CgPurchase, CgPurchaseMx, CgTh, InitYskp, KcRk, KcRkTz};
+use app\admin\validate\{FeiyongDetails};
+use Exception;
+use think\{Db, Request};
 
 class Cg extends Right
 {
     public function cgth()
     {
         $params = request()->param();
-        $list = \app\admin\model\CgTh::with(["jsfsData", "customData", "pjlxData"])->where('companyid', $this->getCompanyId());
+        $list = CgTh::with(["jsfsData", "customData", "pjlxData"])->where('companyid', $this->getCompanyId());
         //往来单位
         if (!empty($params['customer_id'])) {
             $list->where('customer_id', $params['customer_id']);
@@ -45,7 +35,7 @@ class Cg extends Right
 
     public function cgthmx($id = 0)
     {
-        $data = $list = \app\admin\model\CgTh::with(['details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData'], "jsfsData", "customData", "pjlxData",
+        $data = $list = CgTh::with(['details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData'], "jsfsData", "customData", "pjlxData",
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
@@ -62,7 +52,7 @@ class Cg extends Right
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
             $data = request()->post();
-            $count = \app\admin\model\InitYskp::whereTime('create_time', 'today')->count();
+            $count = InitYskp::whereTime('create_time', 'today')->count();
             $data["status"] = 0;
             $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
@@ -215,7 +205,7 @@ class Cg extends Right
     }
 
 
-    public function edit(Request $request, $moshi_type = 4, $data = [], $return = false, $spotIds = [])
+    public function edit(Request $request, $moshi_type = 4, $data = [])
     {
         Db::startTrans();
         try {
@@ -229,7 +219,7 @@ class Cg extends Right
 
             $addList = [];
             $updateList = [];
-            $detailValidate = new CgPurchaseMx();
+            $detailValidate = new \app\admin\validate\CgPurchaseMx();
             $num = 1;
             foreach ($data['details'] as $item) {
                 if (!$detailValidate->check($item)) {
@@ -246,7 +236,7 @@ class Cg extends Right
             }
             $companyId = $this->getCompanyId();
             if (empty($data['id'])) {
-                $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')
+                $count = CgPurchase::whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
                     ->count();
 
@@ -257,26 +247,26 @@ class Cg extends Right
                 $data['system_number'] = $systemNumber;
                 $data['moshi_type'] = $moshi_type;
 
-                $cg = new \app\admin\model\CgPurchase();
+                $cg = new CgPurchase();
                 $cg->allowField(true)->data($data)->save();
                 $purchase_id = $cg["id"];
                 if ($data['ruku_fangshi'] == 1) {
                     $rk = (new KcRk())->insertRuku($cg['id'], "4", $cg['yw_time'], $cg['group_id'], $cg['system_number'], $cg['sale_operator_id'], $this->getAccountId(), $this->getCompanyId());
                 }
             } else {
-                $cg = \app\admin\model\CgPurchase::where('companyid', $companyId)->where('id', $data['id'])->find();
+                $cg = CgPurchase::where('companyid', $companyId)->where('id', $data['id'])->find();
                 if (empty($cg)) {
-                    throw new ValidateException("对象不存在");
+                    throw new Exception("对象不存在");
                 }
                 if ($cg["status"] == 1) {
-                    throw new ValidateException("该单据已经作废");
+                    throw new Exception("该单据已经作废");
                 }
                 if (!$cg["moshi_type"] == 6) {
                     if ($cg["moshi_type"] == 1) {
-                        throw new ValidateException("该采购单是由调货销售单自动生成的，禁止直接删除！");
+                        throw new Exception("该采购单是由调货销售单自动生成的，禁止直接删除！");
                     }
                     if ($cg["moshi_type"] == 2) {
-                        throw new ValidateException("该采购单是由采购直发单自动生成的，禁止直接删除！");
+                        throw new Exception("该采购单是由采购直发单自动生成的，禁止直接删除！");
                     }
                 }
                 $cg->allowField(true)->data($data)->save();
@@ -329,7 +319,7 @@ class Cg extends Right
                     if ($data["ruku_fangshi"] == 1) {
                         throw new Exception('自动入库单禁止修改');
                     } else {
-                        $mx = \app\admin\model\CgPurchaseMx::where('id', $mjo['id'])->find();
+                        $mx = CgPurchaseMx::where('id', $mjo['id'])->find();
                         $mx->allowField(true)->data($mjo)->isUpdate(true)->save();
                         (new KcRkTz())->updateRukuTz($mx["id"], $mx["ruku_type"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"]
                             , $mx["houdu"], $mx["changdu"], $mx["kuandu"], $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["shui_price"]
@@ -341,12 +331,12 @@ class Cg extends Right
                 }
             }
             if (!empty($addList)) {
-                $trumpet = \app\admin\model\CgPurchaseMx::where('purchase_id', $data['id'])->max('trumpet');
+                $trumpet = CgPurchaseMx::where('purchase_id', $data['id'])->max('trumpet');
                 foreach ($addList as $mjo) {
                     $trumpet++;
                     $mjo['trumpet'] = $trumpet;
                     $mjo["purchase_id"] = $purchase_id;
-                    $mx = new \app\admin\model\CgPurchaseMx();
+                    $mx = new CgPurchaseMx();
                     $mx->allowField(true)->data($mjo)->save();
                     if ($data["ruku_fangshi"] == 1) {
                         (new KcRk())->insertRkMxMd($rk, $mx["data_id"], 4, $mx["yw_time"], $mx["system_number"], null, $mx["customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
@@ -355,7 +345,7 @@ class Cg extends Right
                     } else {
                         (new KcRkTz())->insertRukuTz($mx["id"], 4, $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["houdu"], $mx["changdu"], $mx["kuandu"],
                             $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["shui_price"], $mx["sumprice"], $mx["sum_shui_price"], $mx["shuie"], $mx["price"], $mx["huohao"],
-                            $mx["pihao"], $mx["beizhu"], $mx["chehao"], $mx["cache_ywtime"], null, $mx["cache_data_pnumber"], $mx["cacheCustomer_id"], $mx["store_id"], $this->getAccountId(), $mx["cache_piaoju_id"],
+                            $mx["pihao"], $mx["beizhu"], $mx["chehao"], $mx["cache_ywtime"], null, $mx["cache_data_pnumber"], $mx["cacheCustomer_id"], $mx["store_id"], $this->getAccountId(),
                             $mx["mizhong"], $mx["jianzhong"], $this->getCompanyId());
                     }
                     (new \app\admin\model\Inv())->insertInv($mx["id"], 2, 2, $mx["chagndu"], $mx["kuandu"], $mx["houdu"], $mx["guige_id"], $mx["jijiafangshi_id"], $mx["piaoju_id"], $mx["pinming_id"],
@@ -364,14 +354,13 @@ class Cg extends Right
 
             }
 
-            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $xs['id'], $xs['ywsj'], 1, $xs['department'] ?? '', $xs['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $cg['id'], $cg['yw_time'], 1, $cg['group_id'] ?? '', $cg['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
             Db::commit();
-
+            return returnSuc();
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
         }
     }
-
 
 }

@@ -21,7 +21,7 @@ class KcSpot extends Base
     public function guigeData()
     {
         return $this->belongsTo('ViewSpecification', 'guige_id', 'id')->cache(true, 60)
-            ->field('id,specification')->bind(['guige' => 'specification']);;
+            ->field('id,specification')->bind(['guige' => 'specification']);
     }
 
     public function storage()
@@ -315,6 +315,48 @@ class KcSpot extends Base
         return $s;
     }
 
+    /**
+     * @param $rukuFangshi
+     * @param $rukuType
+     * @param $jijiafangshiId
+     * @param $rkMdId
+     * @param $dataId
+     * @param $pinmingId
+     * @param $guigeId
+     * @param $caizhiId
+     * @param $chandiId
+     * @param $storeId
+     * @param $customerId
+     * @param $piaojuId
+     * @param $chehao
+     * @param $beizhu
+     * @param $huohao
+     * @param $pihao
+     * @param $changdu
+     * @param $houdu
+     * @param $kuandu
+     * @param $lingzhi
+     * @param $jianshu
+     * @param $zhijian
+     * @param $counts
+     * @param $zhongliang
+     * @param $price
+     * @param $sumprice
+     * @param $shuiprice
+     * @param $sumShuiPrice
+     * @param $shuie
+     * @param $mizhong
+     * @param $jianzhong
+     * @param $cbPrice
+     * @param $cbShuie
+     * @param $cbSumPrice
+     * @param $cbSumShuiPrice
+     * @param $companyId
+     * @return KcSpot
+     * @throws DbException
+     * @throws \think\Exception
+     * @throws Exception
+     */
     public function insertSpot($rukuFangshi, $rukuType, $jijiafangshiId, $rkMdId, $dataId, $pinmingId, $guigeId, $caizhiId, $chandiId, $storeId, $customerId, $piaojuId, $chehao, $beizhu, $huohao, $pihao, $changdu
         , $houdu, $kuandu, $lingzhi, $jianshu, $zhijian, $counts, $zhongliang, $price, $sumprice, $shuiprice, $sumShuiPrice, $shuie, $mizhong, $jianzhong, $cbPrice, $cbShuie, $cbSumPrice, $cbSumShuiPrice, $companyId)
     {

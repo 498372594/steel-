@@ -4,7 +4,7 @@
 namespace app\admin\controller;
 
 
-use app\admin\model\{CapitalFy, SalesReturnDetails, StockOutMd};
+use app\admin\model\{CapitalFy, Jsfs, KcRk, KcSpot, SalesReturnDetails, StockOutMd};
 use think\{Db,
     db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
@@ -126,139 +126,13 @@ class SalesReturn extends Right
                 $th = new \app\admin\model\SalesReturn();
                 $th->allowField(true)->data($data)->save();
 
-                //todo 入库
-//            rk = this . rkDaoImpl . insertRuku(th . getId(), "7", th . getSystemNumber(), th . getYwTime(), th . getGroupId(), user, jigou, zhangtao, su, th . getSaleOperatorId());
+                $rk = (new KcRk())->insertRuku($th['id'], 7, $th['system_number'], $th['yw_time'], $th['group_id'], $th['sale_operator_id'], $this->getAccountId(), $companyId);
             } else {
                 throw new \Exception('销售退货单禁止修改');
-//            th = (TbXsTh) getBeanDAO() . selectByPrimaryKey(pid);
-//            if (th == null) {
-//                throw new ValidateException("对象不存在");
-//            }
-//            if (!user . getId() . equals(th . getUserId())) {
-//                throw new ValidateException("对象不存在");
-//            }
-//            if ("1" . equals(th . getStatus())) {
-//                throw new ValidateException("该单据已经作废");
-//            }
-//            th . setCustomerId(customerId);
-//            th . setPiaojuId(piaojuId);
-//            th . setPriceId(priceId);
-//            th . setJiesuanId(jiesuanId);
-//            th . setLxr(lxr);
-//            th . setTelephone(telephone);
-//            th . setChengyunfang(chengyunfang);
-//            th . setChehao(chehao);
-//            th . setYunjia(yunjia);
-//            th . setYunfei(yunfei);
-//            th . setOfflineNumber(offlineNumber);
-//            th . setBeizhu(beizhu);
-//            th . setYwTime(DateUtil . parseDate(ywTime, "yyyy-MM-dd HH:mm:ss"));
-//            th . setGroupId(groupId);
-//            th . setSaleOperatorId(saleOperatorId);
-//            th . setUpdateOperatorId(su . getId());
-//            th . setYfhs(yfhs);
-//            getBeanDAO() . updateByPrimaryKeySelective(th);
-//            rk = this . rkDaoImpl . updateRuku(th . getId(), "7", null, th . getYwTime(), th . getCustomerId(), th . getGroupId(), th . getSaleOperatorId());
             }
 
             if (!empty($data['deleteMxIds']) || !empty($updateList)) {
                 throw new \Exception('销售退货单禁止修改');
-//        for (Map < String, String > map : deleteList) {
-//            TbXsThMx mx = new TbXsThMx();
-//            mx . setId((String)map . get("id"));
-//            mx . setIsDelete("1");
-//            this . mxDao . updateByPrimaryKeySelective(mx);
-//            this . rkDaoImpl . deleteRkMxMd(mx . getId(), "7");
-//
-//            this . invDaoImpl . deleteInv(mx . getId(), "6");
-//        }
-//
-//        for (Map < String, String > map : updateList) {
-//            TbXsThMx mx = new TbXsThMx();
-//
-//            BigDecimal maxCounts = this . mdDAO . findCountsByDataId((String)map . get("xsmxId"));
-//            BigDecimal thCounts = this . mxDao . findCountsByXsSaleMxId((String)map . get("xsmxId"));
-//            BigDecimal maxZhongliang = this . mdDAO . findZhongliangByDataId((String)map . get("xsmxId"));
-//            BigDecimal thZhongliang = this . mxDao . findZhongliangByXsSaleMxId((String)map . get("xsmxId"));
-//            if (maxCounts == null) {
-//                maxCounts = BigDecimal . valueOf(0L);
-//            }
-//            if (thCounts == null) {
-//                thCounts = BigDecimal . valueOf(0L);
-//            }
-//            if (maxZhongliang == null) {
-//                maxZhongliang = BigDecimal . valueOf(0L);
-//            }
-//            if (thZhongliang == null) {
-//                thZhongliang = BigDecimal . valueOf(0L);
-//            }
-//
-//            if (maxCounts . subtract(thCounts) . compareTo(new BigDecimal((String)map . get("counts")) . subtract(thCounts)) < 0) {
-//                throw new ValidateException("本次退货数量大于销售出库数量(剩余未退货重量为：" + maxCounts . subtract(thCounts) . stripTrailingZeros() . toPlainString() + ")");
-//            }
-//
-//            if (maxZhongliang . subtract(thZhongliang) . compareTo(new BigDecimal((String)map . get("zhongliang")) . subtract(thZhongliang)) < 0) {
-//                throw new ValidateException("本次退货重量大于销售出库重量(剩余未退货重量为：" + maxZhongliang . subtract(thZhongliang) . stripTrailingZeros() . toPlainString() + ")");
-//            }
-//
-//            mx . setId((String)map . get("id"));
-//            mx . setStoreId((String)map . get("storeId"));
-//            mx . setPinmingId((String)map . get("pinmingId"));
-//            mx . setGuigeId((String)map . get("guigeId"));
-//            mx . setCaizhiId((String)map . get("caizhiId"));
-//            mx . setHoudu(new BigDecimal((String)map . get("houdu")));
-//            mx . setKuandu(new BigDecimal((String)map . get("kuandu")));
-//            mx . setChangdu(new BigDecimal((String)map . get("changdu")));
-//            mx . setLingzhi(new BigDecimal((String)map . get("lingzhi")));
-//            mx . setJianshu(new BigDecimal((String)map . get("jianshu")));
-//            mx . setZhijian(new BigDecimal((String)map . get("zhijian")));
-//            mx . setCounts(new BigDecimal((String)map . get("counts")));
-//            mx . setZhongliang(new BigDecimal((String)map . get("zhongliang")));
-//            mx . setPrice(new BigDecimal((String)map . get("price")));
-//            mx . setSumprice(new BigDecimal((String)map . get("sumprice")));
-//            mx . setShuiprice(new BigDecimal((String)map . get("shuiprice")));
-//            mx . setShuie(new BigDecimal((String)map . get("shuie")));
-//            mx . setSumShuiprice(new BigDecimal((String)map . get("sumShuiprice")));
-//
-//            mx . setBeizhu((String)map . get("beizhu"));
-//            mx . setExt1((String)map . get("ext1"));
-//            mx . setExt2((String)map . get("ext2"));
-//            mx . setExt3((String)map . get("ext3"));
-//            mx . setExt4((String)map . get("ext4"));
-//            mx . setExt5((String)map . get("ext5"));
-//            mx . setExt6((String)map . get("ext6"));
-//            mx . setExt7((String)map . get("ext7"));
-//            mx . setExt8((String)map . get("ext8"));
-//            mx . setGgBm((String)map . get("ggBm"));
-//            mx . setChandiId((String)map . get("chandiId"));
-//            mx . setJijiafangshiId((String)map . get("jijiafangshiId"));
-//            mx . setPihao((String)map . get("pihao"));
-//            mx . setChehao((String)map . get("chehao"));
-//            mx . setHuohao((String)map . get("huohao"));
-//            mx . setMizhong(new BigDecimal((String)map . get("mizhong")));
-//            mx . setJianzhong(new BigDecimal((String)map . get("jianzhong")));
-//            this . mxDao . updateByPrimaryKeySelective(mx);
-//
-//            TbXsThMx tbXsThMx = (TbXsThMx) this . mxDao . selectByPrimaryKey(mx . getId());
-//            TbKcSpot spot = (TbKcSpot) this . spotDao . selectByPrimaryKey(tbXsThMx . getSpotId());
-//            BigDecimal price = spot . getPrice();
-//            BigDecimal sumShuiPrice = new BigDecimal(0);
-//            BigDecimal sumPrice = new BigDecimal(0);
-//            BigDecimal shuie = new BigDecimal(0);
-//            TbBaseJijiafangshi jjfs = (TbBaseJijiafangshi) this . jjfsDao . selectByPrimaryKey(spot . getJijiafangshiId());
-//            if ((jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_1)) || (jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_2))) {
-//                sumShuiPrice = price . multiply(mx . getZhongliang());
-//            } else if (jjfs . getBaseJijialeixingId() . equals(Globals . DICT_BASE_JIJIALEIXING_3)) {
-//                sumShuiPrice = price . multiply(mx . getCounts());
-//            }
-//            sumPrice = WuziUtil . calSumPrice(sumShuiPrice, price);
-//            shuie = WuziUtil . calShuie(sumShuiPrice, spot . getShuiprice());
-//            BigDecimal fySz = new BigDecimal(0);
-//
-//            this . rkDaoImpl . updateRkMxMd(mx . getId(), "7", mx . getChangdu(), mx . getHoudu(), mx . getKuandu(), mx . getLingzhi(), mx . getJianshu(), mx . getCounts(), mx . getZhongliang(), mx . getZhijian(), spot . getCustomerId(), mx . getPinmingId(), mx . getGuigeId(), mx . getCaizhiId(), mx . getChandiId(), mx . getJijiafangshiId(), mx . getStoreId(), mx . getPihao(), mx . getHuohao(), mx . getChehao(), mx . getGgBm(), mx . getBeizhu(), th . getPiaojuId(), price, sumPrice, spot . getShuiprice(), sumShuiPrice, shuie, mx . getMizhong(), mx . getJianzhong(), price, fySz, mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8(), zhangtao);
-//
-//            this . invDaoImpl . updateInv(mx . getId(), "3", null, th . getCustomerId(), th . getYwTime(), mx . getChangdu(), mx . getKuandu(), mx . getHoudu(), mx . getGuigeId(), mx . getJijiafangshiId(), th . getPiaojuId(), mx . getPinmingId(), new BigDecimal(0) . subtract(mx . getZhongliang()), mx . getPrice(), new BigDecimal(0) . subtract(mx . getSumprice()), new BigDecimal(0) . subtract(mx . getSumShuiprice()), mx . getShuiprice(), mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8());
-//        }
             }
 
             $trumpet = 0;
@@ -288,26 +162,33 @@ class SalesReturn extends Right
 
                     $mx->allowField(true)->data($map)->save();
 
-//                    $spot = KcSpot::get($mx['spot_id']);
+                    $spot = KcSpot::get($mx['spot_id']);
 
-//                    $price = $spot['price'];
-//                    $sumShuiPrice = 0;
-//                    $sumPrice = 0;
-//                    $shuie = 0;
-//                    $jjfs = Jsfs::where('id', $spot['jijiafangshi_id'])->cache(true, 60)->find();
+                    $price = $spot['price'];
+                    $sumShuiPrice = 0;
+                    $sumPrice = 0;
+                    $shuie = 0;
+                    $jjfs = Jsfs::where('id', $spot['jijiafangshi_id'])->cache(true, 60)->find();
 
-//                    if ($jjfs == 1 || $jjfs == 2) {
-//                        $sumShuiPrice = $price * $mx['zhongliang'];
-//                    } elseif ($jjfs == 3) {
-//                        $sumShuiPrice = $price * $mx['counts'];
-//                    }
+                    if ($jjfs == 1 || $jjfs == 2) {
+                        $sumShuiPrice = $price * $mx['zhongliang'];
+                    } elseif ($jjfs == 3) {
+                        $sumShuiPrice = $price * $mx['counts'];
+                    }
 //                sumPrice = WuziUtil . calSumPrice(sumShuiPrice, price);
 //                shuie = WuziUtil . calShuie(sumShuiPrice, spot . getShuiprice());
 
-                    //todo 入库
-//                this . rkDaoImpl . insertRkMxMd(rk, mx . getId(), "7", th . getYwTime(), th . getSystemNumber(), null, spot . getCustomerId(), mx . getPinmingId(), mx . getGuigeId(), mx . getCaizhiId(), mx . getChandiId(), mx . getJijiafangshiId(), mx . getStoreId(), mx . getPihao(), mx . getHuohao(), mx . getChehao(), mx . getGgBm(), mx . getBeizhu(), piaojuId, mx . getHoudu(), mx . getKuandu(), mx . getChangdu(), mx . getZhijian(), mx . getLingzhi(), mx . getJianshu(), mx . getCounts(), mx . getZhongliang(), price, sumPrice, spot . getShuiprice(), sumShuiPrice, shuie, mx . getMizhong(), mx . getJianzhong(), price, fySz, su, user, zhangtao, jigou, mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8());
+                    (new KcRk())->insertRkMxMd($rk, $mx['id'], 7, $th['yw_time'], $th['system_number'],
+                        null, $spot['customer_id'], $mx['pinming_id'], $mx['guige_id'], $mx['caizhi_id'],
+                        $mx['chandi_id'], $mx['jijiafangshi_id'], $mx['store_id'], $mx['pihao'], $mx['huohao'], $mx['chehao'],
+                        $mx['beizhu'], $th['piaoju_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'],
+                        $mx['lingzhi'], $mx['jianshu'], $mx['counts'], $mx['zhongliang'], $price, $sumPrice, $spot['shui_price'],
+                        $sumShuiPrice, $shuie, $mx['mizhong'], $mx['jianzhong'], $this->getAccountId(), $companyId);
 
-                    (new \app\admin\model\Inv())->insertInv($mx['id'], 6, 1, $mx['changdu'], $mx['houdu'], $mx['kuandu'], $mx['guige_id'], $mx['jijiafangshi_id'], $mx['piaoju_id'], $mx['pinming_id'], $th['system_number'] . '.' . $mx['trumpet'], $th['customer_id'], $th['yw_time'], $mx['price'], $mx['shuiprice'], -$mx['sumprice'], -$mx['sum_shui_price'], -$mx['zhongliang'], $companyId);
+                    (new \app\admin\model\Inv())->insertInv($mx['id'], 6, 1, $mx['changdu'], $mx['houdu'],
+                        $mx['kuandu'], $mx['guige_id'], $mx['jijiafangshi_id'], $mx['piaoju_id'], $mx['pinming_id'],
+                        $th['system_number'] . '.' . $mx['trumpet'], $th['customer_id'], $th['yw_time'],
+                        $mx['price'], $mx['shuiprice'], -$mx['sumprice'], -$mx['sum_shui_price'], -$mx['zhongliang'], $companyId);
                 }
             }
 

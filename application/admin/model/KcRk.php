@@ -2,6 +2,9 @@
 
 namespace app\admin\model;
 
+use Exception;
+use think\db\exception\{DataNotFoundException, ModelNotFoundException};
+use think\exception\DbException;
 use traits\model\SoftDelete;
 
 class KcRk extends Base
@@ -21,75 +24,100 @@ class KcRk extends Base
             ->field('id,custom')->bind(['custom_name' => 'custom']);
     }
 
+    /**
+     * 添加入库单
+     * @param $dataId
+     * @param $rukuType
+     * @param $ywTime
+     * @param $groupId
+     * @param $cacheDataPnumber
+     * @param $saleOperatorId
+     * @param $userId
+     * @param $companyId
+     * @return KcRk
+     * @throws \think\Exception
+     * @throws Exception
+     */
     public function insertRuku($dataId, $rukuType, $ywTime, $groupId, $cacheDataPnumber, $saleOperatorId, $userId, $companyId)
     {
         $rk = new self();
         if (empty($rukuType)) {
             throw new Exception("请传入出库类型[chukuType]");
         }
-        if ($rukuType == 1) {
-            switch ($rukuType) {
-                case 1:
-                    $rk->remark = "库存调拨单," . $cacheDataPnumber;
-                    break;
-                case 2:
-                    $rk->remark = "盘盈入库," . $cacheDataPnumber;
-                    break;
-                case 3:
-                    $rk->remark = "其它出库单," . $cacheDataPnumber;
+        switch ($rukuType) {
+            case 1:
+                $rk->remark = "库存调拨单," . $cacheDataPnumber;
+                break;
+            case 2:
+                $rk->remark = "盘盈入库," . $cacheDataPnumber;
+                break;
+            case 3:
+                $rk->remark = "其它出库单," . $cacheDataPnumber;
 
-                    break;
-                case 4:
-                    $rk->remark = "采购单," . $cacheDataPnumber;
+                break;
+            case 4:
+                $rk->remark = "采购单," . $cacheDataPnumber;
 
-                    break;
-                case 7:
-                    $rk->remark = "销售退货单," . $cacheDataPnumber;
+                break;
+            case 7:
+                $rk->remark = "销售退货单," . $cacheDataPnumber;
 
-                    break;
-                case 8:
-                    $rk->remark = "库存期初余额," . $cacheDataPnumber;
+                break;
+            case 8:
+                $rk->remark = "库存期初余额," . $cacheDataPnumber;
 
-                    break;
-                case 9:
-                    $rk->remark = "卷板开平加工," . $cacheDataPnumber;
+                break;
+            case 9:
+                $rk->remark = "卷板开平加工," . $cacheDataPnumber;
 
-                    break;
-                case 10:
-                    $rk->remark = "卷板纵剪加工," . $cacheDataPnumber;
+                break;
+            case 10:
+                $rk->remark = "卷板纵剪加工," . $cacheDataPnumber;
 
-                    break;
-                case 13:
-                    $rk->remark = "卷板切割加工," . $cacheDataPnumber;
+                break;
+            case 13:
+                $rk->remark = "卷板切割加工," . $cacheDataPnumber;
 
-                    break;
-                case 15:
-                    $rk->remark = "通用加工," . $cacheDataPnumber;
-                    break;
-                default:
-                    throw new Exception("请传入匹配的出库类型[chukuType]");
-            }
-            $rk->create_operator_id = $userId;
-            $rk->data_id = $dataId;
-            $rk->ruku_type = $rukuType;
-            $rk->ruku_fangshi = 1;
-            $rk->create_time = new Date();
-            $rk->group_id = $groupId;
-            $rk->sale_operator_id = $saleOperatorId;
-            $count = self::withTrashed()->where('companyid', $companyId)->whereTime('create_time', 'today')->count();
-            $rk->system_number = 'RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            $rk->ywTime = $ywTime;
-            $rk->status = 0;
-            $rk->save();
-            return $rk;
+                break;
+            case 15:
+                $rk->remark = "通用加工," . $cacheDataPnumber;
+                break;
+            default:
+                throw new Exception("请传入匹配的出库类型[chukuType]");
         }
+        $rk->create_operator_id = $userId;
+        $rk->data_id = $dataId;
+        $rk->ruku_type = $rukuType;
+        $rk->ruku_fangshi = 1;
+        $rk->group_id = $groupId;
+        $rk->sale_operator_id = $saleOperatorId;
+        $count = self::withTrashed()->where('companyid', $companyId)->whereTime('create_time', 'today')->count();
+        $rk->system_number = 'RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+        $rk->ywTime = $ywTime;
+        $rk->status = 0;
+        $rk->save();
+        return $rk;
     }
 
+    /**
+     * @param $dataId
+     * @param $rukuType
+     * @param $storeId
+     * @param $ywTime
+     * @param $cgCustomerId
+     * @param $groupId
+     * @param $saleOperatorId
+     * @return KcRk|false|int|null
+     * @throws DbException
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
     public function updateRuku($dataId, $rukuType, $storeId, $ywTime, $cgCustomerId, $groupId, $saleOperatorId)
     {
         $rk = self::where(array("data_id" => $dataId, "ruku_type" => $rukuType))->get(1);
         if (empty($list)) {
-            throw new ValidateException("对象不存在");
+            throw new Exception("对象不存在");
         }
         $rk->yw_time = $ywTime;
         $rk->groupId = $groupId;
@@ -109,6 +137,46 @@ class KcRk extends Base
 
     }
 
+    /**
+     * @param $rk
+     * @param $dataId
+     * @param $rukuType
+     * @param $ywTime
+     * @param $dataPnumber
+     * @param $dataNumber
+     * @param $customerId
+     * @param $pinmingId
+     * @param $guigeId
+     * @param $caizhiId
+     * @param $chandiId
+     * @param $jijiafangshiId
+     * @param $storeId
+     * @param $pihao
+     * @param $huohao
+     * @param $chehao
+     * @param $beizhu
+     * @param $pjlx
+     * @param $houdu
+     * @param $kuandu
+     * @param $changdu
+     * @param $zhijian
+     * @param $lingzhi
+     * @param $jianshu
+     * @param $counts
+     * @param $zhongliang
+     * @param $price
+     * @param $sumPrice
+     * @param $shuiPrice
+     * @param $sumShuiPrice
+     * @param $shuie
+     * @param $mizhong
+     * @param $jianzhong
+     * @param $userId
+     * @param $companyId
+     * @return KcSpot
+     * @throws DbException
+     * @throws Exception
+     */
     public function insertRkMxMd($rk, $dataId, $rukuType, $ywTime, $dataPnumber, $dataNumber, $customerId, $pinmingId, $guigeId, $caizhiId, $chandiId, $jijiafangshiId, $storeId, $pihao, $huohao, $chehao
         , $beizhu, $pjlx, $houdu, $kuandu, $changdu, $zhijian, $lingzhi, $jianshu, $counts, $zhongliang, $price, $sumPrice, $shuiPrice, $sumShuiPrice, $shuie, $mizhong, $jianzhong, $userId, $companyId)
     {
@@ -119,15 +187,15 @@ class KcRk extends Base
         if (empty($jijiafangshiId)) {
             throw new Exception("计算方式不能为空");
         }
-        if (empty($counts)) {
-            this . log . debug("数量为空");
-        }
-        if (empty($zhongliang)) {
-            this . log . debug("重量为空");
-        }
-        if (empty($price)) {
-            this . log . debug("价格为空");
-        }
+//        if (empty($counts)) {
+//            this . log . debug("数量为空");
+//        }
+//        if (empty($zhongliang)) {
+//            this . log . debug("重量为空");
+//        }
+//        if (empty($price)) {
+//            this . log . debug("价格为空");
+//        }
         $addNumberCount = empty($rk['id']) ? 1 : CgPurchaseMx::where('kc_rk_id', $rk['id'])->max('system_number');
         $mx->companyid = $companyId;
         $mx->kc_rk_id = $rk["id"];
@@ -166,7 +234,7 @@ class KcRk extends Base
         $mx->huohao = $huohao;
         $mx->beizhu = $beizhu;
         $mx->chehao = $chehao;
-        $mx->system_number = $addNumberCount + 1 + "";
+        $mx->system_number = $addNumberCount + 1;
         if (empty($mizhong)) {
             $gg = ViewSpecification::get($guigeId);
             $mx->pinming_id = $gg['productname_id'] ?? '';
@@ -201,28 +269,28 @@ class KcRk extends Base
         $md->jijiafangshi_id = $mx["jijiafangshi_id"];
         $md->guige_id = $mx["guige_id"];
         $md->houdu = $mx["houdu"];
-        $md->kuandu =  $mx["kuandu"];
-        $md->jianshu =  $mx["jianshu"];
-        $md->counts =  $mx["counts"];
-        $md->changdu =  $mx["changdu"];
-        $md->lingzhi =  $mx["lingzhi"];
-        $md->zhijian =  $mx["zhijian"];
-        $md->zhongliang =  $mx["zhongliang"];
-        $md->price =  $mx["price"];
-        $md->shuiprice =  $mx["price"];
-        $md->sumprice =  $mx["sumprice"];
-        $md->sum_shui_price =  $mx["sum_shui_price"];
-        $md->shuie =  $mx["shuie"];
-        $md->huohao =  $huohao;
-        $md->cb_price =  $price;
+        $md->kuandu = $mx["kuandu"];
+        $md->jianshu = $mx["jianshu"];
+        $md->counts = $mx["counts"];
+        $md->changdu = $mx["changdu"];
+        $md->lingzhi = $mx["lingzhi"];
+        $md->zhijian = $mx["zhijian"];
+        $md->zhongliang = $mx["zhongliang"];
+        $md->price = $mx["price"];
+        $md->shuiprice = $mx["price"];
+        $md->sumprice = $mx["sumprice"];
+        $md->sum_shui_price = $mx["sum_shui_price"];
+        $md->shuie = $mx["shuie"];
+        $md->huohao = $huohao;
+        $md->cb_price = $price;
         $md->chehao = $chehao;
         $md->chehao = $chehao;
         $md->cb_shuie = $shuie;
-        $md->pihao =  $pihao;
-        $md->beizhu =  $beizhu;
-        $md->store_id =  $mx["store_id"];
-        $md->mizhong =  $mx["mizhong"];
-        $md->jianzhong =  $mx["jianzhong"];
+        $md->pihao = $pihao;
+        $md->beizhu = $beizhu;
+        $md->store_id = $mx["store_id"];
+        $md->mizhong = $mx["mizhong"];
+        $md->jianzhong = $mx["jianzhong"];
         if (empty($cbPrice)) {
             $cbPrice = $mx['price'];
         }
@@ -236,10 +304,9 @@ class KcRk extends Base
             $md->cb_sum_shuiprice = $md->cb_price * $md->counts;
         }
         $md->save();
-        return (new KcSpot())->insertSpot(1,$rukuType,$md->jijiafangshi_id,$md->id,$md->data_id,$md->pinming_id,$md->guige_id,$md->caizhi_id,$md->chandi_id,$md->store_id
-        ,$mx->cache_customer,$pjlx,$md->chehao,$md->beizhu,$md->huohao,$md->pihao,$md->changdu,$md->houdu,$md->kuandu,$md->lingzhi,$md->jianshu,$md->zhijian,$md->counts,$md->zhongliang,$md->price,$md->sumprice,
-            $md->shuiprice,$md->sum_shui_price,$md->shuie,$md->mizhong,$md->jianzhong,$md->cb_price,$md->cb_shuie,$md->sumprice,$md->sum_shui_price,$companyId);
-
+        return (new KcSpot())->insertSpot(1, $rukuType, $md->jijiafangshi_id, $md->id, $md->data_id, $md->pinming_id, $md->guige_id, $md->caizhi_id, $md->chandi_id, $md->store_id
+            , $mx->cache_customer, $pjlx, $md->chehao, $md->beizhu, $md->huohao, $md->pihao, $md->changdu, $md->houdu, $md->kuandu, $md->lingzhi, $md->jianshu, $md->zhijian, $md->counts, $md->zhongliang, $md->price, $md->sumprice,
+            $md->shuiprice, $md->sum_shui_price, $md->shuie, $md->mizhong, $md->jianzhong, $md->cb_price, $md->cb_shuie, $md->sumprice, $md->sum_shui_price, $companyId);
 
 
     }

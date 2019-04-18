@@ -3,7 +3,7 @@
 namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
-use app\admin\model\{CapitalFy, CgPurchase, KcRk, KcSpot};
+use app\admin\model\{CapitalFy, CgPurchase, KcRk, KcRkTz, KcSpot};
 use app\admin\validate\{CgPurchaseMx, FeiyongDetails};
 use Exception;
 use think\{Db,
@@ -11,8 +11,7 @@ use think\{Db,
     db\exception\ModelNotFoundException,
     exception\DbException,
     Request,
-    response\Json,
-    Session};
+    response\Json};
 
 class Purchase extends Right
 {
@@ -20,20 +19,14 @@ class Purchase extends Right
      * 采购单添加
      * @param Request $request
      * @param int $moshi_type
-     * @param array $data
-     * @param bool $return
-     * @param array $spotIds
      * @return array|bool|string|Json
-     * @throws \think\Exception
      * @throws Exception
      */
-    public function edit(Request $request, $moshi_type = 4, $data = [], $return = false, $spotIds = [])
+    public function edit(Request $request, $moshi_type = 4)
     {
         Db::startTrans();
         try {
-            if (empty($data)) {
-                $data = $request->post();
-            }
+            $data = $request->post();
             $validate = new \app\admin\validate\CgPurchase();
             if (!$validate->check($data)) {
                 return returnFail($validate->getError());
@@ -58,7 +51,7 @@ class Purchase extends Right
             }
             $companyId = $this->getCompanyId();
             if (empty($data['id'])) {
-                $count = \app\admin\model\CgPurchase::whereTime('create_time', 'today')
+                $count = CgPurchase::whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
                     ->count();
 
@@ -69,33 +62,34 @@ class Purchase extends Right
                 $data['system_number'] = $systemNumber;
                 $data['moshi_type'] = $moshi_type;
 
-                $cg = new \app\admin\model\CgPurchase();
+                $cg = new CgPurchase();
                 $cg->allowField(true)->data($data)->save();
                 $purchase_id = $cg["id"];
                 if ($data['ruku_fangshi'] == 1) {
-                    $rk = (new KcRk())->insertRuku($cg['id'], "4", $cg['yw_time'], $cg['group_id'], $cg['system_number'], $cg['sale_operate_id'], $this->getAccountId(), $this->getCompanyId());
+                    $newRk = (new KcRk())->insertRuku($cg['id'], "4", $cg['yw_time'], $cg['group_id'], $cg['system_number'], $cg['sale_operate_id'], $this->getAccountId(), $this->getCompanyId());
                 }
             } else {
-                $cg = \app\admin\model\CgPurchase::where('companyid', $companyId)->where('id', $data['id'])->find();
+                $cg = CgPurchase::where('companyid', $companyId)->where('id', $data['id'])->find();
+                $purchase_id = $cg["id"];
                 if (empty($cg)) {
-                    throw new ValidateException("对象不存在");
+                    throw new Exception("对象不存在");
                 }
                 if ($cg["status"] == 1) {
-                    throw new ValidateException("该单据已经作废");
+                    throw new Exception("该单据已经作废");
                 }
                 if (!$cg["moshi_type"] == 6) {
                     if ($cg["moshi_type"] == 1) {
-                        throw new ValidateException("该采购单是由调货销售单自动生成的，禁止直接删除！");
+                        throw new Exception("该采购单是由调货销售单自动生成的，禁止直接删除！");
                     }
                     if ($cg["moshi_type"] == 2) {
-                        throw new ValidateException("该采购单是由采购直发单自动生成的，禁止直接删除！");
+                        throw new Exception("该采购单是由采购直发单自动生成的，禁止直接删除！");
                     }
                 }
                 $cg->allowField(true)->data($data)->save();
                 if ($data["ruku_fangshi"] == 1) {
                     throw new Exception('自动入库单禁止修改');
                 }
-                $mxList = (new CgPurchaseMx())->where("purchase_id", $cg["id"])->select();
+                $mxList = (new \app\admin\model\CgPurchaseMx())->where("purchase_id", $cg["id"])->select();
                 if (!empty($mxList)) {
                     foreach ($mxList as $mx) {
                         if (db("spot_id")->where("data_id", $mx["id"])->find()) {
@@ -156,10 +150,10 @@ class Purchase extends Right
             }
 
             if (!empty($addList)) {
-                if(!empty( $data['id'])){
+                if (!empty($data['id'])) {
                     $trumpet = \app\admin\model\CgPurchaseMx::where('purchase_id', $data['id'])->max('trumpet');
-                }else{
-                    $trumpet=0;
+                } else {
+                    $trumpet = 0;
                 }
 
                 foreach ($addList as $mjo) {
@@ -172,32 +166,41 @@ class Purchase extends Right
 
                     if ($data["ruku_fangshi"] == 1) {
 
-                        (new KcRk())->insertRkMxMd($rk, $mx["purchase_id"], 4, $data["yw_time"], $data["system_number"], null, $data["customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
+                        (new KcRk())->insertRkMxMd($newRk, $mx["purchase_id"], 4, $data["yw_time"], $data["system_number"], null, $data["customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
                             , $mx["jijiafangshi_id"], $mx["store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], $data["piaoju_id"], $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
                             $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $mx["sumprice"], $mx["shui_price"], $mx["sum_shui_price"], $mx["shuie"], $mx["mizhong"], $mx["jianzhong"], $this->getAccountId(), $this->getCompanyId());
-                        } else {
+                    } else {
 
-                        (new \app\admin\model\KcRkTz())->insertRukuTz($mx["id"], 4, $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["houdu"], $mx["changdu"], $mx["kuandu"],
+                        (new KcRkTz())->insertRukuTz($mx["id"], 4, $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["houdu"], $mx["changdu"], $mx["kuandu"],
                             $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["shui_price"], $mx["sumprice"], $mx["sum_shui_price"], $mx["shuie"], $mx["price"], $mx["huohao"],
-                            $mx["pihao"], $mx["beizhu"], $mx["chehao"], $mx["cache_ywtime"], null, $data["system_number"], $data["customer_id"], $mx["store_id"], $this->getAccountId(), $data["piaoju_id"],
+                            $mx["pihao"], $mx["beizhu"], $mx["chehao"], $mx["cache_ywtime"], null, $data["system_number"], $data["customer_id"], $mx["store_id"], $this->getAccountId(),
                             $mx["mizhong"], $mx["jianzhong"], $this->getCompanyId());
                     }
                     (new \app\admin\model\Inv())->insertInv($mx["id"], 2, 2, $mx["changdu"], $mx["kuandu"], $mx["houdu"], $mx["guige_id"], $mx["jijiafangshi_id"], $data["piaoju_id"], $mx["pinming_id"],
-                        $data["system_number"].".".$trumpet, $data["customer_id"], $data["yw_time"], $mx["price"], $mx["shui_price"], $mx["sumprice"], $mx["sum_shui_price"], $mx["zhongliang"], $this->getCompanyId());
+                        $data["system_number"] . "." . $trumpet, $data["customer_id"], $data["yw_time"], $mx["price"], $mx["shui_price"], $mx["sumprice"], $mx["sum_shui_price"], $mx["zhongliang"], $this->getCompanyId());
                 }
 
             }
 
             (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
             Db::commit();
-
+            return returnSuc();
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
         }
     }
 
-    public function purchaseadd(Request $request, $moshi_type = 4, $data = [], $return = false, $spotIds = [])
+    /**
+     * @param Request $request
+     * @param int $moshi_type
+     * @param array $data
+     * @param bool $return
+     * @param array $spotIds
+     * @return array|bool|string|Json
+     * @throws \think\Exception
+     */
+    public function purchaseadd(Request $request, $moshi_type = 4, $data = [], $return = false)
     {
         if ($request->isPost()) {
             $count = CgPurchase::whereTime('create_time', 'today')->count();
@@ -375,7 +378,6 @@ class Purchase extends Right
                         'changdu' => $v["changdu"] ?? '',
                         'kuandu' => $v["kuandu"] ?? '',
                         'zhongliang' => $v["zhongliang"] ?? '',
-                        'price' => $v["price"] ?? '',
                         'price' => $v["price"] ?? '',
                         'customer_id' => $data["customer_id"] ?? '',
                         'jijiafangshi_id' => $v["jijiafangshi_id"] ?? '',

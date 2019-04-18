@@ -49,4 +49,18 @@ class CgPurchase extends Base
     public $map = [
        
     ];
+//
+//    public static function findCgScCountsByMsMxId(){
+//        /*SELECT  COUNT(1) FROM
+//        tb_cg_purchase pu
+//         LEFT JOIN tb_moshi_mx mx ON pu.`data_id`=mx.`id`
+//        LEFT JOIN tb_moshi moshi ON moshi.`id`=mx.`moshi_id`
+//        WHERE moshi.`id`=#{dataId}
+//        AND pu.`customer_id`=#{cgCustomerId}
+//        AND pu.`moshi_type`=#{moshiType} a
+//        nd pu.`piaoju_id`=#{cgPjlx}*/
+//
+//        self::alias('pu')
+//            ->join('__SALES_MOSHI_MX__ ')
+//    }
 }
