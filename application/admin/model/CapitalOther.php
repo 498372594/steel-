@@ -4,6 +4,8 @@
 namespace app\admin\model;
 
 
+use Exception;
+use think\exception\DbException;
 use traits\model\SoftDelete;
 
 class CapitalOther extends Base
@@ -26,5 +28,97 @@ class CapitalOther extends Base
     public function details()
     {
         return $this->hasMany('CapitalOtherDetails', 'cap_qt_id', 'id');
+    }
+
+    /**
+     * @param $id
+     * @param $oldMoney
+     * @param $money
+     * @param $oldZhongliang
+     * @param $zhongliang
+     * @throws DbException
+     * @throws Exception
+     */
+    public function tiaoMoney($id, $oldMoney, $money, $oldZhongliang, $zhongliang)
+    {
+        $money = empty($money) ? 0 : $money;
+        $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
+
+        $obj = self::get('id', $id);
+
+        if ($money != 0) {
+            $obj->hxmoney = $obj['hxmoney'] + $money - $oldMoney;
+        }
+
+//        if (yfkMoney . compareTo(0) != 0) {
+//        obj . setYfkhxmoney(obj . getYfkhxmoney() . add(yfkMoney . subtract(oldYfkMoney)));
+//    }
+
+        if ($obj['hxmoney'] > $obj['money']) {
+            throw new Exception("核销金额不能大于总金额");
+        }
+        if ($zhongliang != 0) {
+            $obj->hxzhongliang = $obj['hxzhongliang'] + $zhongliang - $oldZhongliang;
+        }
+
+        if ($obj['hxzhongliang'] > $obj['zhongliang']) {
+            throw new Exception("核销重量不能大于总重量");
+        }
+        $obj->save();
+    }
+
+    /**
+     * @param $id
+     * @param $money
+     * @param $zhongliang
+     * @throws DbException
+     * @throws Exception
+     */
+    public function addMoney($id, $money, $zhongliang)
+    {
+        $money = empty($money) ? 0 : $money;
+        $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
+
+
+        $obj = self::get($id);
+        if ($money != 0) {
+            $hxmoney = empty($obj['hxmoney']) ? 0 : $obj['hxmoney'];
+            $obj->hxmoney = $hxmoney + $money;
+        }
+
+        if ($obj['hxmoney'] > $obj['money']) {
+            throw new Exception("核销金额不能大于总金额");
+        }
+        if ($zhongliang != 0) {
+            $hxzhongliang = empty($obj['hxzhongliang']) ? 0 : $obj['hxzhongliang'];
+            $obj['hxzhongliang'] = $hxzhongliang + $zhongliang;
+        }
+
+        if ($obj['hxzhongliang'] > $obj['zhongliang']) {
+            throw new Exception("核销重量不能大于总重量");
+        }
+
+        $obj->save();
+    }
+
+    /**
+     * @param $id
+     * @param $money
+     * @param $yfkMoney
+     * @param $zhongliang
+     * @throws DbException
+     */
+    public function jianMoney($id, $money, $zhongliang)
+    {
+        $money = empty($money) ? 0 : $money;
+        $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
+        $obj = self::get($id);
+        if ($money != 0) {
+            $obj['hxmoney'] -= $money;
+        }
+        if ($zhongliang != 0) {
+            $obj['hxzhongliang'] -= $zhongliang;
+        }
+        $obj->save();
     }
 }
