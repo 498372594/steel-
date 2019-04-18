@@ -23,7 +23,7 @@ class CgPurchase extends Validate
 
     protected $message = [
         'customer_id.require' => '运营商必须输入',
-        'ruku_fangshi.require' => '请选择出库方式',
+        'ruku_fangshi.require' => '请选择入库方式',
         'piaoju_id.require' => '票据类型必须输入',
         'details.require' => '明细至少出现一行',
         'details.min' => '明细至少出现一行',

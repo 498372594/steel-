@@ -149,13 +149,25 @@ class Initinput extends Right
                 Db::startTrans();
             }
             try {
-                model("init_bank")->allowField(true)->data($data)->save();
-                $id = model("init_bank")->getLastInsID();
+                if(empty($data["id"])){
+                    model("init_bank")->allowField(true)->isUpdate(false)->save($data);
+                    $id = model("init_bank")->getLastInsID();
+                }else{
+                    model("init_bank")->allowField(true)->save($data,$data["id"]);
+                    $id=$data["id"];
+                }
+                if(!empty($data["delete_id"])){
+                    model("InitBankMx")->where("id","in",$data["delete_id"])->delete();
+                }
                 foreach ($data["detail"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['bank_id'] = $id;
+                    if(empty($v["id"])){
+                        model('InitBankMx')->allowField(true)->isUpdate(false)->data($data['details'][$c])->save();
+                    }else{
+                        model('InitBankMx')->allowField(true)->update($data['details'][$c]);
+                    }
                 }
-               model('InitBankMx')->saveAll($data['details']);
                 if (!$return) {
                     Db::commit();
                     return returnRes(true, '', ['id' => $id]);
@@ -357,7 +369,7 @@ class Initinput extends Right
         return returnRes(true, '', $list);
     }
     public function ysfkmx($id=0){
-        $data  = \app\admin\model\InitYsfk::with([ 'details',
+        $data  = \app\admin\model\InitYsfk::with([ 'details','createoperatordata'
           ])
             ->where('companyid',$this->getCompanyId())
             ->where('id', $id)
@@ -374,16 +386,15 @@ class Initinput extends Right
             $companyId = $this->getCompanyId();
             $data = request()->post();
             $count = \app\admin\model\InitYsfk::whereTime('create_time', 'today')->where("type",$data["type"])->count();
-            $data["status"] = 0;
+            $data["status"] = "0";
             $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
-            if($data["type"]==0){
+            if($data["type"]=="0"){
                 $data['system_number'] = 'YFZKYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
-            if($data["type"]=1){
+            if($data["type"]=="1"){
                 $data['system_number'] = 'YSZKYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
-//            dump($data);die;
             if (!$return) {
                 Db::startTrans();
             }
@@ -403,7 +414,6 @@ class Initinput extends Right
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['ysfk_id'] = $id;
                     if(empty($v["id"])){
-//                        dump(1);die;
                         model('InitYsfkMx')->allowField(true)->isUpdate(false)->data($data['details'][$c])->save();
                     }else{
                         model('InitYsfkMx')->allowField(true)->update($data['details'][$c]);

@@ -21,7 +21,7 @@ class KcSpot extends Base
     public function guigeData()
     {
         return $this->belongsTo('ViewSpecification', 'guige_id', 'id')->cache(true, 60)
-            ->field('id,specification')->bind(['guige' => 'specification']);;
+            ->field('id,specification')->bind(['guige' => 'specification']);
     }
 
     public function storage()
@@ -311,6 +311,129 @@ class KcSpot extends Base
         $s->old_lisuan_jianzhong = $s->lisuan_jianzhong;
         $s->old_guobang_zhizhong = $s->guobang_zhizhong;
         $s->old_lisuan_zhizhong = $s->lisuan_zhizhong;
+
         return $s;
+    }
+
+    /**
+     * @param $rukuFangshi
+     * @param $rukuType
+     * @param $jijiafangshiId
+     * @param $rkMdId
+     * @param $dataId
+     * @param $pinmingId
+     * @param $guigeId
+     * @param $caizhiId
+     * @param $chandiId
+     * @param $storeId
+     * @param $customerId
+     * @param $piaojuId
+     * @param $chehao
+     * @param $beizhu
+     * @param $huohao
+     * @param $pihao
+     * @param $changdu
+     * @param $houdu
+     * @param $kuandu
+     * @param $lingzhi
+     * @param $jianshu
+     * @param $zhijian
+     * @param $counts
+     * @param $zhongliang
+     * @param $price
+     * @param $sumprice
+     * @param $shuiprice
+     * @param $sumShuiPrice
+     * @param $shuie
+     * @param $mizhong
+     * @param $jianzhong
+     * @param $cbPrice
+     * @param $cbShuie
+     * @param $cbSumPrice
+     * @param $cbSumShuiPrice
+     * @param $companyId
+     * @return KcSpot
+     * @throws DbException
+     * @throws \think\Exception
+     * @throws Exception
+     */
+    public function insertSpot($rukuFangshi, $rukuType, $jijiafangshiId, $rkMdId, $dataId, $pinmingId, $guigeId, $caizhiId, $chandiId, $storeId, $customerId, $piaojuId, $chehao, $beizhu, $huohao, $pihao, $changdu
+        , $houdu, $kuandu, $lingzhi, $jianshu, $zhijian, $counts, $zhongliang, $price, $sumprice, $shuiprice, $sumShuiPrice, $shuie, $mizhong, $jianzhong, $cbPrice, $cbShuie, $cbSumPrice, $cbSumShuiPrice, $companyId)
+    {
+        $spot = new self();
+        if (empty($jijiafangshiId)) {
+            throw new Exception("计算方式必输入");
+        }
+        if (empty($guigeId)) {
+            throw new Exception("规格必输入");
+        }
+        $spot->companyid = $companyId;
+        $spot->rk_md_id = $rkMdId;
+        $spot->ruku_fangshi = $rukuFangshi;
+        $spot->ruku_type = $rukuType;
+        $spot->changdu = $changdu;
+        $spot->houdu = $houdu;
+        $spot->kuandu = $kuandu;
+        $spot->lingzhi = $lingzhi;
+        $spot->jianshu = $jianshu;
+        $spot->zhijian = $zhijian;
+        $spot->counts = $counts;
+        $spot->price = $price;
+        $spot->sumprice = $sumprice;
+        $spot->zhongliang = $zhongliang;
+        $spot->shui_price = $shuiprice;
+        $spot->sum_shui_price = $sumShuiPrice;
+        $spot->shuie = $shuie;
+        $spot->cb_shuie = $cbShuie;
+        $spot->cb_price = $cbPrice;
+        $spot->cb_sumprice = $cbSumPrice;
+        $spot->cb_sum_shuiprice = $cbSumShuiPrice;
+        $spot->jianzhong = $jianzhong;
+        if (empty($mizhong)) {
+            $gg = ViewSpecification::get($guigeId);
+            $spot->pinming_id = $gg['productname_id'] ?? '';
+            $spot->mizhong = $gg['mizhong_name'] ?? '';
+        } else {
+            $spot->mizhong = $mizhong;
+        }
+
+        $calSpot = self::calSpot($changdu, $kuandu, $jijiafangshiId, $spot->mizhong, $jianzhong, $counts, $zhijian, $zhongliang,$price, $shuiprice,$shuie);
+        $spot->lisuan_zhongliang = $calSpot->lisuan_zhongliang;
+        $spot->lisuan_price = $calSpot->lisuan_price;
+        $spot->lisuan_shui_price = $calSpot->lisuan_shui_price;
+        $spot->lisuan_zhizhong = $calSpot->lisuan_zhizhong;
+        $spot->zhi_price = $calSpot->zhi_price;
+        $spot->zhi_shui_price = $calSpot->zhi_shui_price;
+        $spot->lisuan_jianzhong = $calSpot->lisuan_jianzhong;
+        $spot->guobang_zhizhong = $calSpot->guobang_zhizhong;
+        $spot->guobang_zhongliang = $calSpot->guobang_zhongliang;
+        $spot->guobang_jianzhong = $calSpot->guobang_jianzhong;
+        $spot->guobang_price = $calSpot->guobang_price;
+        $spot->guobang_shui_price = $calSpot->guobang_shui_price;
+        $spot->old_guobang_zhongliang = $calSpot->old_guobang_zhongliang;
+        $count = self::withTrashed()->where('companyid', $companyId)->whereTime('create_time', 'today')->count();
+        $spot->resource_number = 'kc' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+        $spot->data_id = $dataId;
+        $spot->pinming_id = $pinmingId;
+        $spot->caizhi_id = $caizhiId;
+        $spot->chandi_id = $chandiId;
+        $spot->guige_id = $guigeId;
+        $spot->store_id = $storeId;
+        $spot->customer_id = $customerId;
+        $spot->jijiafangshi_id = $jijiafangshiId;
+        $spot->piaoju_id = $piaojuId;
+        $spot->beizhu = $beizhu;
+        $spot->huohao = $huohao;
+        $spot->pihao = $pihao;
+        $spot->chehao = $chehao;
+        $spot->status = 1;
+        $spot->old_guobang_jianzhong = $calSpot->old_guobang_jianzhong;
+        $spot->old_lisuan_jianzhong = $calSpot->old_lisuan_jianzhong;
+        $spot->old_guobang_zhizhong = $calSpot->old_guobang_zhizhong;
+        $spot->old_lisuan_zhizhong = $calSpot->old_lisuan_zhizhong;
+        $spot->chehao = $chehao;
+        $spot->save();
+
+        return $spot;
     }
 }

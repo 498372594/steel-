@@ -25,5 +25,10 @@ class InitYskpMx extends Base
         return $this->belongsTo('Pjlx', 'piaoju_id', 'id')->cache(true, 60)
             ->field('id,pjlx')->bind(['piaoju_name' => 'pjlx']);
     }
+    public function createoperatordata()
+    {
+        return $this->belongsTo('admin', 'create_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator' => 'name']);
+    }
 
 }

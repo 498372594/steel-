@@ -276,7 +276,8 @@ class Salesorder extends Right
                 $num++;
             }
             if (empty($data['id'])) {
-                $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')
+                $count = \app\admin\model\Salesorder::withTrashed()
+                    ->whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
                     ->count();
 
@@ -386,6 +387,7 @@ class Salesorder extends Right
                         throw new Exception("数量必须大于“0”！");
                     }
                     $mjo['trumpet'] = $trumpet;
+                    $mjo['order_id'] = $xs['id'];
                     $mx = new \app\admin\model\SalesorderDetails();
                     $mx->allowField(true)->data($mjo)->save();
                     if (!empty($mx['kc_spot_id'])) {
@@ -414,7 +416,7 @@ class Salesorder extends Right
                         $mx['tax_rate'] ?? 0, $mx['total_fee'] ?? 0, $mx['price_and_tax'] ?? 0, $mx['weight'], $this->getCompanyId());
                 }
             }
-            (new CapitalFy())->fymxSave($data['other'], $xs['id'], $xs['ywsj'], 1, $xs['department'] ?? '', $xs['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $xs['id'], $xs['ywsj'], 1, $xs['department'] ?? '', $xs['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
             $mxList = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->select();
 
             if (!empty($mxList)) {
@@ -442,7 +444,7 @@ class Salesorder extends Right
             if (empty($data['id'])) {
                 (new \app\admin\model\CapitalHk())->insertHk($xs['id'], "12", $xs['system_no'], $xs['remark'] ?? '',
                     $xs['custom_id'], "1", $xs['ywsj'], $xs['jsfs'] ?? null, $xs['pjlx'], $sumMoney,
-                    $sumZhongliang, $xs['department'] ?? 0, $xs['employer'] ?? 0, $this->getAccountId());
+                    $sumZhongliang, $xs['department'] ?? 0, $xs['employer'] ?? 0, $this->getAccountId(), $this->getCompanyId());
             } else {
                 (new \app\admin\model\CapitalHk())->updateHk($xs['id'], "12", $xs['remark'] ?? '', $xs['custom_id'], $xs['ywsj'],
                     $xs['jsfs'] ?? null, $xs['pjlx'], $sumMoney, $sumZhongliang, $xs['department'] ?? 0, $xs['employer'] ?? 0);

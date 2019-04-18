@@ -36,7 +36,7 @@ class Inv extends Right
                         'data_id'=>$id,
                         'shui_price'=>$v["shui_price"]?? '',
                         'sum_price'=>$v["sum_price"]?? '',};*/
-        model("inv")->allowField(true)->saveALl($data);
+        model("inv")->allowField(true)->saveAll($data);
     }
     public function getjxfpmxhx(){
         $params = request()->param();

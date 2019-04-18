@@ -2,8 +2,16 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\SalesMoshi;
-use app\admin\model\SalesMoshiMx;
+use app\admin\model\{CapitalFy,
+    CgPurchase,
+    Jsfs,
+    KcRk,
+    KcSpot,
+    SalesMoshi,
+    SalesMoshiMx,
+    SalesorderDetails,
+    StockOut,
+    StockOutMd};
 use app\admin\validate\{SalesMoshiDetails};
 use Exception;
 use think\{Db,
@@ -90,230 +98,445 @@ class SalesTiaohuo extends Right
     }
 
     /**
-     * 添加采购直发单
      * @param Request $request
      * @return Json
-     * @throws \think\Exception
      */
     public function add(Request $request)
     {
-        if ($request->isPost()) {
-            $companyId = $this->getCompanyId();
-            $count = SalesMoshi::whereTime('create_time', 'today')
-                ->where('moshi_type', 2)
-                ->where('companyid', $companyId)
-                ->count();
-
-            //获取请求数据
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
             $data = $request->post();
-            $data['create_operator_id'] = $this->getAccountId();
-            $data['moshi_type'] = 2;
-            $data['companyid'] = $companyId;
-            $data['system_no'] = 'THXSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-
             //验证数据
             $validate = new \app\admin\validate\SalesMoshi();
             if (!$validate->scene('tiaohuo')->check($data)) {
                 return returnFail($validate->getError());
             }
-
-            Db::startTrans();
-            try {
-                $model = new SalesMoshi();
-                $model->allowField(true)->data($data)->save();
-
-                //处理明细
-                $id = $model->getLastInsID();
-                $num = 1;
+            $addList = [];
+            $updateList = [];
+            $ja = $data['details'];
+            $companyId = $this->getCompanyId();
+            if (!empty($ja)) {
                 $detailsValidate = new SalesMoshiDetails();
-                $index = -1;
-                foreach ($data['details'] as $c => $v) {
-                    $data['details'][$c]['companyid'] = $companyId;
-                    $data['details'][$c]['moshi_id'] = $id;
-                    $data['details'][$c]['index'] = $index--;
-                    $data['details'][$c]['caizhi'] = empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']);
-                    $data['details'][$c]['chandi'] = empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']);
-
-                    if (!$detailsValidate->scene('tiaohuo')->check($data['details'][$c])) {
+                $num = 1;
+                foreach ($ja as $object) {
+                    if (!$detailsValidate->scene('tiaohuo')->check($object)) {
                         throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                     }
                     $num++;
-                }
-                (new SalesMoshiMx())->allowField(true)->saveAll($data['details']);
-
-                //添加采购单
-                $purchases = [];
-                foreach ($data['details'] as $c => $v) {
-                    $index = $v['cg_customer_id'] . 'dw_pj' . $v['cg_piaoju_id'];
-                    if (!isset($purchases[$index])) {
-                        $purchases[$index] = [
-                            'customer_id' => $v['cg_customer_id'],
-                            'piaoju_id' => $v['cg_piaoju_id'],
-                            'beizhu' => $data['remark'] ?? '',
-                            'yw_time' => $data['yw_time'],
-                            'group_id' => $data['department'] ?? '',
-                            'sale_operate_id' => $data['employer'] ?? '',
-                            'ruku_fangshi' => 1,
-                            'data_id' => $id
-                        ];
-                    }
-                    $purchases[$index]['details'][] = [
-                        'pinming_id' => $v['pinming_id'],
-                        'guige_id' => $v['guige_id'],
-                        'caizhi_id' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
-                        'chandi_id' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
-                        'jijiafangshi_id' => $v['jijiafangshi_id'],
-                        'houdu' => $v['houdu'] ?? '',
-                        'kuandu' => $v['kuandu'] ?? '',
-                        'store_id' => $v['store_id'],
-                        'changdu' => $v['changdu'] ?? 0,
-                        'lingzhi' => $v['cg_lingzhi'] ?? '',
-                        'jianshu' => $v['cg_jianshu'] ?? '',
-                        'zhijian' => $v['zhijian'] ?? 0,
-                        'counts' => $v['cg_counts'] ?? 0,
-                        'zhongliang' => $v['cg_zhongliang'] ?? 0,
-                        'price' => $v['cg_price'] ?? '',
-                        'sumprice' => $v['cg_sumprice'] ?? '',
-                        'shuie' => $v['cg_tax'] ?? '',
-                        'chehao' => $v['chehao'] ?? '',
-                        'huohao' => $v['huohao'] ?? '',
-                        'sum_shui_price' => $v['cg_sum_shui_price'] ?? '',
-                        'beizhu' => $v['beizhu'] ?? '',
-                        'pihao' => $v['pihao'] ?? '',
-                        'shui_price' => $v['cg_tax_rate'] ?? '',
-                        'mizhong' => $v['mizhong'] ?? 0,
-                        'jianzhong' => $v['jianzhong'] ?? '',
-                        'index' => $v['index']
-                    ];
-                }
-                $purchaseObj = new Purchase();
-                $spotIds = [];
-                foreach ($purchases as $v) {
-                    $purchaseRes = $purchaseObj->purchaseadd($request, 1, $v, true, $spotIds);
-                    if ($purchaseRes !== true) {
-                        throw new Exception($purchaseRes);
+                    $object['companyid'] = $companyId;
+                    $object['caizhi'] = $this->getCaizhiId($object['caizhi'] ?? '');
+                    $object['chandi'] = $this->getChandiId($object['chandi'] ?? '');
+                    if (empty($object['id'])) {
+                        $addList[] = $object;
+                    } else {
+                        $updateList[] = $object;
                     }
                 }
+            }
 
-                //添加销售单
-                $salesOrder = [
-                    'custom_id' => $data['customer_id'],
-                    'pjlx' => $data['piaoju_id'],
-                    'jsfs' => $data['jsfs'] ?? '',
-                    'ckfs' => 1,
-                    'contact' => $data['contact'] ?? '',
-                    'mobile' => $data['telephone'] ?? '',
-                    'remark' => $data['remark'] ?? '',
-                    'department' => $data['department'] ?? '',
-                    'employer' => $data['employer'] ?? '',
-                    'ywsj' => $data['yw_time'],
-                    'car_no' => $data['chehao'] ?? '',
-                    'data_id' => $id
-                ];
-                foreach ($data['details'] as $c => $v) {
-                    $salesOrder['details'][] = [
-                        'storage_id' => $v['store_id'],
-                        'wuzi_id' => $v['guige_id'],
-                        'caizhi' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
-                        'chandi' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
-                        'jsfs_id' => $v['jijiafangshi_id'],
-                        'length' => $v['changdu'] ?? '',
-                        'houdu' => $v['houdu'] ?? '',
-                        'width' => $v['kuandu'] ?? '',
-                        'lingzhi' => $v['lingzhi'] ?? '',
-                        'num' => $v['jianshu'] ?? '',
-                        'jzs' => $v['zhijian'] ?? '',
-                        'count' => $v['counts'] ?? '',
-                        'weight' => $v['zhongliang'],
-                        'price' => $v['price'],
-                        'total_fee' => $v['sumprice'] ?? '',
-                        'tax_rate' => $v['tax_rate'] ?? '',
-                        'tax' => $v['tax'] ?? '',
-                        'price_and_tax' => $v['price_and_tax'] ?? '',
-                        'remark' => $v['beizhu'] ?? '',
-                        'car_no' => $v['chehao'] ?? '',
-                        'batch_no' => $v['pihao'] ?? '',
-                        'index' => $v['index']
-                    ];
+            if (empty($data['id'])) {
+                $count = SalesMoshi::withTrashed()->where('moshi_type', 1)
+                    ->where('create_time', 'today')
+                    ->where('companyid', $companyId)
+                    ->count();
+                $data['moshi_type'] = 1;
+                $data['create_operator_id'] = $this->getAccountId();
+                $data['system_number'] = "THXSD" . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $data['companyid'] = $companyId;
+
+                $ms = new SalesMoshi();
+                $ms->allowField(true)->data($data)->save();
+
+                $xs = (new \app\admin\model\Salesorder())->insertSale($ms['id'], 1, $ms['yw_time'], $ms['customer_id'],
+                    $ms['piaoju_id'], $ms['jsfs'], $ms['remark'], $ms['department'], $ms['employer'], $ms['contact'], $ms['mobile'], $ms['chehao'], $this->getAccountId(), $companyId);
+                $ck = (new StockOut())->insertChuku($xs['id'], 4, $ms['yw_time'], $ms['department'], $ms['system_number'], $ms['employer'], $this->getAccountId(), $companyId);
+
+            } else {
+                throw new Exception('调货销售单禁止修改');
+//            ms = (TbMoshi) this . moshiDao . selectByPrimaryKey(pid);
+//            if (ms == null) {
+//                throw new ValidateException("对象不存在");
+//            }
+//            if (!user . getId() . equals(ms . getUserId())) {
+//                throw new ValidateException("对象不存在");
+//            }
+//            if ("1" . equals(ms . getStatus())) {
+//                throw new ValidateException("该单据已经作废");
+//            }
+//            ms . setCustomerId(customerId);
+//            ms . setPiaojuId(piaojuId);
+//            ms . setJiesuanId(jiesuanId);
+//            ms . setLxr(lxr);
+//            ms . setTelephone(telephone);
+//            ms . setBeizhu(beizhu);
+//            ms . setYwTime(DateUtil . parseDate(ywTime, "yyyy-MM-dd HH:mm:ss"));
+//            ms . setGroupId(groupId);
+//            ms . setSaleOperatorId(saleOperatorId);
+//            ms . setUpdateOperatorId(su . getId());
+//            ms . setShouHuoDanWei(shouHuoDanWei);
+//            ms . setChengyunfang(chengyunfangId);
+//            this . moshiDao . updateByPrimaryKeySelective(ms);
+//            xs = this . xsDaoImpl . updateSale(ms . getId(), "1", ms . getYwTime(), chehao, customerId, piaojuId, jiesuanId, groupId, saleOperatorId, lxr, telephone);
+//            String xsId = this . saleDAO . findXsIdByMoshiId(ms . getId(), user . getId(), jigou . getId(), zhangtao . getId());
+//            TbXsSale xsSale = (TbXsSale) this . saleDAO . selectByPrimaryKey(xsId);
+//            xsSale . setFaxiId(fxlx);
+//            this . saleDAO . updateByPrimaryKeySelective(xsSale);
+//            ck = this . ckDaoImpl . updateChuku(xs . getId(), "4", ms . getYwTime(), ms . getCustomerId(), ms . getGroupId(), ms . getSaleOperatorId(), chehao);
+//
+//
+//            Example eMsMx = new Example(TbMoshiMx .class);
+//            eMsMx . createCriteria() . andCondition("moshi_id=", ms . getId());
+//            List<TbMoshiMx > mxList = this . mxDao . selectByExample(eMsMx);
+//            if (mxList . size() != 0) {
+//                for (TbMoshiMx msMx : mxList) {
+//                    Example ecg = new Example(TbCgPurchase .class);
+//                    ecg . createCriteria() . andCondition("data_id=", msMx . getId());
+//                    List<TbCgPurchase > cgList = this . cgDao . selectByExample(ecg);
+//                    if (cgList . size() != 0) {
+//                        for (TbCgPurchase tbcg : cgList) {
+//                            TbCgPurchase cgpu = new TbCgPurchase();
+//                            cgpu . setId(tbcg . getId());
+//                            cgpu . setYwTime(ms . getYwTime());
+//                            cgpu . setPiaojuId(msMx . getCgPiaoJuId());
+//                            this . cgDao . updateByPrimaryKeySelective(cgpu);
+//                            Example eRk = new Example(TbKcRk .class);
+//                            eRk . createCriteria() . andCondition("data_id=", cgpu . getId());
+//                            List<TbKcRk > rkList = this . rkDao . selectByExample(eRk);
+//                            if (rkList . size() != 0) {
+//                                for (TbKcRk tbKcRk : rkList) {
+//                                    TbKcRk rk = new TbKcRk();
+//                                    rk . setId(tbKcRk . getId());
+//                                    rk . setYwTime(ms . getYwTime());
+//                                    this . rkDao . updateByPrimaryKeySelective(rk);
+//                                }
+//                            }
+//                        }
+//                    }
+//
+//                    Example eXsMx = new Example(TbXsSaleMx .class);
+//                    eXsMx . createCriteria() . andCondition("data_id=", msMx . getId());
+//                    List<TbXsSaleMx > xsMxList = this . xsMxDao . selectByExample(eXsMx);
+//                    if (xsMxList . size() != 0) {
+//                        for (TbXsSaleMx tbXsSaleMx : xsMxList) {
+//                            Example eInv = new Example(TbInv .class);
+//                            eInv . createCriteria() . andCondition("data_id=", tbXsSaleMx . getId());
+//                            List<TbInv > invList = this . invDao . selectByExample(eInv);
+//                            if (invList . size() != 0) {
+//                                for (TbInv tbInv : invList) {
+//                                    TbInv inv = new TbInv();
+//                                    inv . setId(tbInv . getId());
+//                                    inv . setYwTime(ms . getYwTime());
+//                                    this . invDao . updateByPrimaryKeySelective(inv);
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+            }
+
+            if (!empty($data['deleteMxIds']) || !empty($updateList)) {
+                throw new Exception('调货销售单禁止修改');
+//            for (TbMoshiMx_Ex mjo : deleteList) {
+//                TbMoshiMx mx = new TbMoshiMx();
+//            mx . setId(mjo . getId());
+//            TbMoshiMx tbMx = (TbMoshiMx) this . mxDao . selectByPrimaryKey(mjo . getId());
+//            BigDecimal money = tbMx . getCgSumShuiPrice();
+//            BigDecimal zhongliang = tbMx . getCgZhongliang();
+//
+//            Example eCgMx = new Example(TbCgPurchaseMx .class);
+//            eCgMx . createCriteria() . andCondition("data_id=", tbMx . getId());
+//            List<TbCgPurchaseMx > mxList = this . cgMxDao . selectByExample(eCgMx);
+//
+//
+//            if (mxList . size() != 0) {
+//                for (TbCgPurchaseMx obj : mxList) {
+//                    TbCgPurchaseMx tbCgMx = (TbCgPurchaseMx) this . cgMxDao . selectByPrimaryKey(obj . getId());
+//                    this . hkDaoImpl . subByDelHk(tbCgMx . getPurchaseId(), "11", money, zhongliang);
+//                    Example eHk = new Example(TbCapitalHk .class);
+//                    eHk . createCriteria() . andCondition("data_id=", tbCgMx . getPurchaseId());
+//                    List<TbCapitalHk > hkList = this . hkDao . selectByExample(eHk);
+//                    TbCapitalHk tbHk = (TbCapitalHk) hkList . get(0);
+//                    if ((tbHk . getMoney() . compareTo(new BigDecimal(0)) == 0) && (tbHk . getZhongliang() . compareTo(new BigDecimal(0)) == 0)) {
+//                        this . hkDao . deleteByPrimaryKey(tbHk);
+//                    }
+//                }
+//            }
+//
+//            TbXsSaleMx salemx = this . xsDaoImpl . deleteMx(mx . getId(), "1");
+//
+//            this . ckDaoImpl . deleteCkMxMd(salemx . getId(), "4");
+//
+//
+//            cgmx = this . cgDaoImpl . deleteCgmxForTh(mx . getId(), "1");
+//
+//
+//            this . rkDaoImpl . deleteRkMxMdForTh(cgmx . getId(), "4");
+//
+//
+//            this . invDaoImpl . deleteInv(salemx . getId(), "3");
+//
+//            this . invDaoImpl . deleteInv(cgmx . getId(), "2");
+//
+//            this . mxDao . deleteByPrimaryKey(mx);
+//        }
+//        for (TbMoshiMx_Ex obj : updateList) {
+//            TbMoshiMx mx = new TbMoshiMx();
+//            TbMoshiMx eduMx = (TbMoshiMx) this . mxDao . selectByPrimaryKey(obj . getId());
+//            if (khedu . intValue() > 0) {
+//                List<TbXsSaleMx_Ex > eduList = this . xsMxDao . findXyedByCustomerId(customerId, user . getId(), jigou . getId(), zhangtao . getId());
+//
+//                for (TbXsSaleMx_Ex mxList : eduList) {
+//                    String customerName = mxList . getCustomerName();
+//                    String xyEduxs = mxList . getXinyongeduxs();
+//                    String shoukuanEduStr = this . skDAO . findMoneyByCustomerId(customerId, user . getId(), jigou . getId(), zhangtao . getId());
+//
+//                    String fukuanEduStr = this . fkDao . findMoneyByCustomerId(customerId, user . getId(), jigou . getId(), zhangtao . getId());
+//
+//                    BigDecimal yiyongEdu = new BigDecimal(shoukuanEduStr) . subtract(new BigDecimal(fukuanEduStr)) . subtract(eduMx . getSumShuiPrice());
+//                    BigDecimal xyEdu = new BigDecimal(mxList . getXinyongedu());
+//                    BigDecimal bcJine = new BigDecimal(shoukuanjine) . setScale(2, 4);
+//                    BigDecimal bcky = xyEdu . subtract(yiyongEdu) . setScale(2, 4);
+//                    BigDecimal pdKy = xyEdu . subtract(yiyongEdu) . subtract(bcJine);
+//                    String bckyStr = bcky . stripTrailingZeros() . toPlainString();
+//                    String bcJineStr = bcJine . stripTrailingZeros() . toPlainString();
+//                    if (pdKy . compareTo(new BigDecimal(0)) < 0) {
+//                        throw new ValidateException("客户：" + customerName + "的信用额度为：" + xyEduxs + ",还剩：" + bckyStr + ",本次金额：" + bcJineStr + ",大于信用额度，保存失败！");
+//                    }
+//                }
+//            }
+//
+//
+//            BigDecimal xgWeight = eduMx . getZhongliang();
+//            this . awDaoImpl . availableTody(saleOperatorId, ywTime . substring(0, 10), obj . getZhongliang(), xgWeight, user, jigou, zhangtao);
+//            BigDecimal xgJine = eduMx . getSumShuiPrice();
+//
+//            this . smsDaoImpl . compYskByOperatorId(customerId, saleOperatorId, user, jigou, obj . getSumShuiPrice(), xgJine, zhangtao);
+//            BigDecimal yuanMoney = eduMx . getCgSumShuiPrice();
+//            BigDecimal yuanZhongliang = eduMx . getCgZhongliang();
+//
+//
+//            mx . setMoshiId(ms . getId());
+//            mx . setId(obj . getId());
+//            mx . setStoreId(obj . getStoreId());
+//            mx . setCgCustomerId(obj . getCgCustomerId());
+//            mx . setPinmingId(obj . getPinmingId());
+//            mx . setGuigeId(obj . getGuigeId());
+//            mx . setGgBm(obj . getGgBm());
+//            mx . setCaizhiId(obj . getCaizhiId());
+//            mx . setChandiId(obj . getChandiId());
+//            mx . setHoudu(obj . getHoudu());
+//            mx . setKuandu(obj . getKuandu());
+//            mx . setChangdu(obj . getChangdu());
+//            mx . setJijiafangshiId(obj . getJijiafangshiId());
+//            mx . setCgJijiafangshiId(obj . getCgJijiafangshiId());
+//            mx . setLingzhi(obj . getLingzhi());
+//            mx . setJianshu(obj . getJianshu());
+//            mx . setZhijian(obj . getZhijian());
+//            mx . setCounts(obj . getCounts());
+//            mx . setCgPiaoJuId(obj . getCgPiaoJuId());
+//            mx . setCgZhongliang(obj . getCgZhongliang());
+//            mx . setCgPrice(obj . getCgPrice());
+//            mx . setCgSumprice(obj . getCgSumprice());
+//
+//            mx . setCgSumShuiPrice(obj . getCgSumShuiPrice());
+//            mx . setZhongliang(obj . getZhongliang());
+//            mx . setPrice(obj . getPrice());
+//            mx . setSumprice(obj . getSumprice());
+//
+//            mx . setSumShuiPrice(obj . getSumShuiPrice());
+//            mx . setFySz(obj . getFySz());
+//            mx . setBeizhu(obj . getBeizhu());
+//            mx . setPihao(obj . getPihao());
+//            mx . setChehao(obj . getChehao());
+//            mx . setIsDelete("0");
+//
+//            mx . setShuiprice(obj . getShuiprice());
+//            mx . setCgShuiprice(obj . getCgShuiprice());
+//
+//            mx . setShuie(obj . getShuie());
+//            mx . setCgShuie(obj . getCgShuie());
+//
+//            mx . setExt1(obj . getExt1());
+//            mx . setExt2(obj . getExt2());
+//            mx . setExt3(obj . getExt3());
+//            mx . setExt4(obj . getExt4());
+//            mx . setExt5(obj . getExt5());
+//            mx . setExt6(obj . getExt6());
+//            mx . setExt7(obj . getExt7());
+//            mx . setExt8(obj . getExt8());
+//            mx . setMizhong(obj . getMizhong());
+//            mx . setJianzhong(obj . getJianzhong());
+//            this . mxDao . updateByPrimaryKeySelective(mx);
+//
+//
+//            cg = this . cgDaoImpl . updateCaigou(mx . getId(), "1", xs . getYwTime(), mx . getCgCustomerId(), mx . getCgPiaoJuId(), null, beizhu, groupId, su, saleOperatorId);
+//
+//            if (cg != null) {
+//                this . rkDaoImpl . updateRuku(cg . getId(), "4", null, xs . getYwTime(), mx . getCgCustomerId(), cg . getGroupId(), cg . getSaleOperateId());
+//            }
+//
+//            cgmx = this . cgDaoImpl . updateMx(mx . getId(), "1", mx . getGuigeId(), mx . getStoreId(), mx . getCaizhiId(), mx . getChandiId(), mx . getPinmingId(), mx . getCgJijiafangshiId(), mx . getChangdu(), mx . getHoudu(), mx . getKuandu(), mx . getLingzhi(), mx . getJianshu(), mx . getZhijian(), mx . getCounts(), mx . getCgZhongliang(), mx . getCgPrice(), mx . getCgSumprice(), mx . getCgShuiprice(), mx . getCgSumShuiPrice(), mx . getCgShuie(), mx . getFySz(), mx . getPihao(), mx . getHuohao(), mx . getBeizhu(), mx . getChehao(), mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8(), mx . getMizhong(), mx . getJianzhong());
+//
+//
+//            TbKcSpot spot = (TbKcSpot) this . spotDao . selectByPrimaryKey(mx . getKcSpotId());
+//            BigDecimal cbPrice = null;
+//            if (spot == null) {
+//                cbPrice = null;
+//            } else {
+//                cbPrice = spot . getCbPrice();
+//            }
+//            this . rkDaoImpl . updateRkMxMd(cgmx . getId(), "4", mx . getChangdu(), mx . getHoudu(), mx . getKuandu(), mx . getLingzhi(), mx . getJianshu(), mx . getCounts(), mx . getCgZhongliang(), mx . getZhijian(), mx . getCgCustomerId(), mx . getPinmingId(), mx . getGuigeId(), mx . getCaizhiId(), mx . getChandiId(), mx . getCgJijiafangshiId(), mx . getStoreId(), mx . getPihao(), mx . getHuohao(), mx . getChehao(), mx . getGgBm(), mx . getBeizhu(), mx . getCgPiaoJuId(), mx . getCgPrice(), mx . getCgSumprice(), mx . getShuiprice(), mx . getCgSumShuiPrice(), mx . getCgShuie(), mx . getMizhong(), mx . getJianzhong(), cbPrice, null, mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8(), zhangtao);
+//
+//
+//            saleMx = this . xsDaoImpl . updateMx(mx . getId(), "1", mx . getGuigeId(), mx . getGgBm(), mx . getCaizhiId(), mx . getChandiId(), mx . getStoreId(), mx . getJijiafangshiId(), mx . getPinmingId(), mx . getHoudu(), mx . getKuandu(), mx . getChangdu(), mx . getLingzhi(), mx . getJianshu(), mx . getZhijian(), mx . getCounts(), mx . getZhongliang(), mx . getPrice(), mx . getSumprice(), mx . getShuiprice(), mx . getSumShuiPrice(), mx . getShuie(), mx . getFySz(), mx . getPihao(), mx . getHuohao(), mx . getBeizhu(), mx . getChehao(), mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8(), mx . getMizhong(), mx . getJianzhong());
+//
+//
+//            ckMx = this . ckDaoImpl . updateCkMx(saleMx . getId(), "4", ms . getYwTime(), mx . getChangdu(), mx . getHoudu(), mx . getKuandu(), mx . getLingzhi(), mx . getJianshu(), mx . getCounts(), mx . getZhongliang(), mx . getZhijian(), mx . getPrice(), mx . getShuiprice(), mx . getSumprice(), mx . getSumShuiPrice(), mx . getMizhong(), mx . getJianzhong(), mx . getStoreId(), mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8(), mx . getJijiafangshiId());
+//
+//
+//            this . ckDaoImpl . updateCkMd(ckMx . getId(), "4", ms . getYwTime(), mx . getChangdu(), mx . getHoudu(), mx . getKuandu(), mx . getLingzhi(), mx . getJianshu(), mx . getCounts(), mx . getCgZhongliang(), mx . getZhijian(), mx . getCgPrice(), mx . getCgShuiprice(), mx . getCgSumprice(), mx . getCgSumShuiPrice(), mx . getMizhong(), mx . getJianzhong(), mx . getStoreId(), mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8(), cbPrice, mx . getCgJijiafangshiId());
+//
+//
+//            this . invDaoImpl . updateInv(saleMx . getId(), "3", null, xs . getCustomerId(), xs . getYwTime(), saleMx . getChangdu(), saleMx . getKuandu(), saleMx . getHoudu(), saleMx . getGuigeId(), saleMx . getJijiafangshiId(), xs . getPiaojuId(), saleMx . getPinmingId(), saleMx . getZhongliang(), saleMx . getPrice(), saleMx . getSumprice(), saleMx . getSumShuiPrice(), saleMx . getShuiprice(), mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8());
+//
+//
+//            if (cgmx != null) {
+//                TbCgPurchaseMx tbCgmx = (TbCgPurchaseMx) this . cgMxDao . selectByPrimaryKey(cgmx . getId());
+//                TbCgPurchase tbCg = (TbCgPurchase) this . cgDao . selectByPrimaryKey(tbCgmx . getPurchaseId());
+//                this . invDaoImpl . updateInv(cgmx . getId(), "2", null, tbCg . getCustomerId(), tbCg . getYwTime(), cgmx . getChangdu(), cgmx . getKuandu(), cgmx . getHoudu(), cgmx . getGuigeId(), cgmx . getJijiafangshiId(), tbCg . getPiaojuId(), cgmx . getPinmingId(), cgmx . getZhongliang(), cgmx . getPrice(), cgmx . getSumprice(), cgmx . getSumShuiPrice(), cgmx . getShuiPrice(), mx . getExt1(), mx . getExt2(), mx . getExt3(), mx . getExt4(), mx . getExt5(), mx . getExt6(), mx . getExt7(), mx . getExt8());
+//
+//
+//                this . hkDaoImpl . subHk(tbCg . getId(), "11", tbCg . getBeizhu(), tbCg . getCustomerId(), tbCg . getYwTime(), tbCg . getJiesuanId(), tbCg . getPiaojuId(), yuanMoney, cgmx . getSumShuiPrice(), yuanZhongliang, cgmx . getZhongliang(), tbCg . getGroupId());
+//            }
+//
+//
+//            Integer isStartFaxi = this . fxDaoImpl . isStartFaxi(user, zhangtao);
+//            if (isStartFaxi . intValue() == 1) {
+//                this . fxDaoImpl . setFaxiForQt(fxlx, customerId, jiesuanId, groupId, saleOperatorId, createOperatorId, jigou, user, zhangtao, xs);
+//            }
+//        }
+            }
+
+            if (empty($data['id'])) {
+                $trumpet = 0;
+            } else {
+                $trumpet = SalesMoshiMx::where('moshi_id', $data['id'])->max('trumpet');
+            }
+
+            foreach ($addList as $obj) {
+                $trumpet++;
+                $obj['moshi_id'] = $ms['id'];
+                $obj['trumpet'] = $trumpet;
+                $mx = new SalesMoshiMx();
+                $mx->allowField(true)->data($obj)->save();
+
+                if (!empty($mx['kc_spot_id'])) {
+                    $spot1 = KcSpot::get($mx['kc_spot_id']);
                 }
-                $salesOrder['other'] = $data['other'] ?? [];
-                $salesRes = (new Salesorder())->add($request, 3, $salesOrder, true, $spotIds);
-                if ($salesRes !== true) {
-                    throw new Exception($salesRes);
+                if (empty($spot1)) {
+                    $cbPrice = null;
+                } else {
+                    $cbPrice = $spot1['cb_price'];
                 }
 
-                Db::commit();
-                return returnRes(true, '', ['id' => $id]);
-            } catch (Exception $e) {
-                Db::rollback();
-                return returnFail($e->getMessage());
+                $cgScCounts = CgPurchase::findCgScCountsByMsMxId($ms['id'], $mx['cg_customer_id'], 1, $mx['cg_piaoju_id']);
+                if ($cgScCounts == 0) {
+                    $cg = (new CgPurchase())->insertCaigou($mx['id'], 1, $xs['ywsj'], $mx['cg_customer_id'],
+                        null, 1, $mx['cg_piaoju_id'], $ms['remark'], $ms['department'], $ms['employer'], $this->getAccountId(), $companyId);
+                } else {
+                    $caigouId = CgPurchase::findCgIdByMsMxId($ms['id'], $mx['cg_customer_id'], 1, $mx['cg_piaoju_id']);
+                    $cg = CgPurchase::get($caigouId);
+                }
+                $cgmx = (new CgPurchase())->insertMx($cg, $mx['id'], 1, $mx['guige_id'], $mx['store_id'],
+                    $mx['caizhi'], $mx['chandi'], null, $mx['cg_jijiafangshi_id'], $mx['changdu'], $mx['houdu'],
+                    $mx['kuandu'], $mx['cg_tax'], $mx['lingzhi'], $mx['jianshu'], $mx['zhijian'], $mx['counts'],
+                    $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'], $mx['cg_sum_shui_price'],
+                    null, $mx['pihao'], $mx['huohao'], $mx['beizhu'], $mx['chehao'], $mx['mizhong'], $mx['jianzhong'], $companyId);
+
+                $rk = (new KcRk())->insertRuku($cg['id'], 4, $cg['system_number'], $xs['ywsj'], $ms['department'], $ms['employer'], $this->getAccountId(), $companyId);
+                $cgmxDataNumber = null;
+                $spot = (new KcRk())->insertRkMxMd($rk, $cgmx['id'], 4, $xs['ywsj'], $cg['system_number'],
+                    null, $mx['cg_customer_id'], null, $mx['guige_id'], $mx['caizhi'], $mx['chandi'],
+                    $mx['cg_jijiafangshi_id'], $mx['store_id'], $mx['pihao'], $mx['huohao'], $mx['chehao'], $mx['beizhu'],
+                    $mx['cg_piaoju_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['lingzhi'],
+                    $mx['jianshu'], $mx['counts'], $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'],
+                    $mx['cg_sum_shui_price'], $mx['tax'], $mx['mizhong'], $mx['jianzhong'], $this->getAccountId(), $companyId);
+
+
+                $saleMx = (new \app\admin\model\Salesorder())->insertMx($xs, $mx['id'], 1, $mx['guige_id'], $mx['caizhi'],
+                    $mx['chandi'], $mx['store_id'], $mx['jijiafangshi_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['lingzhi'],
+                    $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
+                    $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId);
+
+                (new StockOut())->insertCkMxMd($ck, $spot['id'], $saleMx['id'], 4, $ms['yw_time'], $xs['system_no'],
+                    $xs['custom_id'], $mx['guige_id'], $mx['caizhi'], $mx['chandi'], $mx['jijiafangshi_id'], $mx['store_id'],
+                    $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['lingzhi'], $mx['jianshu'], $mx['counts'],
+                    $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'], $mx['tax'], $mx['mizhong'],
+                    $mx['jianzhong'], $cbPrice, null, $this->getAccountId(), $companyId);
+
+                (new \app\admin\model\Inv())->insertInv($saleMx['id'], 3, 1, $saleMx['length'], $saleMx['houdu'],
+                    $saleMx['width'], $saleMx['wuzi_id'], $saleMx['jsfs_id'], $xs['pjlx'], null, $xs['system_no'] . '.' . $saleMx['trumpet'],
+                    $xs['custom_id'], $xs['ywsj'], $saleMx['price'], $saleMx['tax_rate'], $saleMx['total_fee'], $saleMx['price_and_tax'], $saleMx['weight'], $companyId);
+
+                (new \app\admin\model\Inv())->insertInv($cgmx['id'], 2, 2, $cgmx['changdu'], $cgmx['houdu'],
+                    $cgmx['kuandu'], $cgmx['guige_id'], $cgmx['jijiafangshi_id'], $cg['piaoju_id'], $cgmx['pinming_id'],
+                    $cg['system_number'] . '.' . $cgmx['trumpet'], $cg['customer_id'], $cg['yw_time'],
+                    $cgmx['price'], $cgmx['shui_price'], $cgmx['sumprice'], $cgmx['sum_shui_price'], $cgmx['zhongliang'], $companyId);
+
+                if ($cgScCounts == 0) {
+                    (new \app\admin\model\CapitalHk())->insertHk($cg['id'], 11, $cg['system_number'], $cg['beizhu'],
+                        $cg['customer_id'], 2, $cg['yw_time'], $cg['jiesuan_id'], $cg['piaoju_id'], $cgmx['sum_shui_price'],
+                        $cgmx['zhongliang'], $cg['group_id'], $cg['sale_operate_id'], $this->getAccountId(), $companyId);
+                } else {
+                    (new \app\admin\model\CapitalHk())->addHk($cg['id'], 11, $cg['beizhu'], $cg['customer_id'], $cg['yw_time'], $cg['jiesuan_id'], $cg['piaoju_id'], $cgmx['sum_shui_price'], $cgmx['zhongliang'], $cg['group_id']);
+                }
             }
+
+            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $xs['id'], $xs['ywsj'], 1,
+                $ms['department'], $ms['employer'], null, $this->getAccountId(), $companyId);
+
+
+            $mxList = SalesorderDetails::where('order_id', $xs['id'])->select();
+            if (!empty($mxList)) {
+                foreach ($mxList as $mx) {
+
+                    $mdList = StockOutMd::where('data_id', $mx['id'])->select();
+                    if (!empty($mdList)) {
+                        foreach ($mdList as $md) {
+                            $md->cb_price = $md->price;
+                            $jjfs = Jsfs::where('id', $mx['jijiafangshi_id'])->cache(true, 60)->find();
+                            if ($jjfs == 1 || $jjfs == 2) {
+                                $md->cb_sum_shuiprice = $md->cb_price * $md->zhongliang;
+                            } elseif ($jjfs == 3) {
+                                $md->cb_sum_shuiprice = $md->cb_price * $md->counts;
+                            }
+//                        ckMd . setCbSumPrice(WuziUtil . calSumPrice(ckMd . getCbSumShuiPrice(), md . getShuiprice()));
+//                        ckMd . setCbShuie(WuziUtil . calShuie(ckMd . getCbSumShuiPrice(), md . getShuiprice()));
+//                        ckMd . setFySz(ckMd . getCbSumShuiPrice() . subtract(md . getSumShuiPrice()));
+                            $md->save();
+                        }
+                    }
+                }
+            }
+
+            $sumMoney1 = SalesorderDetails::where('order_id', $xs['id'])->sum('price_and_tax');
+            $sumZhongliang1 = SalesorderDetails::where('order_id', $xs['id'])->sum('weight');
+            if (empty($data['id'])) {
+                (new \app\admin\model\CapitalHk())->insertHk($xs['id'], 12, $xs['system_no'], $xs['remark'], $xs['custom_id'],
+                    1, $xs['ywsj'], $xs['jsfs'], $xs['pjlx'], $sumMoney1, $sumZhongliang1, $xs['department'], $xs['employer'], $this->getAccountId(), $companyId);
+            } else {
+                throw new Exception('调货销售单禁止修改');
+            }
+            Db::commit();
+            return returnSuc(['id' => $ms['id']]);
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
         }
-        return returnFail('请求方式错误');
-    }
-
-    /**
-     * 审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function audit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            $salesTiaohuo = SalesMoshi::get($id);
-            if (empty($salesTiaohuo)) {
-                return returnFail('数据不存在');
-            }
-            if ($salesTiaohuo->status == 2) {
-                return returnFail('此单已作废');
-            }
-            if ($salesTiaohuo->status == 3) {
-                return returnFail('此单已审核');
-            }
-            $salesTiaohuo->status = 3;
-            $salesTiaohuo->audit_id = $this->getAccountId();
-            $salesTiaohuo->audit_name = $this->getAccount()['name'];
-            $salesTiaohuo->save();
-            (new Salesorder())->audit($request, $id, 3, false);
-
-            //todo 审核采购单
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
-    }
-
-    /**
-     * 反审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function unAudit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            $cgzfd = SalesMoshi::get($id);
-            if (empty($cgzfd)) {
-                return returnFail('数据不存在');
-            }
-            if ($cgzfd->status == 2) {
-                return returnFail('此单已作废');
-            }
-            if ($cgzfd->status == 1) {
-                return returnFail('此单未审核');
-            }
-            $cgzfd->status = 1;
-            $cgzfd->audit_id = null;
-            $cgzfd->audit_name = '';
-            $cgzfd->save();
-            (new Salesorder())->unAudit($request, $id, 3, false);
-
-            //todo 反审核采购单
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
     }
 
     /**

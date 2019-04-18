@@ -4,11 +4,12 @@
 namespace app\admin\controller;
 
 
-use app\admin\model\StockOtherOutDetails;
+use app\admin\model\{KucunCktz, StockOtherOutDetails};
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
+    db\Query,
     exception\DbException,
     Request,
     response\Json};
@@ -90,155 +91,125 @@ class StockOtherOut extends Right
      * 添加其他出库单
      * @param Request $request
      * @return Json
-     * @throws \think\Exception
      */
     public function add(Request $request)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
         }
-        $companyId = $this->getCompanyId();
-        $count = \app\admin\model\StockOtherOut::whereTime('create_time', 'today')
-            ->where('companyid', $companyId)
-            ->count();
-
-        //数据处理
-        $data = $request->post();
-
-        $systemNumber = 'QTCKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-        $data['companyid'] = $companyId;
-        $data['system_number'] = $systemNumber;
-        $data['create_operator_id'] = $this->getAccountId();
-
-        //数据验证
-        $validate = new \app\admin\validate\StockOtherOut();
-        if (!$validate->check($data)) {
-            return returnFail($validate->getError());
-        }
 
         Db::startTrans();
         try {
-            $model = new \app\admin\model\StockOtherOut();
-            $model->allowField(true)->data($data)->save();
+            $data = $request->post();
 
-            //处理明细
-            $id = $model->id;
-            $num = 1;
-            $detailsValidate = new \app\admin\validate\StockOtherOutDetails();
-            foreach ($data['details'] as $c => $v) {
-                $data['details'][$c]['companyid'] = $companyId;
-                $data['details'][$c]['stock_other_out_id'] = $id;
-                $data['details'][$c]['caizhi'] = empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']);
-                $data['details'][$c]['chandi'] = empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']);
-                if (!$detailsValidate->check($data['details'][$c])) {
-                    throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+            $validate = new \app\admin\validate\StockOtherOut();
+            if (!$validate->check($data)) {
+                throw new Exception($validate->getError());
+            }
+
+            $addList = [];
+            $updateList = [];
+            $ja = $data['details'];
+            $companyId = $this->getCompanyId();
+            if (empty($ja)) {
+                $num = 1;
+                $detailsValidate = new \app\admin\validate\StockOtherOutDetails();
+                foreach ($ja as $object) {
+
+                    $object['companyid'] = $companyId;
+                    $object['caizhi'] = empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']);
+                    $object['chandi'] = empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']);
+                    if (!$detailsValidate->check($object)) {
+                        throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                    }
+                    $num++;
+
+                    if ($object['lingzhi'] == 0 && $object['jianshu'] == 0 && $object['zhijian'] != 0) {
+                        throw new Exception("不能只输输入件支数");
+                    }
+
+                    if ($object['lingzhi'] > 0 || $object['jianshu'] > 0 || $object['zhijian'] > 0) {
+                        $jCount = $object['jianshu'] * $object['zhijian'] + $object['lingzhi'];
+                        if ($jCount != $object['count']) {
+                            throw new Exception('计算的数量:' . $jCount . ',您实际输入的数量:' . $object['counts'] . ',计算数量与实际数量不相等');
+                        }
+                        if ($object['zhijian'] > 0 && $object['lingzhi'] >= $object['zhijian']) {
+                            throw new Exception('您输入的零支为:' . $object['lingzhi'] . ',您输入的件支数为:' . $object['zhijian'] . ',零支不能大于或者等于件支数');
+                        }
+                    }
+
+                    if (empty($object)) {
+                        $addList[] = $object;
+                    } else {
+                        $updateList[] = $object;
+                    }
                 }
-                $num++;
             }
-            (new StockOtherOutDetails())->allowField(true)->saveAll($data['details']);
 
-            //添加出库通知单
-            $notify = [];
-            foreach ($data['details'] as $c => $v) {
-                $notify[] = [
-                    'companyid' => $companyId,
-                    'chuku_type' => 3,
-                    'data_id' => $id,
-                    'guige_id' => $v['guige_id'],
-                    'caizhi' => empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']),
-                    'chandi' => empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']),
-                    'jijiafangshi_id' => $v['jijiafangshi_id'],
-                    'houdu' => $v['houdu'] ?? '',
-                    'kuandu' => $v['kuandu'] ?? '',
-                    'changdu' => $v['changdu'] ?? '',
-                    'lingzhi' => $v['lingzhi'] ?? '',
-                    'jianshu' => $v['jianshu'] ?? '',
-                    'zhijian' => $v['zhijian'] ?? '',
-                    'counts' => $v['counts'] ?? '',
-                    'zhongliang' => $v['zhongliang'] ?? '',
-                    'price' => $v['price'] ?? '',
-                    'sumprice' => $v['sumprice'] ?? '',
-                    'shuie' => $v['shuie'] ?? '',
-                    'shui_price' => $v['shui_price'] ?? '',
-                    'sum_shui_price' => $v['sum_shui_price'] ?? '',
-                    'remark' => $v['beizhu'] ?? '',
-                    'car_no' => $v['chehao'] ?? '',
-                    'pihao' => $v['pihao'] ?? '',
-                    'cache_ywtime' => $data['yw_time'],
-                    'cache_data_pnumber' => $data['system_number'],
-                    'cache_customer_id' => $data['customer_id'],
-                    'store_id' => $v['store_id'],
-                    'cache_create_operator' => $data['create_operator_id'],
-                ];
+            if (empty($data['id'])) {
+                $count = \app\admin\model\StockOtherOut::withTrashed()->whereTime('create_time', 'today')
+                    ->where('companyid', $companyId)
+                    ->count();
+                $data['system_number'] = 'QTCKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $data['create_operator_id'] = $this->getAccountId();
+                $data['companyid'] = $companyId;
+                $qt = new \app\admin\model\StockOtherOut();
+                $qt->allowField($data)->data($data)->save();
+
+            } else {
+                $qt = \app\admin\model\StockOtherOut::where('companyid', $companyId)
+                    ->where('id', $data['id'])
+                    ->find();
+                $data['update_operator_id'] = $this->getAccountId();
+                $qt->allowField(true)->save($data);
+                $mxList = StockOtherOutDetails::where('stock_other_out_id', $qt['id'])->select();
+                if (!empty($mxList)) {
+                    foreach ($mxList as $obj) {
+                        KucunCktz::where('data_id', $obj['id'])->update([
+                            'cache_customer_id' => $qt['customer_id']
+                        ]);
+                    }
+                }
             }
-            (new Chuku())->addNotify($notify);
+
+            foreach ($data['deleteMxIds'] as $obj) {
+                (new KucunCktz())->deleteByDataIdAndChukuType($obj, 3);
+
+                StockOtherOutDetails::destroy(function (Query $query) use ($obj, $companyId) {
+                    $query->where('id', $obj)->where('companyid', $companyId);
+                });
+            }
+
+            foreach ($updateList as $mjo) {
+                $mx = new StockOtherOutDetails();
+                $mx->isUpdate(true)->allowField(true)->save($mjo);
+                (new KucunCktz())->updateChukuTz($mx['id'], "3", $mx['guige_id'], $mx['caizhi'], $mx['chandi'],
+                    $mx['jijiafangshi_id'], $mx['store_id'], $mx['houdu'], $mx['changdu'], $mx['kuandu'], $mx['counts'],
+                    $mx['jianshu'], $mx['lingzhi'], $mx['zhijian'], $mx['zhongliang'], $mx['shuiprice'], $mx['sumprice'],
+                    $mx['sum_shui_price'], $mx['price'], $mx['pihao'], $qt['remark'], $mx['chehao'], $qt['yw_time'],
+                    $qt['system_number'], $qt['customer_id']);
+            }
+
+            foreach ($addList as $mjo) {
+                $mjo['companyid'] = $companyId;
+                $mjo['stock_other_out_id'] = $qt['id'];
+                $mx = new StockOtherOutDetails();
+                $mx->allowField(true)->save($mjo);
+                (new KucunCktz())->insertChukuTz($mx['id'], 3, $mx['guige_id'], $mx['caizhi'], $mx['chandi'],
+                    $mx['jijiafangshi_id'], $mx['store_id'], $mx['houdu'] ?? '', $mx['changdu'] ?? '',
+                    $mx['kuandu'] ?? 0, $mx['counts'] ?? 0, $mx['jianshu'], $mx['lingzhi'] ?? 0,
+                    $mx['zhijian'], $mx['zhongliang'], $mx['shuiprice'] ?? 0, $mx['sumprice'] ?? 0,
+                    $mx['sum_shui_price'] ?? 0, $mx['price'], $mx['pihao'] ?? 0, $mx['beizhu'] ?? 0,
+                    $mx['chehao'] ?? 0, $qt['yw_time'], $qt['system_number'], $qt['customer_id'], $this->getAccountId(),
+                    $companyId);
+            }
 
             Db::commit();
-            return returnRes(true, '', ['id' => $id]);
+            return returnSuc(['id' => $qt['id']]);
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
         }
-    }
-
-    /**
-     * 审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function audit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            $salesorder = \app\admin\model\StockOtherOut::where('id', $id)
-                ->where('companyid', $this->getCompanyId())
-                ->find();
-            if (empty($salesorder)) {
-                return returnFail('数据不存在');
-            }
-            if ($salesorder->status == 3) {
-                return returnFail('此单已审核');
-            }
-            if ($salesorder->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $salesorder->status = 3;
-            $salesorder->check_operator_id = $this->getAccountId();
-            $salesorder->save();
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
-    }
-
-    /**
-     * 反审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function unAudit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            $salesorder = \app\admin\model\StockOtherOut::where('id', $id)
-                ->where('companyid', $this->getCompanyId())
-                ->find();
-            if (empty($salesorder)) {
-                return returnFail('数据不存在或已作废');
-            }
-            if ($salesorder->status == 1) {
-                return returnFail('此单未审核');
-            }
-            if ($salesorder->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $salesorder->status = 1;
-            $salesorder->check_operator_id = null;
-            $salesorder->save();
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
     }
 
     /**

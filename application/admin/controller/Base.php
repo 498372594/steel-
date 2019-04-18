@@ -16,11 +16,6 @@ class Base extends Controller
 {
     protected $pageSize;
 
-    public function test(){
-        $model=new CgPurchaseMx();
-        dump($model->where('id',6));
-    }
-
     public function __construct()
     {
         parent::__construct();

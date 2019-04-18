@@ -3,7 +3,7 @@
 namespace app\admin\model;
 
 use Exception;
-use think\db\exception\{DataNotFoundException, ModelNotFoundException};
+use think\db\{exception\DataNotFoundException, exception\ModelNotFoundException, Query};
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -42,7 +42,8 @@ class CapitalFy extends Base
     }
 
     /**
-     * @param $fyJson
+     * @param $fyLists
+     * @param $deleteIds
      * @param $dataId
      * @param $ywTime
      * @param $ywType
@@ -57,16 +58,20 @@ class CapitalFy extends Base
      * @throws ModelNotFoundException
      * @throws Exception
      */
-    public function fymxSave($fyJson, $dataId, $ywTime, $ywType, $groupId, $saleOperatorId, $beizhu, $userId, $companyId)
+    public function fymxSave($fyLists, $deleteIds, $dataId, $ywTime, $ywType, $groupId, $saleOperatorId, $beizhu, $userId, $companyId)
     {
         $addFyList = [];
         $updateFyList = [];
 
         $flag = true;
-        if (!empty($fyJson)) {
-            foreach ($fyJson as $index => $jo) {
+        if (!empty($fyLists)) {
+            $validate = new \app\admin\validate\CapitalFy();
+            foreach ($fyLists as $index => $jo) {
                 if ($index == 'deleteIds') {
                     continue;
+                }
+                if (!$validate->check($jo)) {
+                    throw new Exception($validate->getError());
                 }
                 if (empty($jo['id'])) {
                     $addFyList[] = $jo;
@@ -78,8 +83,8 @@ class CapitalFy extends Base
             $flag = false;
         }
 
-        if (!empty($fyJson['deleteIds'])) {
-            $deleteList = self::where('id', 'in', $fyJson['deleteIds'])->select();
+        if (!empty($deleteIds)) {
+            $deleteList = self::where('id', 'in', $deleteIds)->select();
             foreach ($deleteList as $obj) {
                 $this->deleteFyMx($obj);
             }
@@ -139,7 +144,10 @@ class CapitalFy extends Base
         $fy->customer_id = $customerId;
         $fy->group_id = $groupId;
         $fy->sale_operator_id = $saleOperatorId;
-        $count = self::withTrashed()->where('companyid', $companyId)->count();
+        $count = self::withTrashed()
+            ->whereTime('create_time', 'today')
+            ->where('companyid', $companyId)
+            ->count();
         $fy->system_number = "FYD" . date('Ymd') . str_pad($count++, 3, '0', STR_PAD_LEFT);
         $fy->yw_time = $ywTime;
         $fy->fymx_create_type = "1";
@@ -230,9 +238,6 @@ class CapitalFy extends Base
 
     /**
      * @param CapitalFy $fy
-     * @throws DataNotFoundException
-     * @throws ModelNotFoundException
-     * @throws DbException
      * @throws Exception
      */
     public function deleteFyMx(CapitalFy $fy)
@@ -245,12 +250,9 @@ class CapitalFy extends Base
                 throw new Exception("已经有结算信息!");
             }
 
-            $hxList = CapitalFyhx::where('cap_fy_id', $fy->id)->select();
-            if (!empty($hxList)) {
-                foreach ($hxList as $tbCapitalFyhx) {
-                    $tbCapitalFyhx->delete();
-                }
-            }
+            CapitalFyhx::destroy(function (Query $query) use ($fy) {
+                $query->where('cap_fy_id', $fy->id);
+            });
 
             $fy->delete();
         } else {
@@ -260,9 +262,8 @@ class CapitalFy extends Base
 
     /**
      * @param $id
-     * @throws DataNotFoundException
      * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws Exception
      */
     public function deleteFyMxById($id)
     {
