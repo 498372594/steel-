@@ -67,7 +67,7 @@ class CapitalSk extends Right
      * @param Request $request
      * @return Json
      */
-    public function doSave(Request $request)
+    public function add(Request $request)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
@@ -225,7 +225,7 @@ class CapitalSk extends Right
                 });
             }
 
-            foreach ($updateList as $obj) {
+            foreach ($updateFyList as $obj) {
                 $skhx = CapitalSkhx::get($obj['id']);
                 if ($skhx['skhx_type'] == 1 || $skhx['skhx_type'] == 16) {
                     (new CapitalOtherModel())->tiaoMoney($skhx['data_id'], $skhx['hx_money'], $obj['hx_money'], $skhx['hx_zhongliang'], $obj['hx_zhongliang']);
@@ -234,9 +234,7 @@ class CapitalSk extends Right
                 } else {
                     (new CapitalHkModel())->tiaoMoney($skhx['data_id'], $skhx['hx_money'], $obj['hx_money'], $skhx['hx_zhongliang'], $obj['hx_zhongliang']);
                 }
-                $skhx->hx_money = $obj['hx_money'];
-                $skhx->hx_zhongliang = $obj['hx_zhongliang'];
-                $skhx->save();
+                $skhx->allowField(true)->isUpdate(true)->save($obj);
             }
 
             foreach ($addFyList as $obj) {
@@ -290,7 +288,7 @@ class CapitalSk extends Right
                     $obj['customer_id'] = $hk['customer_id'];
                     (new CapitalHkModel())->addMoney($hk['id'], $skhx['hx_money'], $skhx['hx_zhongliang']);
                 }
-                $skhx->data($data)->allowField(true)->save(0);
+                $skhx->data($obj)->allowField(true)->save(0);
 
             }
             Db::commit();

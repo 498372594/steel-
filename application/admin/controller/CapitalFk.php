@@ -3,10 +3,12 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{CapitalFk as CapitalFkModel,
-    CapitalFkhx as CapitalFkhxModel,
-    CapitalFkjsfs as CapitalFkjsfsModel,
-    CapitalFy as CapitalFyModel,
+use app\admin\model\{Bank,
+    CapitalBank,
+    CapitalFk as CapitalFkModel,
+    CapitalFkhx,
+    CapitalFkjsfs,
+    CapitalFy,
     CapitalHk as CapitalHkModel,
     CapitalOther as CapitalOtherModel};
 use app\admin\validate\{CapitalFk as CapitalFkValidate,
@@ -16,6 +18,7 @@ use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
+    db\Query,
     exception\DbException,
     Request,
     response\Json};
@@ -65,95 +68,232 @@ class CapitalFk extends Right
      * 添加付款单
      * @param Request $request
      * @return Json
-     * @throws \think\Exception
      */
     public function add(Request $request)
     {
-        $companyid = $this->getCompanyId();
-        $count = CapitalFkModel::whereTime('create_time', 'today')->where('companyid', $companyid)->count() + 1;
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        $number = 0;
+        $mxnumber = 0;
 
         $data = $request->post();
-        $data['companyid'] = $companyid;
-        $data['system_number'] = 'FKD' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
-        $data['create_operator_id'] = $this->getAccountId();
-        $validate = new CapitalFkValidate();
-        if (!$validate->check($data)) {
-            return returnFail($validate->getError());
-        }
         Db::startTrans();
         try {
-            $model = new CapitalFkModel();
-            $model->allowField(true)->data($data)->save();
-            $id = $model->getLastInsID();
+            $validate = new CapitalFkValidate();
+            if (!$validate->check($data)) {
+                return returnFail($validate->getError());
+            }
 
-            if (!empty($data['detaiils'])) {
-                //核销明细
+            if (($data['fk_type'] == 3 || $data['fk_type'] == 4) && $data['money'] > 0) {
+                throw new Exception("类型是退货款或者退预收款,本次付款必须为负数");
+            }
+
+
+            $addList = [];
+            $updateList = [];
+            $ja = $data['details'];
+            $companyId = $this->getCompanyId();
+            if (!empty($ja)) {
+                $shoukuanValidate = new CapitalFkJsfsValidate();
+                foreach ($ja as $object) {
+                    if (($data['fk_type'] == 3 || $data['fk_type'] == 4) && $object['money'] > 0) {
+                        throw new Exception("类型是退货款或者退预收款,付款金额必须为负数");
+                    }
+
+                    if (!$shoukuanValidate->check($object)) {
+                        throw new Exception($shoukuanValidate->getError());
+                    }
+                    $object['companyid'] = $companyId;
+
+                    $mxnumber += $object['money'];
+
+                    if (empty($object['id'])) {
+                        $addList[] = $object;
+                    } else {
+                        $updateList[] = $object;
+                    }
+                }
+            }
+
+
+            $addFyList = [];
+            $updateFyList = [];
+            $ja1 = $data['hxDetails'];
+            if (!empty($ja1)) {
                 $detailsValidate = new CapitalFkhxValidate();
-                foreach ($data['details'] as $c => $v) {
-                    $v['companyid'] = $companyid;
-                    $v['fk_id'] = $id;
-                    if (!$detailsValidate->check($v)) {
+
+                foreach ($ja1 as $object) {
+
+                    if (!$detailsValidate->check($object)) {
                         throw new Exception($detailsValidate->getError());
                     }
-                    if ($v['fkhx_type'] == CapitalHk::CAPITAL_OTHER) {
-                        $relation = CapitalOtherModel::where('fangxiang', 2)
-                            ->where('id', $v['data_id'])
-                            ->where('status', '<>', '2')
-                            ->find();
-                    } elseif ($v['fkhx_type'] == CapitalHk::CAPITAL_COST) {
-                        $relation = CapitalFyModel::where('fang_xiang', 2)
-                            ->where('id', $v['data_id'])
-                            ->where('status', '<>', '2')
-                            ->find();
+
+                    if (empty($object['hx_money']) && empty($object['hx_zhongliang'])) {
+                        throw new Exception("核销重量或者核销金额必须填一项");
+                    }
+
+                    $number += $object['hx_money'];
+                    if (empty($object['id'])) {
+                        $addFyList[] = $object;
                     } else {
-                        $relation = CapitalHkModel::where('id', $v['data_id'])
-                            ->where('fangxiang', 2)
-                            ->where('status', '<>', '2')
-                            ->find();
+                        $updateFyList[] = $object;
                     }
-                    if (empty($relation)) {
-                        throw new Exception('未找到对应源单');
-                    }
-                    if (($relation->money < 0 && $v['hx_money'] > 0) ||
-                        abs($v['hx_money']) > abs($relation->money - $relation->hxmoney)) {
-                        throw new Exception('核销金额不能大于未核销金额');
-                    }
-                    if (($relation->zhongliang < 0 && $v['hx_zhongliang']) ||
-                        (abs($v['hx_zhongliang']) > abs($relation->zhongliang - $relation->hxzhongliang))) {
-                        throw new Exception('核销重量不能大于未核销金额');
-                    }
-                    $relation->hxmoney += $v['hx_money'];
-                    $relation->hxzhongliang += $v['hx_zhongliang'];
-                    $relation->save();
-
-                    $v['customer_id'] = $relation->customer_id;
-                    $v['cache_ywtime'] = $relation->yw_time;
-                    $v['cache_systemnumber'] = $relation->system_number;
-                    $v['hj_money'] = $relation->money;
-                    $v['hj_zhongliang'] = $relation->zhongliang;
-
-                    (new CapitalFkhxModel())->allowField(true)->save($v);
                 }
             }
 
-            //款项明细
-            $shoukuanValidate = new CapitalFkJsfsValidate();
-            $totalMoney = 0;
-            foreach ($data['mingxi'] as $c => $v) {
-                $data['mingxi'][$c]['companyid'] = $companyid;
-                $data['mingxi'][$c]['fk_id'] = $id;
-                if (!$shoukuanValidate->check($data['mingxi'][$c])) {
-                    throw new Exception($shoukuanValidate->getError());
-                }
-                $totalMoney += $v['money'];
-            }
-            if ($totalMoney != $data['money']) {
-                throw new Exception('付款金额必须等于本次收款');
-            }
-            (new CapitalFkjsfsModel())->allowField(true)->saveAll($data['mingxi']);
 
+            if (empty($data['id'])) {
+                $fk = new CapitalFkModel();
+
+                $count = CapitalFkModel::withTrashed()
+                    ->whereTime('create_time', 'today')
+                    ->where('companyid', $companyId)
+                    ->count();
+
+                $data['system_number'] = 'FKD' . date('Ymd') . str_pad(++$count, 3, 0, STR_PAD_LEFT);
+                $data['create_operator_id'] = $this->getAccountId();
+                $data['companyid'] = $companyId;
+
+                $fk->allowField(true)->data($data)->save();
+                if ($data['fk_type'] == 2) {
+                    (new CapitalHkModel())->insertHk($fk['id'], 23, $fk['system_number'], $fk['beizhu'], $fk['customer_id'], 2, $fk['yw_time'], null, null, -$fk['money'] - $fk['msmoney'], null, $fk['group_id'], $fk['sale_operator_id'], $this->getAccountId(), $companyId);
+                }
+            } else {
+                $fk = CapitalFkModel::get($data['id']);
+                if (empty($fk)) {
+                    throw new Exception("对象不存在");
+                }
+                if ($fk['status'] == 2) {
+                    throw new Exception("该单据已经作废");
+                }
+                $fk->isUpdate(true)->allowField(true)->save($data);
+                if ($data['fk_type'] == 2) {
+                    (new CapitalHkModel())->updateHk($data['id'], 23, $fk['beizhu'], $fk['customer_id'], $fk['yw_time'], null, null, $fk['money'] + $fk['mfmoney'], null, $fk['group_id'], $fk['sale_operator_id']);
+                }
+
+                $fkjsfsList = CapitalFkjsfs::where('fk_id', $fk['id'])->select();
+                if (!empty($fkjsfsList)) {
+                    foreach ($fkjsfsList as $obj) {
+                        CapitalBank::where('data_id', $obj['id'])->update([
+                            'yw_time' => $fk['yw_time'],
+                            'cache_customer_id' => $fk['customer_id']
+                        ]);
+                    }
+                }
+            }
+            if (!empty($data['deleteMxIds'])) {
+                if (is_string($data['deleteMxIds'])) {
+                    $data['deleteMxIds'] = explode(',', $data['deleteMxIds']);
+                }
+                foreach ($data['deleteMxIds'] as $string) {
+                    (new Bank())->deleteBank($string, 3, 2);
+                }
+                CapitalFkjsfs::destroy(function (Query $query) use ($data) {
+                    $query->where('id', 'in', $data['deleteMxIds']);
+                });
+            }
+
+            foreach ($updateList as $mjo) {
+                $jsfs = CapitalFkjsfs::get($mjo['id']);
+                $oldMoney = $jsfs['money'];
+                $oldBankId = $jsfs['bank_id'];
+
+                $jsfs->allowField(true)->save($mjo);
+
+                (new Bank())->updateBank($jsfs['id'], $oldBankId, 3, $jsfs['bank_id'], 2, null, $jsfs['money'], $oldMoney);
+            }
+
+            foreach ($addList as $mjo) {
+                $mjo['sk_id'] = $fk['id'];
+                $jsfs = new CapitalFkjsfs();
+                $jsfs->allowField(true)->data($mjo)->save();
+                (new Bank())->insertBank($jsfs['id'], 3, $jsfs['bank_id'], 2, $fk['yw_time'], $jsfs['money'], $fk['customer_id'], $fk['system_number'], $companyId);
+            }
+
+            if (!empty($data['deleteHxIds'])) {
+                $hxList = CapitalFkhx::where('id', 'in', $data['deleteHxIds'])->select();
+                foreach ($hxList as $hx) {
+                    if ($hx->fkhx_type == 1) {
+                        (new CapitalOtherModel())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                    } else if ($hx->skhx_type == 2) {
+                        (new CapitalFy())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                    } else {
+                        (new CapitalHkModel())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                    }
+                }
+                CapitalFkhx::destroy(function (Query $query) use ($data) {
+                    $query->where('id', 'in', $data['deleteHxIds']);
+                });
+            }
+
+            foreach ($updateFyList as $obj) {
+                $fkhx = CapitalFkhx::get($obj['id']);
+                if ($fkhx['fkhx_type'] == 1) {
+                    (new CapitalOtherModel())->tiaoMoney($fkhx['data_id'], $fkhx['hx_money'], $obj['hx_money'], $fkhx['hx_zhongliang'], $obj['hx_zhongliang']);
+                } elseif ($fkhx['fkhx_type'] == 2) {
+                    (new CapitalFy())->tiaoMoney($fkhx['data_id'], $fkhx['hx_money'], $obj['hx_money'], $fkhx['hx_zhongliang'], $obj['hx_zhongliang']);
+                } else {
+                    (new CapitalHkModel())->tiaoMoney($fkhx['data_id'], $fkhx['hx_money'], $obj['hx_money'], $fkhx['hx_zhongliang'], $obj['hx_zhongliang']);
+                }
+                $fkhx->allowField(true)->isUpdate(true)->save($obj);
+            }
+
+            foreach ($addFyList as $obj) {
+                $fkhx = new CapitalFkhx();
+                if ($obj['skhx_type'] == 1) {
+                    $qt = CapitalOtherModel::get($obj['data_id']);
+                    if ($obj['hx_money'] > ($qt['money'] - $qt['hxmoney'])) {
+                        throw new Exception("核销金额不能大于未核销金额");
+                    }
+                    $obj['create_time'] = $qt['create_time'];
+                    $obj['cache_systemnumber'] = $qt['system_number'];
+                    $obj['cache_ywtime'] = $qt['yw_time'];
+                    $obj['sk_id'] = $fk['id'];
+                    $obj['hj_money'] = $qt['money'];
+                    $obj['hj_zhongliang'] = $qt['zhongliang'];
+                    $obj['customer_id'] = $qt['customer_id'];
+                    (new CapitalOtherModel())->addMoney($qt['id'], $fkhx['hx_money'], $fkhx['hx_zhongliang']);
+                } elseif ($obj['skhx_type'] == 2) {
+                    $fy = CapitalFy::get($obj['data_id']);
+
+                    if ($obj['hx_money'] > ($fy['money'] - $fy['hxmoney'])) {
+                        throw new Exception("核销金额不能大于未核销金额");
+                    }
+                    $obj['create_time'] = $fy['create_time'];
+                    $obj['cache_systemnumber'] = $fy['system_number'];
+                    $obj['cache_ywtime'] = $fy['yw_time'];
+                    $obj['sk_id'] = $fk['id'];
+                    $obj['hj_money'] = $fy['money'];
+                    $obj['hj_zhongliang'] = $fy['zhongliang'];
+                    $obj['customer_id'] = $fy['customer_id'];
+                    (new CapitalFy())->addMoney($fy['id'], $fkhx['hx_money'], $fkhx['hx_zhongliang']);
+                } else {
+                    $hk = CapitalHkModel::get($obj['data_id']);
+                    if (!empty($hk)) {
+                        if ($obj['hx_money'] > 0) {
+                            if ($obj['hx_money'] > ($hk['money'] - $hk['hxmoney'])) {
+                                throw new Exception("核销金额不能大于未核销金额");
+                            }
+                        } elseif ($obj['hx_money'] < ($hk['money'] - $hk['hxmoney'])) {
+                            throw new Exception("核销金额不能大于未核销金额");
+                        }
+                    } else {
+                        $hk = CapitalHkModel::where('data_id', $obj['data_id'])->find();
+                    }
+                    $obj['create_time'] = $hk['create_time'];
+                    $obj['cache_systemnumber'] = $hk['system_number'];
+                    $obj['cache_ywtime'] = $hk['yw_time'];
+                    $obj['sk_id'] = $fk['id'];
+                    $obj['hj_money'] = $hk['money'];
+                    $obj['hj_zhongliang'] = $hk['zhongliang'];
+                    $obj['customer_id'] = $hk['customer_id'];
+                    (new CapitalHkModel())->addMoney($hk['id'], $fkhx['hx_money'], $fkhx['hx_zhongliang']);
+                }
+                $fkhx->data($data)->allowField(true)->save(0);
+            }
             Db::commit();
-            return returnSuc();
+            return returnSuc(['id' => $fk['id']]);
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
@@ -225,7 +365,7 @@ class CapitalFk extends Right
                         ->where('status', '<>', '2')
                         ->find();
                 } elseif ($item['fkhx_type'] == CapitalHk::CAPITAL_COST) {
-                    $relation = CapitalFyModel::where('fang_xiang', 2)
+                    $relation = CapitalFy::where('fang_xiang', 2)
                         ->where('id', $item['data_id'])
                         ->where('status', '<>', '2')
                         ->find();
