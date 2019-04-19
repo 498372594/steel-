@@ -2,7 +2,7 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{CapitalFy, Jsfs, KcSpot, KucunCktz, SalesReturnDetails, StockOut, StockOutMd};
+use app\admin\model\{CapitalFy, Jsfs, KcSpot, KcYlSh, KucunCktz, SalesReturnDetails, StockOut, StockOutMd};
 use app\admin\validate\{SalesorderDetails};
 use Exception;
 use think\{Db,
@@ -92,90 +92,6 @@ class Salesorder extends Right
     }
 
     /**
-     * 审核
-     * @param Request $request
-     * @param int $id
-     * @param int $ywlx
-     * @param boolean $isWeb
-     * @return Json
-     * @throws DbException
-     */
-    public function audit(Request $request, $id = 0, $ywlx = 1, $isWeb = true)
-    {
-        if ($request->isPut()) {
-            if ($ywlx != 1 && $isWeb) {
-                return returnFail('此销售单禁止直接审核');
-            }
-            if ($isWeb) {
-                $salesorder = \app\admin\model\Salesorder::where('id', $id)
-                    ->where('ywlx', $ywlx)
-                    ->find();
-            } else {
-                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)
-                    ->where('ywlx', $ywlx)
-                    ->find();
-            }
-            if (empty($salesorder)) {
-                return returnFail('数据不存在');
-            }
-            if ($salesorder->status == 3) {
-                return returnFail('此单已审核');
-            }
-            if ($salesorder->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $salesorder->status = 3;
-            $salesorder->auditer = $this->getAccountId();
-            $salesorder->audit_name = $this->getAccount()['name'];
-            $salesorder->save();
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
-    }
-
-    /**
-     * 反审核
-     * @param Request $request
-     * @param int $id
-     * @param int $ywlx
-     * @param boolean $isWeb
-     * @return Json
-     * @throws DbException
-     */
-    public function unAudit(Request $request, $id = 0, $ywlx = 1, $isWeb = true)
-    {
-        if ($request->isPut()) {
-            if ($ywlx != 1 && $isWeb) {
-                return returnFail('此销售单禁止直接反审核');
-            }
-            if ($isWeb) {
-                $salesorder = \app\admin\model\Salesorder::where('id', $id)
-                    ->where('ywlx', $ywlx)
-                    ->find();
-            } else {
-                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)
-                    ->where('ywlx', $ywlx)
-                    ->find();
-            }
-            if (empty($salesorder)) {
-                return returnFail('数据不存在或已作废');
-            }
-            if ($salesorder->status == 1) {
-                return returnFail('此单未审核');
-            }
-            if ($salesorder->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $salesorder->status = 1;
-            $salesorder->auditer = null;
-            $salesorder->audit_name = '';
-            $salesorder->save();
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
-    }
-
-    /**
      * 作废
      * @param Request $request
      * @param int $id
@@ -242,13 +158,15 @@ class Salesorder extends Right
      * @param int $ywlx
      * @return Json
      */
-    public function add(Request $request, $data = [], $ywlx = 1)
+    public function add(Request $request, $ywlx = 1)
     {
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+
         Db::startTrans();
         try {
-            if (empty($data)) {
-                $data = $request->post();
-            }
+            $data = $request->post();
 
             $validate = new \app\admin\validate\Salesorder();
             if (!$validate->check($data)) {
@@ -439,6 +357,117 @@ class Salesorder extends Right
                     }
                 }
             }
+            $sumMoney = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->sum('price_and_tax');
+            $sumZhongliang = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->sum('weight');
+            if (empty($data['id'])) {
+                (new \app\admin\model\CapitalHk())->insertHk($xs['id'], "12", $xs['system_no'], $xs['remark'] ?? '',
+                    $xs['custom_id'], "1", $xs['ywsj'], $xs['jsfs'] ?? null, $xs['pjlx'], $sumMoney,
+                    $sumZhongliang, $xs['department'] ?? 0, $xs['employer'] ?? 0, $this->getAccountId(), $this->getCompanyId());
+            } else {
+                (new \app\admin\model\CapitalHk())->updateHk($xs['id'], "12", $xs['remark'] ?? '', $xs['custom_id'], $xs['ywsj'],
+                    $xs['jsfs'] ?? null, $xs['pjlx'], $sumMoney, $sumZhongliang, $xs['department'] ?? 0, $xs['employer'] ?? 0);
+            }
+            Db::commit();
+            return returnSuc(['id' => $xs['id']]);
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+
+    /**
+     * 预留货物销售释放
+     * @param Request $request
+     * @return Json
+     */
+    public function ylAdd(Request $request)
+    {
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+
+        Db::startTrans();
+        try {
+            $data = $request->post();
+            $validate = new \app\admin\validate\Salesorder();
+            if (!$validate->check($data)) {
+                throw new Exception($validate->getError());
+            }
+            $companyId = $this->getCompanyId();
+
+            $addList = [];
+            $ja = $data['details'];
+            if (!empty($ja)) {
+                $num = 1;
+                $detailValidate = new SalesorderDetails();
+                foreach ($ja as $object) {
+                    if (!$detailValidate->check($object)) {
+                        throw new Exception('请检查第' . $num . '行' . $data['details']);
+                    }
+                    if (empty($object['id'])) {
+                        $addList[] = $object;
+                    }
+                }
+            }
+            $count = \app\admin\model\Salesorder::withTrashed()
+                ->whereTime('create_time', 'today')
+                ->where('companyid', $companyId)
+                ->count();
+            $data['add_id'] = $this->getAccountId();
+            $data['companyid'] = $companyId;
+            $data['system_no'] = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);;
+            $data['ywlx'] = 1;
+            $xs = new \app\admin\model\Salesorder();
+            $xs->allowField(true)->data($data)->save();
+            if ($data['ckfs'] == 1) {
+                $ck = (new StockOut())->insertChuku($xs['id'], "4", $xs['ywsj'], $xs['department'], $xs['system_no'], $xs['employer'], $this->getAccountId(), $this->getCompanyId());
+            }
+            if (!empty($addList)) {
+                $trumpet = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->max('trumpet');
+                foreach ($addList as $mjo) {
+                    $ylsh = KcYlSh::get($mjo['ylsh_id']);
+                    if ($ylsh['shuliang'] < $mjo['count']) {
+                        throw new Exception("销售数量不得大于预留数量");
+                    }
+                    if ($ylsh['zhongliang'] < $mjo['weight']) {
+                        throw new Exception("销售重量不得大于预留重量");
+                    }
+                    $counts = $ylsh['shuliang'] - $mjo['count'];
+                    $ylsh->shuliang = $ylsh['shuliang'] - $mjo['count'];
+                    $ylsh->zhongliang = $ylsh['zhongliang'] - $mjo['weight'];
+                    $spot = KcSpot::get($ylsh['spot_id']);
+                    $jjfs = Jsfs::where('id', $spot['jijiafangshi_id'])->cache(true, 60)->value('jj_type');
+                    $calSpot = KcSpot::calSpot($ylsh['changdu'], $spot['kuandu'], $jjfs, $spot['mizhong'], $spot['jianzhong'], $ylsh['shuliang'], $ylsh['zhijian'], $ylsh['zhongliang'], $spot['price'], $spot['shuiprice'], 0);
+                    $ylsh->guobang_zhongliang = $calSpot['guobang_zhongliang'];
+                    $ylsh->lisuan_zhongliang = $calSpot['lisuan_zhongliang'];
+                    $lingzhi = $counts % $ylsh['zhijian'];
+                    $jianshu = floor($count / $ylsh['zhijian']);
+                    $ylsh->lingzhi = $lingzhi;
+                    $ylsh->jianshu = $jianshu;
+                    $ylsh->save();
+                    $trumpet++;
+                    $mjo['kc_spot_id'] = $ylsh['spot_id'];
+                    $mjo['trumpet'] = $trumpet;
+                    $mjo['order_id'] = $xs['id'];
+                    $mx = new \app\admin\model\SalesorderDetails();
+                    $mx->allowField(true)->data($mjo)->save();
+                    if ($xs['ckfs'] == 1) {
+                        (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "4",
+                            $xs['ywsj'], $xs['system_no'], $xs['custom_id'], $mx['wuzi_id'], $mx['caizhi'], $mx['chandi'],
+                            $mx['jsfs_id'], $mx['storage_id'], $mx['houdu'] ?? 0, $mx['width'] ?? 0,
+                            $mx['length'] ?? 0, $mx['jzs'], $mx['lingzhi'] ?? 0, $mx['num'],
+                            $mx['count'] ?? 0, $mx['weight'], $mx['price'], $mx['total_fee'],
+                            $mx['tax_rate'] ?? 0, $mx['price_and_tax'], $mx['tax'], null,
+                            null, null, '', $this->getAccount(), $this->getCompanyId());
+                    }
+                    (new \app\admin\model\Inv())->insertInv($mx['id'], 3, 1, $mx['length'] ?? '', $mx['houdu'] ?? '',
+                        $mx['width'] ?? 0, $mx['wuzi_id'], $mx['jsfs_id'], $xs['pjlx'], null,
+                        $xs['system_no'] . "." . $mx['trumpet'], $xs['custom_id'], $xs['ywsj'], $mx['price'],
+                        $mx['tax_rate'] ?? 0, $mx['total_fee'] ?? 0, $mx['price_and_tax'] ?? 0, $mx['weight'], $this->getCompanyId());
+                }
+            }
+            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $xs['id'], $xs['ywsj'], 1, $xs['department'] ?? '', $xs['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+
             $sumMoney = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->sum('price_and_tax');
             $sumZhongliang = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->sum('weight');
             if (empty($data['id'])) {

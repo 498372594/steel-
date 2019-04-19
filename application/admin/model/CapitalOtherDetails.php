@@ -14,7 +14,7 @@ class CapitalOtherDetails extends Base
     public function szmcData()
     {
         return $this->belongsTo('Paymenttype', 'shouzhimingcheng_id', 'id')->cache(true, 60)
-            ->field('id,name')->bind([ 'shouzhimingcheng' => 'name']);
+            ->field('id,name')->bind(['shouzhimingcheng' => 'name']);
     }
 
     public function szflData()
