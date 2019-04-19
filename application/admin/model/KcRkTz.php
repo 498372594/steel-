@@ -83,12 +83,12 @@ class KcRkTz extends Base
         $count = KcRkMx::alias("mx")->join("kc_rk rk", "rk.id=mx.kc_rk_id", "left")
             ->join("kc_rk_tz tz", "tz.id=mx.kc_rk_tz_id", "left")
             ->where(array("tz.ruku_type" => $rukuType, "tz.data_id" => $dataId))
-            ->where('ck.status', '<>', 1)
+            ->where('rk.status', '<>', 1)
             ->count();
         $count1 = KcRkMd::alias("mx")->join("kc_rk rk", "rk.id=mx.kc_rk_id", "left")
             ->join("kc_rk_tz tz", "tz.id=mx.kc_rk_tz_id", "left")
             ->where(array("tz.ruku_type" => $rukuType, "tz.data_id" => $dataId))
-            ->where('ck.status', '<>', 1)
+            ->where('rk.status', '<>', 1)
             ->count();
         if ($count > 0) {
             throw new Exception("已有入库记录,操作终止");
@@ -135,10 +135,12 @@ class KcRkTz extends Base
      * @throws ModelNotFoundException
      */
     public function updateRukuTz($dataId, $rukuType, $pinmingId, $guigeId, $caizhiId, $chandiId, $jijiafangshiId, $houdu, $changdu, $kuandu,
-                                 $counts, $jianshu, $lingzhi, $zhijian, $zhongliang, $shuiPrice, $huohao, $pihao, $beizhu, $chehao, $cacheYwTime, $cacheDataNumber, $cacheDataPnumber
+                                 $counts, $jianshu, $lingzhi, $zhijian, $zhongliang,$sumShuiPrice,$price, $shuiPrice, $huohao, $pihao, $beizhu, $chehao, $cacheYwTime, $cacheDataNumber, $cacheDataPnumber
         , $cacheCustomerId, $storeId, $cachePiaojuId, $mizhong, $jianzhong)
     {
+
         $this->ifRkMdMxExists($dataId, $rukuType);
+
         $rktz = self::where('data_id', $dataId)->where('ruku_type', $rukuType)->find();
         $rktz->pinming_id = $pinmingId;
         $rktz->guige_id = $guigeId;
@@ -147,6 +149,7 @@ class KcRkTz extends Base
         $rktz->jijiafangshi_id = $jijiafangshiId;
         $rktz->houdu = $houdu;
         $rktz->kuandu = $kuandu;
+
         $rktz->changdu = $changdu;
         $rktz->counts = $counts;
         $rktz->jianshu = $jianshu;
@@ -154,6 +157,8 @@ class KcRkTz extends Base
         $rktz->zhijian = $zhijian;
         $rktz->zhongliang = $zhongliang;
         $rktz->shui_price = $shuiPrice;
+        $rktz->sum_shui_price = $sumShuiPrice;
+        $rktz->price = $price;
         $rktz->huohao = $huohao;
         $rktz->pihao = $pihao;
         $rktz->beizhu = $beizhu;
@@ -166,6 +171,7 @@ class KcRkTz extends Base
         $rktz->cache_piaoju_id = $cachePiaojuId;
         $rktz->mizhong = $mizhong;
         $rktz->jianzhong = $jianzhong;
+
         $rktz->save();
 
     }
@@ -270,6 +276,7 @@ class KcRkTz extends Base
         return $tz;
 
     }
+
 
     // 验证规则
     public $rules = [

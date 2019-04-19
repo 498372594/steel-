@@ -159,7 +159,7 @@ class Initinput extends Right
                 if(!empty($data["delete_id"])){
                     model("InitBankMx")->where("id","in",$data["delete_id"])->delete();
                 }
-                foreach ($data["detail"] as $c => $v) {
+                foreach ($data["details"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['bank_id'] = $id;
                     if(empty($v["id"])){
@@ -331,7 +331,7 @@ class Initinput extends Right
      */
     public function kclist(){
         $params = request()->param();
-        $list = $list = \app\admin\model\InitKc::with(['customData','jsfsData','pjlxData','storageData'])
+        $list = $list = \app\admin\model\InitKc::with(['customData','jsfsData','pjlxData','storageData','createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])
             ->where('companyid', $this->getCompanyId());
 
        $list=$this->getsearchcondition($params,$list);
@@ -348,7 +348,7 @@ class Initinput extends Right
      */
     public function kcmx($id=0){
 
-        $data =  \app\admin\model\InitKc::with([ 'details' => ['specification', 'jsfs', 'storage','chandiData','caizhiData','pinmingData'],
+        $data =  \app\admin\model\InitKc::with([ 'details' => ['specification', 'jsfs', 'storage','chandiData','caizhiData','pinmingData'],'createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata',
             'customData','jsfsData','pjlxData','storageData'])
             ->where('companyid',$this->getCompanyId())
             ->where('id', $id)
@@ -362,14 +362,14 @@ class Initinput extends Right
     //0为付款，1为收款
     public function ysfk($type=0){
         $params = request()->param();
-        $list = $list = \app\admin\model\InitYsfk::where('companyid', $this->getCompanyId());
+        $list = $list = \app\admin\model\InitYsfk::with(['createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid', $this->getCompanyId());
         $list->where('type',$type);
         $list=$this->getsearchcondition($params,$list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
     public function ysfkmx($id=0){
-        $data  = \app\admin\model\InitYsfk::with([ 'details','createoperatordata'
+        $data  = \app\admin\model\InitYsfk::with([ 'details','createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'
           ])
             ->where('companyid',$this->getCompanyId())
             ->where('id', $id)
@@ -444,14 +444,14 @@ class Initinput extends Right
     //0为付款，1为收款
     public function yskp($type=0){
         $params = request()->param();
-        $list = $list = \app\admin\model\InitYskp::where('companyid', $this->getCompanyId());
+        $list = $list = \app\admin\model\InitYskp::with(['createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid', $this->getCompanyId());
         $list->where('type',$type);
         $list=$this->getsearchcondition($params,$list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
     public function yskpmx($id=0){
-        $data = \app\admin\model\InitYskp::with([ 'details'=>['customData','pjlxData'],
+        $data = \app\admin\model\InitYskp::with([ 'details'=>['customData','pjlxData'],'createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'
         ])
             ->where('companyid',$this->getCompanyId())
             ->where('id', $id)
@@ -474,7 +474,7 @@ class Initinput extends Right
             if($data["type"]==0){
                 $data['system_number'] = 'YSJXFPYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
-            if($data["type"]=1){
+            if($data["type"]==1){
                 $data['system_number'] = 'YKXXFPYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
 
@@ -482,11 +482,20 @@ class Initinput extends Right
                 Db::startTrans();
             }
             try {
-                model("InitYskp")->allowField(true)->data($data)->save();
-                $id = model("InitYskp")->getLastInsID();
+                if(empty($data["id"])){
+                    model("InitYskp")->allowField(true)->isUpdate(false)->save($data);
+                    $id = model("InitYskp")->getLastInsID();
+                }else{
+                    model("InitYskp")->allowField(true)->save($data,$data["id"]);
+                    $id=$data["id"];
+                }
+                if(!empty($data["delete_id"])){
+                    model("InitYskpMx")->where("id","in",$data["delete_id"])->delete();
+                }
+
                 foreach ($data["details"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
-                    $data['details'][$c]['ysfk_id'] = $id;
+                    $data['details'][$c]['yskp_id'] = $id;
                 }
                 model('InitYskpMx')->saveAll($data['details']);
                 if (!$return) {

@@ -14,11 +14,6 @@ use think\Model;
  */
 class Right extends Signin
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $this->view->engine->layout('common/layout');
-    }
 
     /**
      * 搜索条件
@@ -295,6 +290,11 @@ class Right extends Signin
             $id = $model->id;
         }
         return $id;
+    }
+
+    public function delete()
+    {
+        return returnFail('禁止跳号删除');
     }
 
 }
