@@ -290,10 +290,6 @@ class CapitalFy extends Base
             $obj->hxmoney = $obj['hxmoney'] + $money - $oldMoney;
         }
 
-//        if (yfkMoney . compareTo(BigDecimal . valueOf(0L)) != 0) {
-//        obj . setYfkhxmoney(obj . getYfkhxmoney() . add(yfkMoney . subtract(oldYfkMoney)));
-//    }
-
         if ($obj['hxmoney'] > $obj['money']) {
             throw new Exception("核销金额不能大于总金额");
         }
@@ -344,7 +340,6 @@ class CapitalFy extends Base
     /**
      * @param $id
      * @param $money
-     * @param $yfkMoney
      * @param $zhongliang
      * @throws DbException
      */

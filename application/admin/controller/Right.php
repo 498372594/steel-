@@ -296,9 +296,12 @@ class Right extends Signin
         return $id;
     }
 
-    public function delete()
+    public function _empty($name)
     {
-        return returnFail('禁止跳号删除');
+        if ($name == 'delete') {
+            return returnFail('禁止跳号删除');
+        }
+        return returnFail('404 not found');
     }
 
 }
