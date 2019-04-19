@@ -87,7 +87,12 @@ class Inv extends Base
             $obj->houdu = $houdu;
             $obj->jijiafangshi_id = $jijiafangshiId;
             $obj->piaoju_id = $piaojuId;
-            $obj->pinming_id = $pinmingId;
+            if (empty($pinmingId) && !empty($guigeId)) {
+                $gg = ViewSpecification::where('id', $guigeId)->cache(true, 60)->find();
+                $obj->pinming_id = $gg['productname_id'] ?? '';
+            } else {
+                $obj->pinming_id = $pinmingId;
+            }
             $obj->price = $price;
             $obj->shui_price = $shuiPrice;
             $obj->sum_price = $sumPrice;
@@ -139,7 +144,7 @@ class Inv extends Base
         $i->houdu = $houdu;
         $i->jijiafangshi_id = $jijiafangshiId;
         $i->piaoju_id = $piaojuId;
-        if (empty($pinmingId)) {
+        if (empty($pinmingId) && !empty($guigeId)) {
             $gg = ViewSpecification::where('id', $guigeId)->cache(true, 60)->find();
             $i->pinming_id = $gg['productname_id'] ?? '';
         } else {

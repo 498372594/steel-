@@ -4,10 +4,13 @@ namespace app\admin\controller;
 
 use app\admin\model\CapitalFy;
 use app\admin\model\CapitalFyhx;
+use app\admin\model\CgPurchase;
+use app\admin\model\CgTh;
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
+    db\Query,
     exception\DbException,
     Request,
     response\Json};
@@ -17,128 +20,115 @@ class Feiyong extends Signin
     /**
      * 添加费用单
      * @param Request $request
-     * @param array $data
-     * @param int $count
-     * @param bool $return
-     * @param bool $useTrans
      * @return array|bool|string|Json
-     * @throws \think\Exception
      */
-    public function add(Request $request, $data = [], $count = 0, $return = false, $useTrans = true)
+    public function add(Request $request)
     {
-        $companyid = $this->getCompanyId();
-        if (empty($count)) {
-            $count = CapitalFy::whereTime('create_time', 'today')->where('companyid', $companyid)->count() + 1;
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
         }
 
-        if (empty($data)) {
+        Db::startTrans();
+        try {
             $data = $request->post();
-        }
-        $data['companyid'] = $companyid;
-        $data['system_number'] = 'FYD' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
-        $data['create_operator_id'] = $this->getAccountId();
-        $data['fymx_create_type'] = $return ? 1 : 2;
-        $validate = new \app\admin\validate\CapitalFy();
-        if (!$validate->check($data)) {
-            if ($return) {
-                return $validate->getError();
-            } else {
-                return returnFail($validate->getError());
-            }
-        }
-        if ($useTrans) {
-            Db::startTrans();
-        }
-        try {
-            $model = new CapitalFy();
-            $model->allowField(true)->data($data)->save();
-            $id = $model->getLastInsID();
-            foreach ($data['details'] as $c => $v) {
-                $data['details'][$c]['companyid'] = $companyid;
-                $data['details'][$c]['cap_fy_id'] = $id;
-            }
-            (new CapitalFyhx())->allowField(true)->saveAll($data['details']);
 
-            if ($useTrans) {
-                Db::commit();
+            $validate = new \app\admin\validate\CapitalFy();
+            if (!$validate->check($data)) {
+                throw new Exception($validate->getError());
             }
-            if ($return) {
-                return true;
-            }
-            return returnSuc();
-        } catch (Exception $e) {
-            if ($useTrans) {
-                Db::rollback();
-            }
-            if ($return) {
-                return $e->getMessage();
-            }
-            return returnFail($e->getMessage());
-        }
-    }
 
-    /**
-     * 添加多条费用单
-     * @param array $data 费用单数据
-     * $data = [
-     *     'customer_id' => '对方单位',
-     *     'beizhu' => '备注',
-     *     'group_id' => '部门',
-     *     'sale_operator_id' => '职员',
-     *     'fang_xiang' => '方向，1-应收，2-应付',
-     *     'shouzhifenlei_id' => '收支分类',
-     *     'shouzhimingcheng_id' => '收支名称',
-     *     'danjia' => '单价',
-     *     'money' => '金额',
-     *     'zhongliang' => '重量',
-     *     'piaoju_id' => '票据类型',
-     *     'price_and_tax' => '价税合计',
-     *     'tax_rate' => '税率',
-     *     'tax' => '税额'
-     * ];
-     * @param int $type 单据类型，1-销售单，2-采购单，3-销售退货单，4-采购退货单
-     * @param int $data_id 关联数据id
-     * @param string $yw_time 业务时间
-     * @param bool $useTrans 是否使用事务
-     * @return bool|string
-     * @throws \think\Exception
-     */
-    public function addAll($data = [], $type = 0, $data_id = 0, $yw_time = '', $useTrans = true)
-    {
-        $request = Request::instance();
-        $companyid = $this->getCompanyId();
-        $count = CapitalFy::whereTime('create_time', 'today')->where('companyid', $companyid)->count();
-        if ($useTrans) {
-            Db::startTrans();
-        }
-        try {
-            foreach ($data as $item) {
-                //处理核销数据
-                $item['details'] = [[
-                    'fyhx_type' => $type,
-                    'data_id' => $data_id,
-                    'cache_yw_time' => $yw_time,
-                    'hx_money' => $item['money'] ?? 0,
-                    'heji_zhongliang' => $item['zhongliang'] ?? 0,
-                    'customer_id' => $item['customer_id']
-                ]];
-                $item['yw_time'] = $yw_time;
+            $addFyList = [];
+            $updateFyList = [];
+            $ja1 = $data['details'];
+            $companyid = $this->getCompanyId();
+            if (empty($ja1)) {
+                foreach ($ja1 as $object) {
+                    $object['companyid'] = $companyid;
 
-                //添加费用单
-                $res = $this->add($request, $item, ++$count, true, false);
-                if ($res !== true) {
-                    throw new Exception($res);
+                    if (empty($object['id'])) {
+                        $addFyList[] = $object;
+                    } else {
+                        $updateFyList[] = $object;
+                    }
                 }
             }
-            if ($useTrans) {
-                Db::commit();
+
+            if (empty($data['id'])) {
+
+                $count = CapitalFy::withTrashed()
+                    ->whereTime('create_time', 'today')
+                    ->where('companyid', $companyid)
+                    ->count();
+
+                $data['companyid'] = $companyid;
+                $data['system_number'] = 'FYD' . date('Ymd') . str_pad(++$count, 3, 0, STR_PAD_LEFT);
+                $data['create_operator_id'] = $this->getAccountId();
+                $data['fymx_create_type'] = 2;
+                $data['yw_type'] = 2;
+
+                $sk = new CapitalFy();
+                $sk->allowField(true)->data($data)->save();
+
+                (new \app\admin\model\Inv())->insertInv($sk['id'], 7, $sk['fang_xiang'], null, null, null, null, null, $sk['piaoju_id'], null, $sk['system_number'], $sk['customer_id'], $sk['yw_time'], $sk['danjia'], $sk['tax_rate'], $sk['money'], $sk['price_and_tax'], $sk['zhongliang'], $companyid);
+            } else {
+                $sk = CapitalFy::get($data['id']);
+                if (empty($sk)) {
+                    throw new Exception("对象不存在");
+                }
+                if ($sk['status'] == 2) {
+                    throw new Exception("该单据已经作废");
+                }
+                if ($sk['fymx_create_type'] == 1) {
+                    throw new Exception("业务生成费用单,请修改原单");
+                }
+                $data['update_operator_id'] = $this->getAccountId();
+                $sk->isUpdate(true)->allowField(true)->save($data);
+
+                (new \app\admin\model\Inv())->updateInv($sk['id'], 7, $sk['fang_xiang'], $sk['customer_id'], $sk['yw_time'], null, null, null, null, null, $sk['piaoju_id'], null, $sk['zhongliang'], $sk['danjia'], $sk['money'], $sk['price_and_tax'], $sk['tax_rate']);
             }
-            return true;
+
+            if (!empty($data['deleteFyIds'])) {
+                CapitalFyhx::destroy(function (Query $query) use ($data) {
+                    $query->where('id', 'in', $data['deleteFyIds']);
+                });
+            }
+
+            foreach ($updateFyList as $obj) {
+                $hx = CapitalFyhx::get($obj['id']);
+                $hx->allowField(true)->isUpdate(true)->save($obj);
+
+            }
+
+            foreach ($addFyList as $obj) {
+
+                if ($obj['fyhx_type'] == 0) {
+                    $relation = CgPurchase::get($obj['data_id']);
+                } elseif ($obj['fyhx_type'] == 1) {
+                    $sale = \app\admin\model\Salesorder::get($obj['data_id']);
+                } elseif ($obj['fyhx_type'] == 4) {
+                    //采购退货
+                    $relation = CgTh::get($obj['data_id']);
+                } elseif ($obj['fyhx_type'] == 5) {
+                    //销售退货
+                    $relation = \app\admin\model\SalesReturn::get($obj['data_id']);
+                }
+                if (!empty($relation)) {
+                    $obj['cache_yw_time'] = $relation['yw_time'];
+                    $obj['customer_id'] = $relation['customer_id'];
+                } elseif (!empty($sale)) {
+                    $obj['cache_yw_time'] = $sale['ywsj'];
+                    $obj['customer_id'] = $sale['custom_id'];
+                }
+                $obj['cap_fy_id'] = $sk['id'];
+
+                (new CapitalFyhx())->allowField(true)->data($obj)->save();
+            }
+
+            Db::commit();
+            return returnSuc();
         } catch (Exception $e) {
-            if ($useTrans) {
-                Db::rollback();
-            }
-            return $e->getMessage();
+            Db::rollback();
+            return returnFail($e->getMessage());
         }
     }
 
@@ -218,67 +208,6 @@ class Feiyong extends Signin
         } else {
             return returnRes(true, '', $data);
         }
-    }
-
-    /**
-     * 审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function audit(Request $request, $id = 0)
-    {
-        if (!$request->isPut()) {
-            return returnFail('请求方式错误');
-        }
-        $capitalFy = CapitalFy::where('id', $id)
-            ->where('companyid', $this->getCompanyId())
-            ->find();
-        if (empty($capitalFy)) {
-            return returnFail('数据不存在');
-        }
-        if ($capitalFy->status == 3) {
-            return returnFail('此单已审核');
-        }
-        if ($capitalFy->status == 2) {
-            return returnFail('此单已作废');
-        }
-        $capitalFy->status = 3;
-        $capitalFy->check_operator_id = $this->getAccountId();
-        $capitalFy->save();
-        return returnSuc();
-    }
-
-    /**
-     * 反审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function unAudit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            return returnFail('请求方式错误');
-
-        }
-        $capitalFy = CapitalFy::where('id', $id)
-            ->where('companyid', $this->getCompanyId())
-            ->find();
-        if (empty($capitalFy)) {
-            return returnFail('数据不存在或已作废');
-        }
-        if ($capitalFy->status == 1) {
-            return returnFail('此单未审核');
-        }
-        if ($capitalFy->status == 2) {
-            return returnFail('此单已作废');
-        }
-        $capitalFy->status = 1;
-        $capitalFy->check_operator_id = null;
-        $capitalFy->save();
-        return returnSuc();
     }
 
     /**
