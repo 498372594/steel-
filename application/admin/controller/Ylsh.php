@@ -4,7 +4,7 @@ namespace app\admin\controller;
 
 use app\admin\library\traits\Backend;
 use app\admin\model\KcRk;
-use app\admin\model\{ KcSpot};
+use app\admin\model\{KcDiaoboMx, KcRkMd, KcSpot, StockOut};
 use think\{Db,Request};
 use think\Exception;
 use think\Session;
@@ -172,7 +172,7 @@ class Ylsh extends Right
     public function diaobolist()
     {
         $params = request()->param();
-        $list = $list = \app\admin\model\KcDiaobo::where('companyid',$this->getCompanyId());
+        $list = $list = \app\admin\model\KcDiaobo::with(['createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid',$this->getCompanyId());
         if (!empty($params['system_number'])) {
             $list->where("system_number",$params['system_number']);
         }
@@ -192,7 +192,7 @@ class Ylsh extends Right
      */
     public function diaobomx($id = 0)
     {
-        $data = \app\admin\model\KcDiaobo::with(['details'])
+        $data = \app\admin\model\KcDiaobo::with(['details'=>["jsfsData","specification","storageData","newstorageData","pinmingData","caizhiData","chandiData","customData"],'createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
@@ -202,54 +202,171 @@ class Ylsh extends Right
             return returnRes(true, '', $data);
         }
     }
-    public function adddiaobo($data = [], $return = false){
-        if (request()->isPost()) {
-            $companyId =$this->getCompanyId();
-            $count = \app\admin\model\KcDiaobo::whereTime('create_time', 'today')->count();
-            $data = request()->post();
-            $data["status"] = 0;
-            $data['create_operator_id'] =$this->getAccountId();
-            $data['companyid'] = $companyId;
-            $data['system_number'] = 'KCPD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            if (!$return) {
-                Db::startTrans();
-            }
-            try {
-                model("KcDiaobo")->allowField(true)->data($data)->save();
-                $id = model("KcPandian")->getLastInsID();
-                foreach ($data["detail"] as $c => $v) {
-                    $dat['details'][$c]['id']=$v["id"];
-                    $dat['details'][$c]['counts']=$v["old_counts"]-$v["counts"];
-                    $dat['details'][$c]['zhongliang']=$v["old_zhongliang"]-$v["zhongliang"];
-                    $dat['details'][$c]['jianshu']= intval( floor($dat['details'][$c]['counts']/$v["zhijian"]));
-                    $dat['details'][$c]['lingzhi']= $dat['details'][$c]['counts']%$v["zhijian"];
-                    $data['details'][$c]['companyid'] = $companyId;
-                    $data['details'][$c]['pandian_id'] = $id;
-                    unset($v["id"]);
-                }
-                //修改库存数量
-                model("KcSpot")->saveAll($dat['details']);
-                //添加到
-                model('KcPandianMx')->saveAll($data['details']);
-                if (!$return) {
-                    Db::commit();
-                    return returnRes(true, '', ['id' => $id]);
-                } else {
-                    return true;
-                }
-            } catch (Exception $e) {
-                if ($return) {
-                    return $e->getMessage();
-                } else {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
-                }
-            }
-        }
-        if ($return) {
-            return '请求方式错误';
-        } else {
+    public function adddiaobo(){
+        if (!request()->isPost()) {
             return returnFail('请求方式错误');
         }
+
+        Db::startTrans();
+        try {
+            $data = request()->post();
+
+            $validate = new \app\admin\validate\KcDiaobo();
+            if (!$validate->check($data)) {
+                throw new Exception($validate->getError());
+            }
+
+            $addList = [];
+            $updateList = [];
+            $ja = $data['details'];
+            $companyId = $this->getCompanyId();
+            if (!empty($ja)) {
+
+                $num = 1;
+                $detailsValidate = new \app\admin\validate\KcQtrkMx();
+                foreach ($ja as $object) {
+
+                    $object['companyid'] = $companyId;
+                    if (!$detailsValidate->check($object)) {
+                        throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                    }
+                    $num++;
+                    if (empty($object["id"])) {
+                        $addList[] = $object;
+                    } else {
+                        $updateList[] = $object;
+                    }
+                }
+            }
+
+            if (empty($data['id'])) {
+                $count = \app\admin\model\KcDiaobo::withTrashed()->whereTime('create_time', 'today')
+                    ->where('companyid', $companyId)
+                    ->count();
+
+                $data['system_number'] = 'KCDBD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $data['create_operator_id'] = $this->getAccountId();
+                $data['companyid'] = $companyId;
+                $db = new \app\admin\model\KcDiaobo();
+                $db->allowField(true)->save($data);
+            } else {
+                throw new Exception('调拨已入库禁止修改');
+//                $db = \app\admin\model\KcQtrk::where('companyid', $companyId)
+//                    ->where('id', $data['id'])
+//                    ->find();
+//                $data['update_operator_id'] = $this->getAccountId();
+//                $db->allowField(true)->save($data);
+//                $mxList = KcDiaoboMx::where('diaobo_id', $db['id'])->select();
+//                if (!empty($mxList)) {
+//                    foreach ($mxList as $tbDbMx) {
+//                        $rkMdList= KcRkMd::where("data_id",$tbDbMx["id"])->select();
+//                        if($rkMdList){
+//                            foreach ($rkMdList as $tbRkMd){
+//                               KcRk::where("id",$tbRkMd["kc_rk_id"])->save(array("yw_time"=>$db["yw_time"]));
+//
+//                            }
+//                        }
+//
+//                    }
+//                }
+            }
+            if (!empty($data['deleteMxIds'])) {
+                throw new Exception('已入库禁止修改');
+            }
+//            for (TbKcDiaoboMxObj obj : deleteList) {
+//                TbKcDiaoboMx dbmx = (TbKcDiaoboMx)this.mxDao.selectByPrimaryKey(obj.getId());
+//       if (dbmx != null)
+//       {
+//           this.rkDaoImpl.deleteRuku(dbmx.getId(), "1");
+//
+//           this.ckDaoImpl.deleteChuku(dbmx.getId(), "1");
+//           this.mxDao.deleteByPrimaryKey(dbmx);
+//       }
+//     }
+
+
+            foreach ($addList as $mjo) {
+
+                $mjo['companyid'] = $companyId;
+                $mjo['diaobo_id'] = $db['id'];
+                $mx = new KcDiaoboMx();
+                $calSpot=(new KcSpot())->calSpot($mjo["changdu"],$mjo["kuandu"],$mjo["jijiafangshi_id"],$mjo["mizhong"],$mjo["jianzhong"],$mjo["counts"],$mjo["zhijian"],$mjo["zhongliang"],$mjo["price"],
+                    $mjo["shuiprice"],$mjo["shuie"]);
+                $mjo["sumprice"]=$calSpot["sumprice"];
+                $mjo["sum_shui_price"]=$calSpot["sum_shui_price"];
+                $mx->allowField(true)->save($mjo);
+                $rk=(new KcRk())->insertRuku($mx["id"],1,$db["yw_time"],$db["group_id"],$db["system_number"],$db["create_operator_id"],$this->getAccountId(),$companyId);
+                $ck=(new StockOut())->insertChuku($mx["id"],1,$db["yw_time"],$db["group_id"],$db["system_number"],$db["create_operator_id"],$this->getAccountId(),$companyId);
+                $spot= KcSpot::where("id",$mjo["data_id"])->find();
+                $mjo["cb_price"]=$spot["cb_price"];
+                (new KcRk())->insertRkMxMd($rk, $mx["id"], 1, $db["yw_time"], $db["system_number"], null, $db["customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
+                    , $mx["jijiafangshi_id"], $mx["store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], $data["piaoju_id"], $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
+                    $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $mx["sumprice"], $mx["shui_price"], $mx["sum_shui_price"], $mx["shuie"], null,null, $this->getAccountId(), $this->getCompanyId());
+
+                (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "1",
+                    $mx['yw_time'], $db['system_number'], $db['customer_id'], $mx['pinming_id'], $mx['caizhi'], $mx['chandi'],
+                    $mx['jijiafangshi_id'], $db['store_id'], $mx['houdu'] ?? 0, $mx['kuandu'] ?? 0,
+                    $mx['changdu'] ?? 0, $mx['zhijian'], $mx['lingzhi'] ?? 0, $mx['jianshu'],
+                    $mx['counts'] ?? 0, $mx['zhongliang'], $mx['price'], $mx['sum_price'],
+                    $mx['shuiprice'] ?? 0, $mx['sum_shui_price'], $mx['shuie'], null,
+                    null, null, '', $this->getAccount(), $this->getCompanyId());
+            }
+
+            Db::commit();
+            return returnSuc(['id' => $db['id']]);
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
     }
+//    public function adddiaobo($data = [], $return = false){
+//        if (request()->isPost()) {
+//            $companyId =$this->getCompanyId();
+//            $count = \app\admin\model\KcDiaobo::whereTime('create_time', 'today')->count();
+//            $data = request()->post();
+//            $data["status"] = 0;
+//            $data['create_operator_id'] =$this->getAccountId();
+//            $data['companyid'] = $companyId;
+//            $data['system_number'] = 'KCPD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+//            if (!$return) {
+//                Db::startTrans();
+//            }
+//            try {
+//                model("KcDiaobo")->allowField(true)->data($data)->save();
+//                $id = model("KcDiaobo")->getLastInsID();
+//                foreach ($data["detail"] as $c => $v) {
+//                    $dat['details'][$c]['id']=$v["spot_id"];
+//                    $dat['details'][$c]['counts']=$v["old_counts"]-$v["counts"];
+//                    $dat['details'][$c]['zhongliang']=$v["old_zhongliang"]-$v["zhongliang"];
+//                    $dat['details'][$c]['jianshu']= intval( floor($dat['details'][$c]['counts']/$v["zhijian"]));
+//                    $dat['details'][$c]['lingzhi']= $dat['details'][$c]['counts']%$v["zhijian"];
+//                    $data['details'][$c]['companyid'] = $companyId;
+//                    $data['details'][$c]['pandian_id'] = $id;
+//                    unset($v["id"]);
+//                }
+//                //修改库存数量
+//                model("KcSpot")->saveAll($dat['details']);
+//                //添加到
+//                model('KcDiaoboMx')->saveAll($data['details']);
+//                if (!$return) {
+//                    Db::commit();
+//                    return returnRes(true, '', ['id' => $id]);
+//                } else {
+//                    return true;
+//                }
+//            } catch (Exception $e) {
+//                if ($return) {
+//                    return $e->getMessage();
+//                } else {
+//                    Db::rollback();
+//                    return returnFail($e->getMessage());
+//                }
+//            }
+//        }
+//        if ($return) {
+//            return '请求方式错误';
+//        } else {
+//            return returnFail('请求方式错误');
+//        }
+//    }
 }

@@ -249,7 +249,7 @@ class Invcgsp extends Right
 
                 }
                 Db::commit();
-                return returnSuc(['id' => $qt['id']]);
+                return returnSuc(['id' => $cgsp['id']]);
             }
         }catch (Exception $e){
 
