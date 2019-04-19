@@ -98,7 +98,7 @@ class CapitalOther extends Right
         }
         $data = \app\admin\model\CapitalOther::with([
             'custom',
-            'details' => ['szmcData'],
+            'details' => ['szmcData','szflData'],
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
