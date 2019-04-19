@@ -136,7 +136,7 @@ class Ylsh extends Right
     public function pandianlist()
     {
         $params = request()->param();
-        $list = $list = \app\admin\model\KcPandian::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list = $list = \app\admin\model\KcPandian::where('companyid', $this->getCompanyId());
         if (!empty($params['system_number'])) {
             $list->where("system_number",$params['system_number']);
         }
@@ -157,7 +157,7 @@ class Ylsh extends Right
     public function pandianmx($id = 0)
     {
         $data = \app\admin\model\KcPandian::with(['details'])
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -172,7 +172,7 @@ class Ylsh extends Right
     public function diaobolist()
     {
         $params = request()->param();
-        $list = $list = \app\admin\model\KcDiaobo::where('companyid', Session::get('uinfo.companyid', 'admin'));
+        $list = $list = \app\admin\model\KcDiaobo::where('companyid',$this->getCompanyId());
         if (!empty($params['system_number'])) {
             $list->where("system_number",$params['system_number']);
         }
@@ -193,7 +193,7 @@ class Ylsh extends Right
     public function diaobomx($id = 0)
     {
         $data = \app\admin\model\KcDiaobo::with(['details'])
-            ->where('companyid', Session::get('uinfo.companyid', 'admin'))
+            ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -204,12 +204,11 @@ class Ylsh extends Right
     }
     public function adddiaobo($data = [], $return = false){
         if (request()->isPost()) {
-            $companyId = Session::get('uinfo.companyid', 'admin');
+            $companyId =$this->getCompanyId();
             $count = \app\admin\model\KcDiaobo::whereTime('create_time', 'today')->count();
             $data = request()->post();
             $data["status"] = 0;
-            $data['create_operator_name'] = Session::get("uinfo.name", "admin");
-            $data['create_operator_id'] = Session::get("uid", "admin");
+            $data['create_operator_id'] =$this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_number'] = 'KCPD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             if (!$return) {
