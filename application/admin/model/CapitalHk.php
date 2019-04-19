@@ -5,8 +5,7 @@ namespace app\admin\model;
 
 
 use Exception;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\ModelNotFoundException;
+use think\db\exception\{DataNotFoundException, ModelNotFoundException};
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -216,5 +215,25 @@ class CapitalHk extends Base
             $obj['hxzhongliang'] -= $zhongliang;
         }
         $obj->save();
+    }
+
+    /**
+     * @param $dataId
+     * @param $ywType
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public function deleteHk($dataId, $ywType)
+    {
+        $obj = CapitalHk::where('data_id', $dataId)->where('hk_type', $ywType)->find();
+        if (empty($obj)) {
+            return;
+        }
+        if ($obj['hxmoney'] != 0 || $obj['hxzhongliang'] != 0) {
+            throw new Exception("已经有结算信息!");
+        }
+        $obj->delete();
     }
 }

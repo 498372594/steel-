@@ -32,7 +32,7 @@ class CapitalOtherYf extends Right
             $addList = [];
             $updateList = [];
             $ja = $data['details'];
-            if (empty($ja)) {
+            if (!empty($ja)) {
                 $num = 1;
                 $detailsValidate = new CapitalOtherDetails();
                 foreach ($ja as $object) {
@@ -64,6 +64,7 @@ class CapitalOtherYf extends Right
                 $data['fangxiang'] = 2;
                 $data['system_number'] = 'QTYFK' . date('Ymd') . str_pad(++$count, 3, 0, STR_PAD_LEFT);
                 $data['yw_type'] = 1;
+                $data['companyid'] = $companyid;
 
                 $qt = new \app\admin\model\CapitalOther();
                 $qt->allowField(true)->data($data)->save();
