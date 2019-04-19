@@ -95,70 +95,73 @@ class Salesorder extends Right
      * 作废
      * @param Request $request
      * @param int $id
-     * @param int $ywlx
-     * @param boolean $isWeb
      * @return Json|string
-     * @throws DbException
      */
-    public function cancel(Request $request, $id = 0, $ywlx = 1, $isWeb = true)
+    public function cancel(Request $request, $id = 0)
     {
-        if ($request->isPost()) {
-            if ($ywlx != 1 && $isWeb) {
-                return returnFail('此销售单禁止直接作废');
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+
+        Db::startTrans();
+        try {
+            $xs = \app\admin\model\Salesorder::get($id);
+            if (empty($xs)) {
+                throw new Exception("对象不存在");
             }
-            if ($isWeb) {
-                $salesorder = \app\admin\model\Salesorder::where('id', $id)
-                    ->where('ywlx', $ywlx)
-                    ->find();
-            } else {
-                $salesorder = \app\admin\model\Salesorder::where('data_id', $id)
-                    ->where('ywlx', $ywlx)
-                    ->find();
+            if ($xs['status'] == 2) {
+                throw new Exception("该单据已经作废");
             }
-            if (empty($salesorder)) {
-                return returnFail('数据不存在');
+            if ($xs['ywlx'] != 1) {
+                throw new Exception("该销售单是由其他单据自动生成的，禁止直接作废！");
             }
-            if ($salesorder->status == 3) {
-                return returnFail('此单已审核，禁止作废');
-            }
-            if ($salesorder->status == 2) {
-                return returnFail('此单已作废');
-            }
-            if ($isWeb) {
-                Db::startTrans();
-            }
-            try {
-                $salesorder->status = 2;
-                $salesorder->save();
-                //货款单作废
-                (new CapitalHk())->cancel($id, CapitalHk::SALES_ORDER);
-                //费用单作废
-                (new Feiyong())->cancelByRelation($id, 1);
-                //出库单作废
-                (new Chuku())->cancel($request, $id, false);
-                //清理出库通知
-                (new Chuku())->cancelNotify($id, 4);
-                Db::commit();
-                return returnSuc();
-            } catch (Exception $e) {
-                if ($isWeb) {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
-                } else {
-                    return $e->getMessage();
+            if ($xs['ywlx'] != 7) {
+                if ($xs['ywlx'] == 1)
+                    throw new Exception("该销售单是由调货销售单自动生成的，禁止直接作废！");
+                if ("2" == $xs['ywlx'])
+                    throw new Exception("该销售单是由采购直发单自动生成的，禁止直接作废！");
+                if ("4" == $xs['ywlx'])
+                    throw new Exception("该销售单是由销售预订单自动生成的，禁止直接作废！");
+                if ("5" == $xs['ywlx']) {
+                    throw new Exception("该销售单是由销售预订实销单自动生成的，禁止直接作废！");
                 }
             }
+            $xs->status = 2;
+            $xs->save();
+            $mxList = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->select();
+            if ($xs['ckfs'] == 1) {
+                (new StockOut())->cancelChuku($xs['id'], 4);
+            } else {
+                $ckTzDaoTmpl = new KucunCktz();
+                foreach ($mxList as $mx) {
+                    $ckTzDaoTmpl->deleteByDataIdAndChukuType($mx['id'], 4);
+                }
+            }
+            $invDaoImpl = new \app\admin\model\Inv();
+            foreach ($mxList as $mx) {
+                $invDaoImpl->deleteInv($mx['id'], 3);
+                $thMxList = SalesReturnDetails::where('xs_sale_mx_id', $mx['id'])->count();
+                if ($thMxList > 0) {
+                    throw new Exception("该销售单已有退货信息，禁止该操作！");
+                }
+            }
+            (new CapitalFy())->deleteByDataIdAndType($xs['id'], 1);
+            (new \app\admin\model\CapitalHk())->deleteHk($xs['id'], 12);
+
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
         }
-        return returnFail('请求方式错误');
     }
 
     /**
      * @param Request $request
-     * @param array $data
      * @param int $ywlx
      * @return Json
      */
-    public function add(Request $request, $ywlx = 1)
+    public function add(Request $request, $ywlx = 7)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
@@ -416,7 +419,7 @@ class Salesorder extends Right
             $data['add_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_no'] = 'XSD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);;
-            $data['ywlx'] = 1;
+            $data['ywlx'] = 7;
             $xs = new \app\admin\model\Salesorder();
             $xs->allowField(true)->data($data)->save();
             if ($data['ckfs'] == 1) {

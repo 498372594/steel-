@@ -356,4 +356,32 @@ class CapitalFy extends Base
         }
         $obj->save();
     }
+
+    /**
+     * @param $dataId
+     * @param $type
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public function deleteByDataIdAndType($dataId, $type)
+    {
+        $list = self::where('data_id', $dataId)->where('fyhx_type', $type)->select();
+        foreach ($list as $hx) {
+            $fy = CapitalFy::get($hx['cap_fy_id']);
+            if (!empty($fy)) {
+                if ($fy['fymx_create_type'] == 1) {
+                    if ($fy['hxmoney'] != 0 || $fy['hxzhongliang'] != 0) {
+                        throw new Exception("已经有结算信息!");
+                    }
+                    $fy->delete();
+                } else {
+                    throw new Exception("已做费用单,禁止删除!");
+                }
+            }
+
+            $hx->delete();
+        }
+    }
 }

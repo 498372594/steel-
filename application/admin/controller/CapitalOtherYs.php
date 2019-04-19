@@ -33,7 +33,7 @@ class CapitalOtherYs extends Right
             $addList = [];
             $updateList = [];
             $ja = $data['details'];
-            if (empty($ja)) {
+            if (!empty($ja)) {
                 $num = 1;
                 $detailsValidate = new CapitalOtherDetails();
                 foreach ($ja as $object) {
@@ -65,6 +65,7 @@ class CapitalOtherYs extends Right
                 $data['fangxiang'] = 1;
                 $data['system_number'] = 'QTYSK' . date('Ymd') . str_pad(++$count, 3, 0, STR_PAD_LEFT);
                 $data['yw_type'] = 1;
+                $data['companyid'] = $companyid;
 
                 $qt = new \app\admin\model\CapitalOther();
                 $qt->allowField(true)->data($data)->save();
@@ -103,7 +104,7 @@ class CapitalOtherYs extends Right
             $qt->money = $sumMoney;
             $qt->save();
             Db::commit();
-            return returnSuc();
+            return returnSuc(['id' => $qt['id']]);
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());

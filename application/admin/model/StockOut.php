@@ -5,6 +5,8 @@ namespace app\admin\model;
 
 
 use Exception;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\ModelNotFoundException;
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -150,6 +152,41 @@ class StockOut extends Base
         $spot = KcSpot::get($spotId);
         if (empty($spot) || empty($spotId)) {
             throw new Exception("引用的采购单还未入库，请入库后再操作！");
+        }
+    }
+
+    /**
+     * @param $dataId
+     * @param $chukuType
+     * @throws DbException
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     */
+    public function cancelChuku($dataId, $chukuType)
+    {
+        if (empty($dataId)) {
+            throw new Exception("请传入dataId");
+        }
+        if ("1" != $chukuType && "2" != $chukuType && "3" != $chukuType && "4" != $chukuType && "9" != $chukuType && "10" != $chukuType && "11" != $chukuType && "12" != $chukuType && "14" != $chukuType && "16" != $chukuType) {
+            throw new Exception("请传入匹配的出库类型[chukuType]");
+        }
+
+        $ck = self::where('data_id', $dataId)->where('chuku_type', $chukuType)->find();
+        if (empty($ck)) {
+            throw new Exception("对象不存在");
+        }
+
+        $ck->status = 2;
+        $ck->save();
+        $ckmd = StockOutMd::where('stock_out_id', $ck['id'])->select();
+        foreach ($ckmd as $md) {
+            $spot = KcSpot::get($md['kc_spot_id']);
+            $rkMd = KcRkMd::get($spot['rk_md_id']);
+
+            if ($md['out_mode'] == 2 && ($rkMd['counts'] != $spot['counts'] || $rkMd['zhongliang'] != $spot['zhongliang'])) {
+                throw new Exception("已经有出库信息!");
+            }
+            (new KcSpot())->adjustSpotById($md['kc_spot_id'], true, $md['counts'], $md['zhongliang'], $md['jijiafangsshi_id'], $md['tax']);
         }
     }
 }
