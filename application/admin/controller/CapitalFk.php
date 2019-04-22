@@ -334,54 +334,46 @@ class CapitalFk extends Right
      * @param Request $request
      * @param int $id
      * @return Json
-     * @throws DbException
      */
-    public function cancel(Request $request, $id = 0)
+    public function cancel(Request $request, $id)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
         }
-        $fukuan = CapitalFkModel::where('id', $id)
-            ->where('companyid', $this->getCompanyId())
-            ->find();
-        if (empty($fukuan)) {
-            return returnFail('数据不存在');
-        }
-        if ($fukuan->status == 3) {
-            return returnFail('此单已审核，禁止作废');
-        }
-        if ($fukuan->status == 2) {
-            return returnFail('此单已作废');
-        }
         Db::startTrans();
         try {
-            $fukuan->status = 2;
-            $fukuan->save();
-            //核销记录退回
-            foreach ($fukuan->details as $item) {
-                if ($item['fkhx_type'] == CapitalHk::CAPITAL_OTHER) {
-                    $relation = CapitalOtherModel::where('fangxiang', 2)
-                        ->where('id', $item['data_id'])
-                        ->where('status', '<>', '2')
-                        ->find();
-                } elseif ($item['fkhx_type'] == CapitalHk::CAPITAL_COST) {
-                    $relation = CapitalFy::where('fang_xiang', 2)
-                        ->where('id', $item['data_id'])
-                        ->where('status', '<>', '2')
-                        ->find();
-                } else {
-                    $relation = CapitalHkModel::where('id', $item['data_id'])
-                        ->where('fangxiang', 2)
-                        ->where('status', '<>', '2')
-                        ->find();
-                }
-                if (empty($relation)) {
-                    throw new Exception('未知错误');
-                }
-                $relation->hxmoney -= $item->hx_money;
-                $relation->hxzhongliang -= $item->hx_zhongliang;
-                $relation->save();
+            $fk = CapitalFkModel::get($id);
+
+            if (empty($fk)) {
+                throw new Exception("对象不存在");
             }
+            if ($fk['companyid'] != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if ($fk['status'] == 2) {
+                throw new Exception("该单据已经作废");
+            }
+            if ($fk['fk_type'] == 2) {
+                CapitalHkModel::deleteHk($fk['id'], 23);
+            }
+
+            $list = CapitalFkjsfs::where('fk_id', $fk['id'])->select();
+            foreach ($list as $jsfs) {
+                Bank::deleteBank($jsfs['id'], 3, 2);
+            }
+
+            $list1 = CapitalFkhx::where('fk_id', $fk['id'])->select();
+            foreach ($list1 as $hx) {
+                if ($hx['fkhx_type'] == 1) {
+                    CapitalOtherModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                } elseif ($hx['fkhx_type'] == 2) {
+                    CapitalFy::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                } else {
+                    CapitalHkModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                }
+            }
+            $fk->status = 2;
+            $fk->save();
             Db::commit();
             return returnSuc();
         } catch (Exception $e) {
@@ -389,5 +381,4 @@ class CapitalFk extends Right
             return returnFail($e->getMessage());
         }
     }
-
 }
