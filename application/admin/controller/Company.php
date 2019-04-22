@@ -10,6 +10,7 @@ use app\admin\model\Admin as AdminModel;
 
 class Company extends Right
 {
+    protected $role = 3;
     /**
      * 查
      * @return \think\response\Json
