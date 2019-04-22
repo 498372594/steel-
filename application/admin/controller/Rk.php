@@ -426,15 +426,15 @@ class Rk extends Right
         $params = request()->param();
         $list = \app\admin\model\ViewQingku::where(array("companyid" => $this->getCompanyId()));
         $list = $this->getsearchcondition($params, $list);
-      if(!empty($params['status'])){
-          $list->where('status', $params['status']);
+      if($params['qingku_status']){
+          $list->where('status',2);
       }else{
           $list->where('status', 1);
       }
-        if(!empty($params['guobang_zhongliang'])){
+        if(!$params['guobang_zhongliang']){
             $list->where('guobang_zhongliang', 0);
         }
-        if(!empty($params['counts'])){
+        if(!$params['counts']){
             $list->where('counts', 0);
         }
         $list = $list->paginate(10);
@@ -452,27 +452,27 @@ class Rk extends Right
         foreach ($ids as $id){
             $st=KcSpot::where("id",$id)->find();
             if(empty($st)){
-                throw new \Exception("没有数据");
+                throw new Exception("没有数据");
             }else{
                 if($type==1){
                     if($st["status"]==1){
-                        throw new \Exception("该单据未清库，禁止反清库！");
-                        $st["status"]=1;
+                        throw new Exception("该单据未清库，禁止反清库！");
                 }
+                    $st["status"]=1;
             }elseif( $type==2){
                     if($st["status"]==2){
-                        throw new \Exception("该单据已清库，禁止再次清库！");
-                        $st["status"]=2;
+                        throw new Exception("该单据已清库，禁止再次清库！");
                     }
+                    $st["status"]=2;
             }else{
-                    throw new \Exception("非法参数");
+                    throw new Exception("非法参数");
                 }
                 $st->isUpdate(true)->allowField(true)->save($st);
-                return returnSuc(['id' => $xs['id']]);
+                return returnSuc(['id' => $st['id']]);
             }
 
         }
-        $res = model("KcSpot")->where("id", "in", $id)->update(array("status" => 2));
+        $res = model("KcSpot")->where("id", "in", $ids)->update(array("status" => 2));
         return returnRes($res, '清库失败');
     }
 
@@ -724,6 +724,42 @@ class Rk extends Right
 
             Db::commit();
             return returnSuc(['id' => $qt['id']]);
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+    /**
+     * 作废
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     */
+    public function cancel(Request $request, $id = 0)
+    {
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $rk = \app\admin\model\KcQtrk::get($id);
+            if (empty($rk)) {
+                throw new Exception("没有此对象");
+            }
+            if ($rk->companyid != $this->getCompanyId()) {
+                throw new Exception("没有此对象");
+            }
+
+            $rk->status = 1;
+            $rk->save();
+
+            $mxList = KcQtrkMx::where('kc_rk_qt_id', $rk['id'])->select();
+            $cktzModel = new KcRkTz();
+            foreach ($mxList as $mx) {
+                $cktzModel->deleteByDataIdAndRukuType($mx['id'], 3);
+            }
+            Db::commit();
+            return returnSuc();
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());

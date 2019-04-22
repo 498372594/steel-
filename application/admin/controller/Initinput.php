@@ -5,7 +5,7 @@ namespace app\admin\controller;
 use think\Controller;
 use think\Db;
 use think\Exception;
-use app\admin\model\{KcSpot};
+use app\admin\model\{KcRk, KcSpot};
 use think\Session;
 
 class Initinput extends Right
@@ -149,22 +149,22 @@ class Initinput extends Right
                 Db::startTrans();
             }
             try {
-                if(empty($data["id"])){
+                if (empty($data["id"])) {
                     model("init_bank")->allowField(true)->isUpdate(false)->save($data);
                     $id = model("init_bank")->getLastInsID();
-                }else{
-                    model("init_bank")->allowField(true)->save($data,$data["id"]);
-                    $id=$data["id"];
+                } else {
+                    model("init_bank")->allowField(true)->save($data, $data["id"]);
+                    $id = $data["id"];
                 }
-                if(!empty($data["delete_id"])){
-                    model("InitBankMx")->where("id","in",$data["delete_id"])->delete();
+                if (!empty($data["delete_id"])) {
+                    model("InitBankMx")->where("id", "in", $data["delete_id"])->delete();
                 }
                 foreach ($data["details"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['bank_id'] = $id;
-                    if(empty($v["id"])){
+                    if (empty($v["id"])) {
                         model('InitBankMx')->allowField(true)->isUpdate(false)->data($data['details'][$c])->save();
-                    }else{
+                    } else {
                         model('InitBankMx')->allowField(true)->update($data['details'][$c]);
                     }
                 }
@@ -193,19 +193,22 @@ class Initinput extends Right
     /**
      *应收账款余额初始录入
      */
-    public function initysk(){
+    public function initysk()
+    {
         $params = request()->param();
-        $list = $list = \app\admin\model\InitYsfk::where(array("companyid"=>$this->getCompanyId(),"type"=>0));
+        $list = $list = \app\admin\model\InitYsfk::where(array("companyid" => $this->getCompanyId(), "type" => 0));
         $list = $this->getinitsearch($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
+
     /**
      *应付账款余额初始录入
      */
-    public function inityfk(){
+    public function inityfk()
+    {
         $params = request()->param();
-        $list = $list = \app\admin\model\InitYsfk::where(array("companyid"=>$this->getCompanyId(),"type"=>1));
+        $list = $list = \app\admin\model\InitYsfk::where(array("companyid" => $this->getCompanyId(), "type" => 1));
         $list = $this->getinitsearch($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
@@ -217,7 +220,8 @@ class Initinput extends Right
      * @return string|\think\response\Json
      * @throws \Exception
      */
-    public function addkc($data = [], $return = false){
+    public function addkc($data = [], $return = false)
+    {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
             $count = \app\admin\model\InitKc::whereTime('create_time', 'today')->count();
@@ -251,7 +255,7 @@ class Initinput extends Right
                         'guige_id' => $v['guige_id'],
                         'data_id' => $id,
                         'pinming_id' => $v['pinming_id'],
-                        'store_id' => $v['store_id']?? '',
+                        'store_id' => $v['store_id'] ?? '',
                         'caizhi_id' => $v['caizhi_id'] ?? '',
                         'chandi_id' => $v['chandi_id'] ?? '',
                         'jijiafangshi_id' => $v['jijiafangshi_id'],
@@ -329,12 +333,13 @@ class Initinput extends Right
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function kclist(){
+    public function kclist()
+    {
         $params = request()->param();
-        $list = $list = \app\admin\model\InitKc::with(['customData','jsfsData','pjlxData','storageData','createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])
+        $list = $list = \app\admin\model\InitKc::with(['customData', 'jsfsData', 'pjlxData', 'storageData', 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])
             ->where('companyid', $this->getCompanyId());
 
-       $list=$this->getsearchcondition($params,$list);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
@@ -346,11 +351,12 @@ class Initinput extends Right
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    public function kcmx($id=0){
+    public function kcmx($id = 0)
+    {
 
-        $data =  \app\admin\model\InitKc::with([ 'details' => ['specification', 'jsfs', 'storage','chandiData','caizhiData','pinmingData'],'createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata',
-            'customData','jsfsData','pjlxData','storageData'])
-            ->where('companyid',$this->getCompanyId())
+        $data = \app\admin\model\InitKc::with(['details' => ['specification', 'jsfs', 'storage', 'chandiData', 'caizhiData', 'pinmingData'], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata',
+            'customData', 'jsfsData', 'pjlxData', 'storageData'])
+            ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -359,19 +365,23 @@ class Initinput extends Right
             return returnRes(true, '', $data);
         }
     }
+
     //0为付款，1为收款
-    public function ysfk($type=0){
+    public function ysfk($type = 0)
+    {
         $params = request()->param();
-        $list = $list = \app\admin\model\InitYsfk::with(['createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid', $this->getCompanyId());
-        $list->where('type',$type);
-        $list=$this->getsearchcondition($params,$list);
+        $list = $list = \app\admin\model\InitYsfk::with(['createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])->where('companyid', $this->getCompanyId());
+        $list->where('type', $type);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
-    public function ysfkmx($id=0){
-        $data  = \app\admin\model\InitYsfk::with([ 'details','createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'
-          ])
-            ->where('companyid',$this->getCompanyId())
+
+    public function ysfkmx($id = 0)
+    {
+        $data = \app\admin\model\InitYsfk::with(['details', 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'
+        ])
+            ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -380,19 +390,20 @@ class Initinput extends Right
             return returnRes(true, '', $data);
         }
     }
+
     public function addysfk($data = [], $return = false)
     {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
             $data = request()->post();
-            $count = \app\admin\model\InitYsfk::whereTime('create_time', 'today')->where("type",$data["type"])->count();
+            $count = \app\admin\model\InitYsfk::whereTime('create_time', 'today')->where("type", $data["type"])->count();
             $data["status"] = "0";
             $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
-            if($data["type"]=="0"){
+            if ($data["type"] == "0") {
                 $data['system_number'] = 'YFZKYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
-            if($data["type"]=="1"){
+            if ($data["type"] == "1") {
                 $data['system_number'] = 'YSZKYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
             if (!$return) {
@@ -400,22 +411,22 @@ class Initinput extends Right
             }
             try {
 
-                if(empty($data["id"])){
+                if (empty($data["id"])) {
                     model("InitYsfk")->allowField(true)->isUpdate(false)->save($data);
                     $id = model("InitYsfk")->getLastInsID();
-                }else{
-                    model("InitYsfk")->allowField(true)->save($data,$data["id"]);
-                    $id=$data["id"];
+                } else {
+                    model("InitYsfk")->allowField(true)->save($data, $data["id"]);
+                    $id = $data["id"];
                 }
-                if(!empty($data["delete_id"])){
-                    model("InitYsfkMx")->where("id","in",$data["delete_id"])->delete();
+                if (!empty($data["delete_id"])) {
+                    model("InitYsfkMx")->where("id", "in", $data["delete_id"])->delete();
                 }
                 foreach ($data["details"] as $c => $v) {
                     $data['details'][$c]['companyid'] = $companyId;
                     $data['details'][$c]['ysfk_id'] = $id;
-                    if(empty($v["id"])){
+                    if (empty($v["id"])) {
                         model('InitYsfkMx')->allowField(true)->isUpdate(false)->data($data['details'][$c])->save();
-                    }else{
+                    } else {
                         model('InitYsfkMx')->allowField(true)->update($data['details'][$c]);
                     }
 
@@ -441,19 +452,23 @@ class Initinput extends Right
             return returnFail('请求方式错误');
         }
     }
+
     //0为付款，1为收款
-    public function yskp($type=0){
+    public function yskp($type = 0)
+    {
         $params = request()->param();
-        $list = $list = \app\admin\model\InitYskp::with(['createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid', $this->getCompanyId());
-        $list->where('type',$type);
-        $list=$this->getsearchcondition($params,$list);
+        $list = $list = \app\admin\model\InitYskp::with(['createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])->where('companyid', $this->getCompanyId());
+        $list->where('type', $type);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
-    public function yskpmx($id=0){
-        $data = \app\admin\model\InitYskp::with([ 'details'=>['customData','pjlxData'],'createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'
+
+    public function yskpmx($id = 0)
+    {
+        $data = \app\admin\model\InitYskp::with(['details' => ['customData', 'pjlxData'], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'
         ])
-            ->where('companyid',$this->getCompanyId())
+            ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -462,19 +477,20 @@ class Initinput extends Right
             return returnRes(true, '', $data);
         }
     }
+
     public function yskpadd($data = [], $return = false)
     {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
             $data = request()->post();
-            $count = \app\admin\model\InitYskp::whereTime('create_time', 'today')->where("type",$data["type"])->count();
+            $count = \app\admin\model\InitYskp::whereTime('create_time', 'today')->where("type", $data["type"])->count();
             $data["status"] = 0;
             $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
-            if($data["type"]==0){
+            if ($data["type"] == 0) {
                 $data['system_number'] = 'YSJXFPYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
-            if($data["type"]==1){
+            if ($data["type"] == 1) {
                 $data['system_number'] = 'YKXXFPYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
 
@@ -482,15 +498,15 @@ class Initinput extends Right
                 Db::startTrans();
             }
             try {
-                if(empty($data["id"])){
+                if (empty($data["id"])) {
                     model("InitYskp")->allowField(true)->isUpdate(false)->save($data);
                     $id = model("InitYskp")->getLastInsID();
-                }else{
-                    model("InitYskp")->allowField(true)->save($data,$data["id"]);
-                    $id=$data["id"];
+                } else {
+                    model("InitYskp")->allowField(true)->save($data, $data["id"]);
+                    $id = $data["id"];
                 }
-                if(!empty($data["delete_id"])){
-                    model("InitYskpMx")->where("id","in",$data["delete_id"])->delete();
+                if (!empty($data["delete_id"])) {
+                    model("InitYskpMx")->where("id", "in", $data["delete_id"])->delete();
                 }
 
                 foreach ($data["details"] as $c => $v) {
@@ -520,4 +536,173 @@ class Initinput extends Right
         }
     }
 
+    public function kcCancel($id = 0)
+    {
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $kc = \app\admin\model\InitKc::get($id);
+            if (empty($kc)) {
+                throw new Exception("对象不存在");
+            }
+            if ($kc["status"] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            $kc->status = 1;
+            $kc->save();
+            (new KcRk())->cancelRuku($kc->id, 8);
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+
+    public function yskcancel($id = 0)
+    {
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $ysfk = \app\admin\model\InitYsfk::get($id);
+            if (empty($ysfk)) {
+                throw new Exception("对象不存在");
+            }
+            if ($ysfk["status"] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            $ysfk->status = 1;
+            $ysfk->save();
+            $list = \app\admin\model\InitYsfkMx::where("ysfk_id", $ysfk["id"])->select();
+
+            foreach ($list as $mx) {
+                (new \app\admin\model\CapitalHk())->deleteHk($mx["id"], 26);
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+
+    public function yfkcancel($id = 0)
+    {
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $ysfk = \app\admin\model\InitYsfk::get($id);
+            if (empty($ysfk)) {
+                throw new Exception("对象不存在");
+            }
+            if ($ysfk["status"] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            $ysfk->status = 1;
+            $ysfk->save();
+            $list = \app\admin\model\InitYsfkMx::where("ysfk_id", $ysfk["id"])->select();
+
+            foreach ($list as $mx) {
+                (new \app\admin\model\CapitalHk())->deleteHk($mx["id"], 27);
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+
+    public function yspcancel($id = 0)
+    {
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $ysfp = \app\admin\model\InitYskp::get($id);
+            if (empty($ysfp)) {
+                throw new Exception("对象不存在");
+            }
+            if ($ysfp["status"] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            $ysfp->status = 1;
+            $ysfp->save();
+            $list = \app\admin\model\InitYsfpMx::where("ysfp_id", $ysfp["id"])->select();
+
+            foreach ($list as $mx) {
+                (new \app\admin\model\Inv())->deleteInv($mx["id"], 1);
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+
+    public function ykpcancel($id = 0)
+    {
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $ysfp = \app\admin\model\InitYskp::get($id);
+            if (empty($ysfp)) {
+                throw new Exception("对象不存在");
+            }
+            if ($ysfp["status"] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            $ysfp->status = 1;
+            $ysfp->save();
+            $list = \app\admin\model\InitYsfpMx::where("ysfp_id", $ysfp["id"])->select();
+
+            foreach ($list as $mx) {
+                (new \app\admin\model\Inv())->deleteInv($mx["id"], 4);
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+    public function bankcancel($id = 0)
+    {
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $bank = \app\admin\model\InitBank::get($id);
+//            $bank = \app\admin\model\CapitalCqk::get($id);
+            if (empty($bank)) {
+                throw new Exception("对象不存在");
+            }
+            if ($bank["status"] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            $bank->status = 1;
+            $bank->save();
+            $list = \app\admin\model\InitBankMx::where("bank_id", $bank["id"])->select();
+
+            foreach ($list as $mx) {
+                (new \app\admin\model\Bank())->deleteBank($mx["id"], 0,1);
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
 }
