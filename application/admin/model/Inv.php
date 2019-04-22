@@ -162,4 +162,66 @@ class Inv extends Base
         $i->companyid = $companyId;
         $i->save();
     }
+
+    /**
+     * @param $dataId
+     * @param $money
+     * @param $zhongliang
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    public function jianMoney($dataId,$money,$zhongliang){
+        $money=$money==null?0:$money;
+        $zhongliang=$money==null?0:$zhongliang;
+        $inv=new self();
+        $obj=$inv::where("id",$dataId)->field("id,yhx_zhongliang,yhx_price")->find();
+        if($obj){
+            if($money!=0){
+                $fhMoney=$obj["yhx_price"]-$money;
+                if($fhMoney<0){
+                    $obj["yhx_price"]=0;
+                }else{
+                    $obj["yhx_price"]=$obj["yhx_price"]-$money;
+                }
+            }
+            if($zhongliang!=0){
+                $fhzhongliang=$obj["yhx_zhongliang"]-$money;
+                if($fhzhongliang<0){
+                    $obj["yhx_zhongliang"]=0;
+                }else{
+                    $obj["yhx_zhongliang"]=$obj["yhx_zhongliang"]-$money;
+                }
+            }
+            $inv->save($obj);
+        }
+    }
+    public function tiaoMoney($id,$oldMoney,$money,$oldZhongliang,$zhongliang){
+        $money=$money==null?0:$money;
+        $zhongliang=$money==null?0:$zhongliang;
+        $oldMoney=$oldMoney==null?0:$oldMoney;
+        $oldZhongliang=$oldZhongliang==null?0:$oldZhongliang;
+        $inv=new self();
+        $obj=$inv::where("id",$id)->field("id,yhx_zhongliang,yhx_price")->find();
+        if($money!=0){
+            $obj["yhx_price"]= $obj["yhx_price"]+($money-$oldMoney);
+        }
+        if($zhongliang!=0){
+            $obj["yhx_zhongliang"]= $obj["yhx_zhongliang"]+($zhongliang-$oldZhongliang);
+        }
+        $inv->save($obj);
+    }
+    public function addMoney($dataId,$money,$zhongliang){
+        $money=$money==null?0:$money;
+        $zhongliang=$money==null?0:$zhongliang;
+        $inv=new self();
+        $obj=$inv::where("id",$id)->field("id,yhx_zhongliang,yhx_price")->find();
+        if($money!=0){
+            $obj["yhx_price"]= $obj["yhx_price"]+($money);
+        }
+        if($zhongliang!=0){
+            $obj["yhx_zhongliang"]= $obj["yhx_zhongliang"]+($zhongliang);
+        }
+        $inv->save($obj);
+    }
 }

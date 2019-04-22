@@ -5,11 +5,13 @@ namespace app\admin\controller;
 
 
 
+use app\admin\model\InvCgspHx;
 use think\{db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
     exception\DbException,
     Request,
     response\Json};
+use Exception;
 class Invcgsp extends Right
 {
     public function add($data)
@@ -154,6 +156,103 @@ class Invcgsp extends Right
             return '请求方式错误';
         } else {
             return returnFail('请求方式错误');
+        }
+    }
+    public function addcgsp(){
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
+
+        Db::startTrans();
+        try{
+            $data = request()->post();
+
+            $validate = new \app\admin\validate\KcQtrk();
+            if (!$validate->check($data)) {
+                throw new Exception($validate->getError());
+            }
+
+            $addList = [];
+            $updateList = [];
+            $ja = $data['details'];
+            $companyId = $this->getCompanyId();
+            if (!empty($ja)) {
+
+                $num = 1;
+                $detailsValidate = new \app\admin\validate\InvCgsp();
+                foreach ($ja as $object) {
+
+                    $object['companyid'] = $companyId;
+                    if (!$detailsValidate->check($object)) {
+                        throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+                    }
+                    $num++;
+
+                    if (empty($object["zhongliang"])) {
+                        throw new Exception("重量不能为空");
+                    }
+                    if (empty($object["id"])) {
+                        $addList[] = $object;
+                    } else {
+                        $updateList[] = $object;
+                    }
+                    if($data["id"]){
+                        $count = \app\admin\model\InvCgsp::whereTime('create_time', 'today')->where("companyid",$companyId)->count();
+                        $data['system_number'] = 'CGSP' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                        $data['create_operator_id'] = $this->getAccountId();
+                        $data['companyid'] = $companyId;
+                        $cgsp = new \app\admin\model\InvCgsp();
+                        $cgsp->allowField(true)->save($data);
+                    }else{
+                        $cgsp=\app\admin\model\InvCgsp::where("companyid",$companyId) ->where('id', $data['id'])
+                            ->find();
+                        if($cgsp["status"]==1){
+                            throw new Exception("该单据已经作废");
+                        }
+                        if(empty($cgsp["status"])){
+                            throw new Exception("该单据只读状态,不能修改");
+                        }
+                        $data['update_operator_id'] = $this->getAccountId();
+                        $cgsp->allowField(true)->save($data);
+                    }
+                    if(!empty($data['deleteMxIds'])){
+                        foreach ($data["deleteMxIds"] as $delete_id){
+                            $mx=\app\admin\model\InvCgspMx::where("id",$delete_id)->find();
+                            \app\admin\model\InvCgsp::destroy(array("id",$delete_id));
+                            \app\admin\model\Inv::jianMoney($mx["data_id"],$mx["sum_shui_price"],$mx["zhongliang"]);
+                        }
+                    }
+                    if(!empty($updateList)){
+                        foreach ($updateList as $mjo){
+                            $hx=InvCgspHx::where("id",$mjo["id"])->find();
+                            if(!empty($mx["data_id"])){
+                                \app\admin\model\Inv::tiaoMoney($hx["data_id"],$hx["sum_shui_price"],$mjo["sum_shui_price"],$hx["zhongliang"],$mjo["zhongliang"]);
+                            }
+                            $mx=new InvCgspHx();
+                            $mx->isUpdate(true)->allowField(true)->save($mjo);
+                        }
+                    }
+                    if(empty($addList)){
+                       foreach ($addList as $mjo){
+                           $mjo["cgsp_id"]=$cgsp["id"];
+
+                           if($mjo["data_id"]){
+                               $inv=\app\admin\model\Inv::where("id",$mjo["data_id"])->find();
+                               $mjo["system_number"]=$inv["system_number"];
+                               $mjo["yw_time"]=$inv["yw_time"];
+                               (new \app\admin\model\Inv())->addMoney($mjo["data_id"],$mjo["sum_shui_price"],$mjo["zhongliang"]);
+                           }
+                           $hx = new InvCgspHx();
+                           $hx->allowField(true)->save($mjo);
+                       }
+                    }
+
+                }
+                Db::commit();
+                return returnSuc(['id' => $cgsp['id']]);
+            }
+        }catch (Exception $e){
+
         }
     }
 }
