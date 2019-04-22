@@ -194,45 +194,17 @@ class KcSpot extends Base
         }
         $s = new self();
 
-        if (empty($zhijian)) {
+        if (empty($zhijian * 1)) {
             $s->lingzhi = $counts;
             $s->jianshu = 0;
         } else {
-            $bresult = round($counts / $zhijian);
+            $bresult = floor($counts / $zhijian);
             $s->lingzhi = $counts - $bresult * $zhijian;
             $s->jianshu = $bresult;
         }
 
         $lisuanZhongliang = 0;
-//        if ("3" . equals(p . getSysDanzhongTypeId())) {
-//            lisuanZhongliang = jianzhong . multiply(s . getJianshu());
-//        } else {
-//            int chusuan = 1000;
-//            if ("6" . equals(p . getZhongliangid())) {
-//                chusuan = 1000;
-//            }
-//            BigDecimal tempChangdu = changdu;
-//            if ("2" . equals(p . getSysDanzhongTypeId())) {
-//                tempChangdu = new BigDecimal("1");
-//            }
-//            BigDecimal cdchusuan = BigDecimal . valueOf(1L);
-//            if ("1" . equals(p . getChangduid())) {
-//                cdchusuan = BigDecimal . valueOf(0.001D);
-//            }
-//
-//            if (("1" . equals(p . getPinmingType())) || ("2" . equals(p . getPinmingType()))) {
-//
-//                lisuanZhongliang = tempChangdu . multiply(cdchusuan) . multiply(mizhong) . multiply(s . getLingzhi()) . multiply(kuandu) . multiply(cdchusuan) . divide(new BigDecimal(chusuan));
-//                BigDecimal tempLisuanZhongliang = tempChangdu . multiply(cdchusuan) . multiply(mizhong) . multiply(zhijian) . multiply(kuandu) . multiply(cdchusuan) . divide(new BigDecimal(chusuan));
-//                tempLisuanZhongliang = tempLisuanZhongliang . setScale(jianzhongNumber, 4) . multiply(s . getJianshu());
-//                lisuanZhongliang = lisuanZhongliang . setScale(zhongliangNumber, 4) . add(tempLisuanZhongliang) . setScale(zhongliangNumber, 4);
-//            } else {
-//                lisuanZhongliang = tempChangdu . multiply(cdchusuan) . multiply(mizhong) . multiply(s . getLingzhi()) . divide(new BigDecimal(chusuan));
-//                BigDecimal tempLisuanZhongliang = tempChangdu . multiply(cdchusuan) . multiply(mizhong) . multiply(zhijian) . divide(new BigDecimal(chusuan));
-//                tempLisuanZhongliang = tempLisuanZhongliang . setScale(jianzhongNumber, 4) . multiply(s . getJianshu());
-//                lisuanZhongliang = lisuanZhongliang . setScale(zhongliangNumber, 4) . add(tempLisuanZhongliang) . setScale(zhongliangNumber, 4);
-//            }
-//        }
+
         $s->shuie = $shuie;
         $s->zhongliang = $zhongliang;
         if ($baseJijialeixingId == 3) {

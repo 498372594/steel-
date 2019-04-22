@@ -14,7 +14,7 @@ class CORS
     public function appInit()
     {
         if (isset($_SERVER['HTTP_ORIGIN'])) {
-            $allow_host = ['http://127.0.0.1:8080','http://192.168.1.104:8080', 'http://localhost:8080', 'http://steelerp.hxc.com:9090', 'http://www.steel.com:9090', 'chrome-extension://aejoelaoggembcahagimdiliamlcdmfm','chrome-extension://apeehbjhcfblkdhffklgbfgllmdfeffo'];
+            $allow_host = ['http://127.0.0.1:8080','http://192.168.1.104:8080', 'http://localhost:8080', 'http://steelerp.hxc.com:9090', 'http://www.steel.com:9090', 'chrome-extension://aejoelaoggembcahagimdiliamlcdmfm','chrome-extension://apeehbjhcfblkdhffklgbfgllmdfeffo','chrome-extension://cmnlfmgbjmaciiopcgodlhpiklaghbok'];
             $http_origin = $_SERVER['HTTP_ORIGIN'];
 
             if(!in_array($http_origin,$allow_host)){
