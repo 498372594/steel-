@@ -187,7 +187,7 @@ class CapitalFk extends Right
                     $data['deleteMxIds'] = explode(',', $data['deleteMxIds']);
                 }
                 foreach ($data['deleteMxIds'] as $string) {
-                    (new Bank())->deleteBank($string, 3, 2);
+                    Bank::deleteBank($string, 3, 2);
                 }
                 CapitalFkjsfs::destroy(function (Query $query) use ($data) {
                     $query->where('id', 'in', $data['deleteMxIds']);
@@ -215,11 +215,11 @@ class CapitalFk extends Right
                 $hxList = CapitalFkhx::where('id', 'in', $data['deleteHxIds'])->select();
                 foreach ($hxList as $hx) {
                     if ($hx->fkhx_type == 1) {
-                        (new CapitalOtherModel())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                        CapitalOtherModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                     } else if ($hx->skhx_type == 2) {
-                        (new CapitalFy())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                        CapitalFy::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                     } else {
-                        (new CapitalHkModel())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                        CapitalHkModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                     }
                 }
                 CapitalFkhx::destroy(function (Query $query) use ($data) {

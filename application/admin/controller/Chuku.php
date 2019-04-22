@@ -471,66 +471,6 @@ class Chuku extends Right
     }
 
     /**
-     * 审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function audit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            $stockOut = StockOut::where('id', $id)
-                ->where('companyid', $this->getCompanyId())
-                ->find();
-            if (empty($stockOut)) {
-                return returnFail('数据不存在');
-            }
-            if ($stockOut->status == 3) {
-                return returnFail('此单已审核');
-            }
-            if ($stockOut->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $stockOut->status = 3;
-            $stockOut->check_operator_id = $this->getAccountId();
-            $stockOut->save();
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
-    }
-
-    /**
-     * 反审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function unAudit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            $stockOut = StockOut::where('id', $id)
-                ->where('companyid', $this->getCompanyId())
-                ->find();
-            if (empty($stockOut)) {
-                return returnFail('数据不存在或已作废');
-            }
-            if ($stockOut->status == 1) {
-                return returnFail('此单未审核');
-            }
-            if ($stockOut->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $stockOut->status = 1;
-            $stockOut->check_operator_id = null;
-            $stockOut->save();
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
-    }
-
-    /**
      * 作废
      * @param Request $request
      * @param int $id

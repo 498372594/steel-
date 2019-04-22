@@ -343,7 +343,7 @@ class CapitalFy extends Base
      * @param $zhongliang
      * @throws DbException
      */
-    public function jianMoney($id, $money, $zhongliang)
+    public static function jianMoney($id, $money, $zhongliang)
     {
         $money = empty($money) ? 0 : $money;
         $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
