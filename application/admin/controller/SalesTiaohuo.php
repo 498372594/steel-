@@ -287,39 +287,8 @@ class SalesTiaohuo extends Right
      * @param Request $request
      * @param int $id
      * @return Json
-     * @throws DbException
      */
     public function cancel(Request $request, $id = 0)
-    {
-        if ($request->isPost()) {
-            $cgzfd = SalesMoshi::get($id);
-            if (empty($cgzfd)) {
-                return returnFail('数据不存在');
-            }
-            if ($cgzfd->status == 3) {
-                return returnFail('此单已审核，无法作废');
-            }
-            if ($cgzfd->status == 2) {
-                return returnFail('此单已作废');
-            }
-            Db::startTrans();
-            try {
-                $cgzfd->status = 2;
-                $cgzfd->save();
-                (new Salesorder())->cancel($request, $id, 3, false);
-
-                //todo 作废采购单
-                Db::commit();
-                return returnSuc();
-            } catch (Exception $e) {
-                Db::rollback();
-                return returnFail($e->getMessage());
-            }
-        }
-        return returnFail('请求方式错误');
-    }
-
-    public function thCancel(Request $request, $id = 0)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
