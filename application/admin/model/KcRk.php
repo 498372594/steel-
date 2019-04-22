@@ -377,4 +377,53 @@ class KcRk extends Base
 
         $rk->delete();
     }
+
+    /**
+     * 入库单作废
+     * @param $dataId
+     * @param $rukuType
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public static function cancelRuku($dataId, $rukuType)
+    {
+        if (empty($dataId)) {
+            throw new Exception("请传入dataId");
+        }
+        if ($rukuType != 1 && $rukuType != 2 && $rukuType != 3 && $rukuType != 4 && $rukuType != 7 && $rukuType != 8 && $rukuType != 9 && $rukuType != 10 && $rukuType != 13 && $rukuType != 15) {
+            throw new Exception("请传入匹配的入库类型[rukuType]");
+        }
+
+        $rk = self::where('data_id', $dataId)->where('ruku_type', $rukuType)->find();
+        if (empty($rk)) {
+            throw new Exception("对象不存在");
+        }
+        $rk->satatus = 2;
+
+        $mdList = KcRkMd::where('kc_rk_id', $rk['id'])->select();
+        if (!empty($mdList)) {
+            foreach ($mdList as $tbKcRkMd) {
+                $spList = KcSpot::where('rk_md_id', $tbKcRkMd['id'])->select();
+                if (!empty($spList)) {
+                    foreach ($spList as $spot) {
+                        if ($spot['status'] == 2) {
+                            throw new Exception("该单据已执行清库操作");
+                        }
+                        $esh = KcYlSh::where('spot_id', $spot['id'])->select();
+                        if (!empty($esh)) {
+                            throw new Exception("该单据已预留锁货！");
+                        }
+                    }
+                }
+            }
+        }
+
+        $listids = KcRkMd::where('kc_rk_id', $rk['id'])->column('id');
+        foreach ($listids as $mdid) {
+            (new KcSpot())->deleteSpotByRkMd($mdid);
+        }
+        $rk->save();
+    }
 }

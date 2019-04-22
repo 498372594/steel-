@@ -164,7 +164,7 @@ class StockOut extends Base
      * @throws ModelNotFoundException
      * @throws Exception
      */
-    public function cancelChuku($dataId, $chukuType)
+    public static function cancelChuku($dataId, $chukuType)
     {
         if (empty($dataId)) {
             throw new Exception("请传入dataId");

@@ -207,4 +207,15 @@ class Salesorder extends Base
         $xs->delete();
         return $xs;
     }
+
+    public static function zuofeiSale($dataId, $moshiType)
+    {
+        $xs = self::where('data_id', $dataId)->where('ywlx', $moshiType)->find();
+        if (empty($xs)) {
+            throw new Exception("对象不存在");
+        }
+        $xs->status = 2;
+        $xs->save();
+        return $xs;
+    }
 }

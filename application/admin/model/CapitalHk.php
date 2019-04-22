@@ -225,7 +225,7 @@ class CapitalHk extends Base
      * @throws ModelNotFoundException
      * @throws Exception
      */
-    public function deleteHk($dataId, $ywType)
+    public static function deleteHk($dataId, $ywType)
     {
         $obj = CapitalHk::where('data_id', $dataId)->where('hk_type', $ywType)->find();
         if (empty($obj)) {

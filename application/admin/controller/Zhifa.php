@@ -287,7 +287,7 @@ class Zhifa extends Right
      * @param int $id
      * @return Json
      */
-    public function cancel(Request $request, $id=0)
+    public function cancel(Request $request, $id = 0)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
@@ -337,8 +337,8 @@ class Zhifa extends Right
 //            }
             }
 
-            (new \app\admin\model\CapitalHk())->deleteHk($tbCg['id'], 11);
-            (new \app\admin\model\CapitalHk())->deleteHk($sale['id'], 12);
+            \app\admin\model\CapitalHk::deleteHk($tbCg['id'], 11);
+            \app\admin\model\CapitalHk::deleteHk($sale['id'], 12);
 
             (new CapitalFy())->deleteByDataIdAndType($sale['id'], 1);
 

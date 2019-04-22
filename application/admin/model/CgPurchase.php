@@ -279,4 +279,29 @@ class CgPurchase extends Base
         $cg->delete();
         return $cg;
     }
+
+    /**
+     * @param $dataId
+     * @return CgPurchase|null
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws Exception
+     * @throws ModelNotFoundException
+     */
+    public static function cancelCaigou($dataId)
+    {
+        $list = CgPurchaseMx::where('data_id', $dataId)->select();
+        $cg = null;
+        if (!empty($list)) {
+            foreach ($list as $tbCgMx) {
+                $cg = self::get($tbCgMx['purchase_id']);
+                if (empty($cg)) {
+                    throw new Exception("对象不存在");
+                }
+                $cg->status = 1;
+                $cg->save();
+            }
+        }
+        return $cg;
+    }
 }
