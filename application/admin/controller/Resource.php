@@ -113,7 +113,7 @@ class Resource extends Right
     {
         $params = request()->param();
         $list = model("ViewTotalSpot")->alias("t1")->where('companyid', $this->getCompanyId());
-        $list = $this->getsearch($params, $list);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list
             ->field("*,sum(t1.xhZhongliang - t1.ylZhongliang)       xhZhongliang,
              sum(t1.ylZhongliang)                                   ylZhongliang,

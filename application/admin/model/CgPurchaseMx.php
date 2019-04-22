@@ -11,12 +11,12 @@ class CgPurchaseMx extends Base
     public function specification()
     {
         return $this->belongsTo('ViewSpecification', 'guige_id', 'id')->cache(true, 60)
-            ->field('id,specification,mizhong_name,productname');
+            ->field('id,specification')->bind(['guige' => 'specification']);
     }
 
     public function jsfs()
     {
-        return $this->belongsTo('Jsfs', 'jiesuan_id', 'id')->cache(true, 60)
+        return $this->belongsTo('jiesuanfangshi', 'jiesuan_id', 'id')->cache(true, 60)
             ->field('id,jsfs')->bind(['jiesuan_name' => 'jsfs']);
     }
 
@@ -30,6 +30,11 @@ class CgPurchaseMx extends Base
         return $this->belongsTo('Productname', 'pinming_id', 'id')->cache(true, 60)
             ->field('id,name')->bind(['pinming' => 'name']);
     }
+    public function wuziData()
+    {
+        return $this->belongsTo('Productname', 'pinming_id', 'id')->cache(true, 60)
+            ->field('id,zjm')->bind(['wuzi' => 'zjm']);
+    }
     public function caizhiData()
     {
         return $this->belongsTo('texture', 'caizhi_id', 'id')->cache(true, 60)
@@ -39,6 +44,11 @@ class CgPurchaseMx extends Base
     {
         return $this->belongsTo('Originarea', 'chandi_id', 'id')->cache(true, 60)
             ->field('id,originarea')->bind(['chandi' => 'originarea']);
+    }
+    public function jijiafangshiData()
+    {
+        return $this->belongsTo('jsfs', 'jijiafangshi_id', 'id')->cache(true, 60)
+            ->field('id,jsfs')->bind(['jijiafangshi' => 'jsfs']);
     }
     // 验证规则
     public $rules = [

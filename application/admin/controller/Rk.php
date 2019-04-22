@@ -424,10 +424,18 @@ class Rk extends Right
     public function clearstoragelist()
     {
         $params = request()->param();
-        $list = \app\admin\model\KcRkTz::where(array("companyid" => $this->getCompanyId(), "zhongliang" => 0));
+        $list = \app\admin\model\ViewQingku::where(array("companyid" => $this->getCompanyId()));
         $list = $this->getsearchcondition($params, $list);
-        if($params["isyiqing"]){
-//            $list->where("")
+      if(!empty($params['status'])){
+          $list->where('status', $params['status']);
+      }else{
+          $list->where('status', 1);
+      }
+        if(!empty($params['guobang_zhongliang'])){
+            $list->where('guobang_zhongliang', 0);
+        }
+        if(!empty($params['counts'])){
+            $list->where('counts', 0);
         }
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -436,9 +444,34 @@ class Rk extends Right
     /**
      * 清库
      */
-    public function clearstorage()
+    public function clearspot()
     {
-        $id = request()->param("ids");
+        $ids = request()->param("ids");
+        $type = request()->param("type");
+        $ids=explode(",",$ids);
+        foreach ($ids as $id){
+            $st=KcSpot::where("id",$id)->find();
+            if(empty($st)){
+                throw new \Exception("没有数据");
+            }else{
+                if($type==1){
+                    if($st["status"]==1){
+                        throw new \Exception("该单据未清库，禁止反清库！");
+                        $st["status"]=1;
+                }
+            }elseif( $type==2){
+                    if($st["status"]==2){
+                        throw new \Exception("该单据已清库，禁止再次清库！");
+                        $st["status"]=2;
+                    }
+            }else{
+                    throw new \Exception("非法参数");
+                }
+                $st->isUpdate(true)->allowField(true)->save($st);
+                return returnSuc(['id' => $xs['id']]);
+            }
+
+        }
         $res = model("KcSpot")->where("id", "in", $id)->update(array("status" => 2));
         return returnRes($res, '清库失败');
     }
@@ -446,18 +479,23 @@ class Rk extends Right
     public function qtrklist()
     {
         $params = request()->param();
-        $list = $list = \app\admin\model\KcQtrk::with(['customData',])->where('companyid', Session::get('uinfo.companyid', 'admin'));
-        if (!empty($params['system_number'])) {
-            $list->where("system_number", $params['system_number']);
+        try {
+            $list = $list = \app\admin\model\KcQtrk::with(['customData',])->where('companyid', Session::get('uinfo.companyid', 'admin'));
+            if (!empty($params['system_number'])) {
+                $list->where("system_number", $params['system_number']);
+            }
+            if (!empty($params['customer_id'])) {
+                $list->where("customer_id", $params['customer_id']);
+            }
+            if (!empty($params['beizhu'])) {
+                $list->where("beizhu", $params['beizhu']);
+            }
+            $list = $list->paginate(10);
+            return returnRes(true, '', $list);
+        }catch (Exception $e){
+
         }
-        if (!empty($params['customer_id'])) {
-            $list->where("customer_id", $params['customer_id']);
-        }
-        if (!empty($params['beizhu'])) {
-            $list->where("beizhu", $params['beizhu']);
-        }
-        $list = $list->paginate(10);
-        return returnRes(true, '', $list);
+
     }
 
     public function qtrkmx($id = 0)

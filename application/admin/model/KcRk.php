@@ -313,7 +313,57 @@ class KcRk extends Base
         return (new KcSpot())->insertSpot(1, $rukuType, $md->jijiafangshi_id, $md->id, $md->data_id, $md->pinming_id, $md->guige_id, $md->caizhi_id, $md->chandi_id, $md->store_id
             , $mx->cache_customer, $pjlx, $md->chehao, $md->beizhu, $md->huohao, $md->pihao, $md->changdu, $md->houdu, $md->kuandu, $md->lingzhi, $md->jianshu, $md->zhijian, $md->counts, $md->zhongliang, $md->price, $md->sumprice,
             $md->shuiprice, $md->sum_shui_price, $md->shuie, $md->mizhong, $md->jianzhong, $md->cb_price, $md->cb_shuie, $md->sumprice, $md->sum_shui_price, $companyId);
+    }
 
+    public function cancelRuku($dataId, $rukuType)
+    {
+        if (empty($dataId)) {
+            throw new Exception("请传入dataId");
+        }
+        if ($rukuType !== 1 && $rukuType !== 2 && $rukuType !== 3 && $rukuType !== 4 && $rukuType !== 7 && $rukuType !== 8 && $rukuType !== 9 && $rukuType !== 10 && $rukuType !== 13 && $rukuType !== 15) {
+            throw new Exception("请传入匹配的入库类型[rukuType]");
+        }
+        $rk = new self();
+        $rk = $rk->where(array("data_id" => $dataId, "ruku_type" => $rukuType))->find();
+        if (empty($rk)) {
+            throw new Exception("对象不存在");
+        }
+        $mdlist = KcRkMd::where("rk_md_id", $rk["id"])->select();
+        if (!empty($mdlist)) {
+            foreach ($mdlist as $md) {
+                $spList = KcSpot::where("rk_md_id", $md["id"])->select();
+                if (!empty($spList)) {
+                    foreach ($spList as $sp) {
+                        if ($sp["status"] == 2) {
+                            throw new Exception("该单据已执行清库操作");
+                        }
+                        $shList=KcYlSh::where("spot_id",$sp["id"])->select();
+                        if(!empty($shList)){
+                            throw new Exception("该单据已预留锁货！");
+                        }
+                    }
+                }
+            }
+        }
+        $idList=KcRkMd::where("kc_rk_id",$rk["id"])->field("id")->select();
+        foreach ($idList as $id){
+            KcSpot::deleteSpotByRkMd($id);
+        }
+        $rk->save($rk);
 
     }
 }
+//$rk->yw_time = $ywTime;
+//$rk->groupId = $groupId;
+//$rk->setSaleOperatorId = $saleOperatorId;
+//$mxList = KcRkMx::where("kc_rk_id", $rk["id"])->select();
+//foreach ($mxList as $mx) {
+//    if (!empty($storeId)) {
+//        KcRkMx::where("id", $mx["id"])->save(array("store_id" => $storeId));
+//    }
+//    if (!empty($cgCustomerId)) {
+//        KcRkMx::where("id", $mx["id"])->save(array("cache_customer" => $cgCustomerId));
+//    }
+//}
+//
+//$rk = $rk->save();

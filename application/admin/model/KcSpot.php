@@ -436,4 +436,15 @@ class KcSpot extends Base
 
         return $spot;
     }
+    public function deleteSpotByRkMd($mdid){
+        $spot=Self::where("rk_md_id",$mdid)->find();
+        if(empty($spot)){
+            throw new Exception("库存未找到");
+
+        }
+        $count=StockOutMd::alias("md")->join("stock_out ck","ck.id=md.kc_ck_id and md.kc_spot_id=$mdid and (ck.is_delete=0 and md.is_delete=0) and ck.status!=1","inner")->count();
+        if($count>0){
+            throw new Exception("已有发货记录,操作终止");
+        }
+    }
 }
