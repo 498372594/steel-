@@ -1,7 +1,9 @@
 <?php
 
 namespace app\admin\model;
+
 use traits\model\SoftDelete;
+
 class CgPurchaseMx extends Base
 {
     use SoftDelete;
@@ -25,38 +27,27 @@ class CgPurchaseMx extends Base
         return $this->belongsTo('Storage', 'store_id', 'id')->cache(true, 60)
             ->field('id,storage')->bind(['storage_name' => 'storage']);
     }
+
     public function pinmingData()
     {
         return $this->belongsTo('Productname', 'pinming_id', 'id')->cache(true, 60)
             ->field('id,name')->bind(['pinming' => 'name']);
     }
+
     public function caizhiData()
     {
         return $this->belongsTo('texture', 'caizhi_id', 'id')->cache(true, 60)
             ->field('id,texturename')->bind(['caizhi' => 'texturename']);
     }
+
     public function chandiData()
     {
         return $this->belongsTo('Originarea', 'chandi_id', 'id')->cache(true, 60)
             ->field('id,originarea')->bind(['chandi' => 'originarea']);
     }
-    // 验证规则
-    public $rules = [
-        
-    ];
 
-    // 验证错误信息
-    public $msg = [
-        
-    ];
-
-    // 场景
-    public $scene = [
-        
-    ];
-
-    // 表单-数据表字段映射
-    public $map = [
-       
-    ];
+    public static function getSumZhongliangByPid($pid)
+    {
+        return self::where('purchase_id', $pid)->sum('zhongliang');
+    }
 }

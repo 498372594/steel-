@@ -488,7 +488,7 @@ class Chuku extends Right
             if (empty($ck)) {
                 throw new Exception("对象不存在");
             }
-            if ($ck->companyid == $this->getCompanyId()) {
+            if ($ck->companyid != $this->getCompanyId()) {
                 throw new Exception("对象不存在");
             }
             if (!empty($ck['data_id'])) {
