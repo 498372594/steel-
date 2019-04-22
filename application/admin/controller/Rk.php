@@ -431,15 +431,15 @@ class Rk extends Right
         $params = request()->param();
         $list = ViewQingku::where(array("companyid" => $this->getCompanyId()));
         $list = $this->getsearchcondition($params, $list);
-        if (!empty($params['status'])) {
-            $list->where('status', $params['status']);
+        if ($params['qingku_status']) {
+            $list->where('status', 2);
         } else {
             $list->where('status', 1);
         }
-        if (!empty($params['guobang_zhongliang'])) {
+        if (!$params['guobang_zhongliang']) {
             $list->where('guobang_zhongliang', 0);
         }
-        if (!empty($params['counts'])) {
+        if (!$params['counts']) {
             $list->where('counts', 0);
         }
         $list = $list->paginate(10);
@@ -456,38 +456,34 @@ class Rk extends Right
      */
     public function clearspot()
     {
-        Db::startTrans();
-        try {
-            $ids = request()->param("ids");
-            $type = request()->param("type");
-            $ids = explode(",", $ids);
-            foreach ($ids as $id) {
-                $st = KcSpot::where("id", $id)->find();
-                if (empty($st)) {
-                    throw new \Exception("没有数据");
-                } else {
-                    if ($type == 1) {
-                        if ($st["status"] == 1) {
-                            throw new \Exception("该单据未清库，禁止反清库！");
-                        }
-                        $st["status"] = 1;
-                    } elseif ($type == 2) {
-                        if ($st["status"] == 2) {
-                            throw new \Exception("该单据已清库，禁止再次清库！");
-                        }
-                        $st["status"] = 2;
-                    } else {
-                        throw new \Exception("非法参数");
+        $ids = request()->param("ids");
+        $type = request()->param("type");
+        $ids = explode(",", $ids);
+        foreach ($ids as $id) {
+            $st = KcSpot::where("id", $id)->find();
+            if (empty($st)) {
+                throw new Exception("没有数据");
+            } else {
+                if ($type == 1) {
+                    if ($st["status"] == 1) {
+                        throw new Exception("该单据未清库，禁止反清库！");
                     }
-                    $st->save();
+                    $st["status"] = 1;
+                } elseif ($type == 2) {
+                    if ($st["status"] == 2) {
+                        throw new Exception("该单据已清库，禁止再次清库！");
+                    }
+                    $st["status"] = 2;
+                } else {
+                    throw new Exception("非法参数");
                 }
+                $st->isUpdate(true)->allowField(true)->save($st);
+                return returnSuc(['id' => $st['id']]);
             }
-            Db::commit();
-            return returnSuc();
-        } catch (\Exception $e) {
-            Db::rollback();
-            return returnFail($e->getMessage());
+
         }
+        $res = model("KcSpot")->where("id", "in", $ids)->update(array("status" => 2));
+        return returnRes($res, '清库失败');
     }
 
     public function qtrklist()
@@ -747,6 +743,7 @@ class Rk extends Right
             return returnFail($e->getMessage());
         }
     }
+
 
     /**
      * 入库单作废

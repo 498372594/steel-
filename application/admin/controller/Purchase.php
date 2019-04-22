@@ -191,9 +191,11 @@ class Purchase extends Right
         }
     }
 
-    public function doCancel()
+    public function cancel($id=0)
     {
-        $id = request()->param("id");
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
         Db::startTrans();
         try {
             $cg = CgPurchase::where("id", $id)->find();
