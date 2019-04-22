@@ -30,6 +30,24 @@ class CapitalOther extends Base
         return $this->hasMany('CapitalOtherDetails', 'cap_qt_id', 'id');
     }
 
+    public function createOperate()
+    {
+        return $this->belongsTo('Admin', 'create_operator_id', 'id')
+            ->field('id,name')->bind(['create_operator' => 'name']);
+    }
+
+    public function updateOperate()
+    {
+        return $this->belongsTo('Admin', 'update_operator_id', 'id')
+            ->field('id,name')->bind(['update_operator' => 'name']);
+    }
+
+    public function saleOperate()
+    {
+        return $this->belongsTo('Admin', 'sale_operator_id', 'id')
+            ->field('id,name')->bind(['sale_operator' => 'name']);
+    }
+
     /**
      * @param $id
      * @param $oldMoney

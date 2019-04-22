@@ -5,6 +5,7 @@ namespace app\admin\model;
 use PDOStatement;
 use think\{db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
+    db\Query,
     Exception,
     exception\DbException,
     Model};
@@ -65,7 +66,7 @@ class Salesorder extends Base
     public function insertSale($dataId, $moshiType, $ywTime, $customerId, $piaojuId, $jiesuanId, $beizhu, $groupId, $saleOperatorId, $lxr, $telephone, $chehao, $userId, $companyId)
     {
         $count = self::withTrashed()
-            ->whereTime('create_time','today')
+            ->whereTime('create_time', 'today')
             ->where('companyid', $companyId)
             ->count();
 
@@ -192,5 +193,29 @@ class Salesorder extends Base
         $mx->tax = $shuie;
         $mx->save();
         return $mx;
+    }
+
+    public function deleteSale($dataId, $moshiType)
+    {
+        $xs = self::where('data_id', $dataId)->where('ywlx', $moshiType)->find();
+        if (empty($xs)) {
+            throw new Exception("对象不存在");
+        }
+        SalesorderDetails::destroy(function (Query $query) use ($xs) {
+            $query->where('order_id', $xs['id']);
+        });
+        $xs->delete();
+        return $xs;
+    }
+
+    public static function zuofeiSale($dataId, $moshiType)
+    {
+        $xs = self::where('data_id', $dataId)->where('ywlx', $moshiType)->find();
+        if (empty($xs)) {
+            throw new Exception("对象不存在");
+        }
+        $xs->status = 2;
+        $xs->save();
+        return $xs;
     }
 }

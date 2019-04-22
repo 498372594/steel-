@@ -426,6 +426,9 @@ class Rk extends Right
         $params = request()->param();
         $list = \app\admin\model\KcRkTz::where(array("companyid" => $this->getCompanyId(), "zhongliang" => 0));
         $list = $this->getsearchcondition($params, $list);
+        if($params["isyiqing"]){
+//            $list->where("")
+        }
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }

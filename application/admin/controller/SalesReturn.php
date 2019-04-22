@@ -213,4 +213,50 @@ class SalesReturn extends Right
             return returnFail($e->getMessage());
         }
     }
+
+    /**
+     * 作废销售退货单
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     */
+    public function cancel(Request $request, $id = 0)
+    {
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        try {
+            $th = \app\admin\model\SalesReturn::get($id);
+            if (empty($th)) {
+                throw new Exception("对象不存在");
+            }
+            if ($th->companyid != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if ($th['status'] == 2) {
+                throw new Exception("该单据已经作废");
+            }
+            $th->status = 2;
+            $th->save();
+
+            $mxList = SalesReturnDetails::where('order_id', $th['id'])->select();
+            if (!empty($mxList)) {
+                $invModel = new \app\admin\model\Inv();
+                foreach ($mxList as $tbXsThMx) {
+                    $invModel->deleteInv($tbXsThMx['id'], 6);
+                }
+            }
+
+            KcRk::cancelRuku($th['id'], 7);
+
+            \app\admin\model\CapitalHk::deleteHk($th['id'], 14);
+
+            (new CapitalFy())->deleteByDataIdAndType($th['id'], 5);
+            Db::commit();
+            return returnSuc();
+        } catch (\Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
 }

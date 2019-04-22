@@ -290,10 +290,6 @@ class CapitalFy extends Base
             $obj->hxmoney = $obj['hxmoney'] + $money - $oldMoney;
         }
 
-//        if (yfkMoney . compareTo(BigDecimal . valueOf(0L)) != 0) {
-//        obj . setYfkhxmoney(obj . getYfkhxmoney() . add(yfkMoney . subtract(oldYfkMoney)));
-//    }
-
         if ($obj['hxmoney'] > $obj['money']) {
             throw new Exception("核销金额不能大于总金额");
         }
@@ -344,7 +340,6 @@ class CapitalFy extends Base
     /**
      * @param $id
      * @param $money
-     * @param $yfkMoney
      * @param $zhongliang
      * @throws DbException
      */
@@ -360,5 +355,60 @@ class CapitalFy extends Base
             $obj['hxzhongliang'] -= $zhongliang;
         }
         $obj->save();
+    }
+
+    /**
+     * @param $dataId
+     * @param $type
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public function deleteByDataIdAndType($dataId, $type)
+    {
+        $list = self::where('data_id', $dataId)->where('fyhx_type', $type)->select();
+        foreach ($list as $hx) {
+            $fy = CapitalFy::get($hx['cap_fy_id']);
+            if (!empty($fy)) {
+                if ($fy['fymx_create_type'] == 1) {
+                    if ($fy['hxmoney'] != 0 || $fy['hxzhongliang'] != 0) {
+                        throw new Exception("已经有结算信息!");
+                    }
+                    $fy->delete();
+                } else {
+                    throw new Exception("已做费用单,禁止删除!");
+                }
+            }
+
+            $hx->delete();
+        }
+    }
+
+    /**
+     * 作废费用单
+     * @param $dataId
+     * @param $type
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public static function invalidByDataIdAndType($dataId, $type)
+    {
+        $list = CapitalFyhx::where('data_id', $dataId)->where('fyhx_type', $type)->select();
+        foreach ($list as $hx) {
+            $fy = self::get($hx['cap_fy_id']);
+            if ($fy['fymx_create_type'] == 1) {
+                if ($fy['hxmoney'] > 0 || $fy['hxzhongliang'] > 0) {
+                    throw new Exception("已经有结算信息!");
+                }
+
+                $fy->status = 2;
+                $fy->save();
+            } else {
+                throw new Exception("已做费用单,禁止删除!");
+            }
+        }
     }
 }

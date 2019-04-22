@@ -32,7 +32,10 @@ class CapitalOther extends Right
         $params = $request->param();
         $list = \app\admin\model\CapitalOther::with([
             'custom',
-            'jsfsData'
+            'jsfsData',
+            'saleOperate',
+            'createOperate',
+            'updateOperate'
         ])->where('companyid', $this->getCompanyId())
             ->where('fangxiang', $fangxiang)
             ->order('create_time', 'desc');
@@ -98,7 +101,11 @@ class CapitalOther extends Right
         }
         $data = \app\admin\model\CapitalOther::with([
             'custom',
-            'details' => ['szmcData'],
+            'jsfsData',
+            'saleOperate',
+            'createOperate',
+            'updateOperate',
+            'details' => ['szmcData', 'szflData'],
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)

@@ -188,6 +188,9 @@ class Right extends Signin
         if (!empty($params['piaoju_id'])) {
             $list->where('piaoju_id', $params['piaoju_id']);
         }
+        if (!empty($params['status'])) {
+            $list->where('status', $params['status']);
+        }
         //批号
         if (!empty($params['pihao'])) {
             $list->where('pihao', $params['pihao']);
@@ -215,6 +218,7 @@ class Right extends Signin
         if (!empty($params['counts'])) {
             $list->where('counts', '>=', 0);
         }
+
         //应收应付初始化录入
         if (!empty($params['type'])) {
             $list->where('type', $params['type']);
@@ -290,6 +294,14 @@ class Right extends Signin
             $id = $model->id;
         }
         return $id;
+    }
+
+    public function _empty($name)
+    {
+        if ($name == 'delete') {
+            return returnFail('禁止跳号删除');
+        }
+        return returnFail('404 not found');
     }
 
 }

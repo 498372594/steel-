@@ -4,6 +4,7 @@ namespace app\admin\model;
 
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
+use think\db\Query;
 use think\Exception;
 use think\exception\DbException;
 use traits\model\SoftDelete;
@@ -194,5 +195,113 @@ class CgPurchase extends Base
         $mx->trumpet = $trumpet;
         $mx->save();
         return $mx;
+    }
+
+    /**
+     * @param CgPurchaseMx $mx
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws Exception
+     * @throws ModelNotFoundException
+     */
+    public static function allPanduanByMxId(CgPurchaseMx $mx)
+    {
+        $pu = CgPurchase::get($mx['purchase_id']);
+
+        $hxList = CapitalFyhx::where('data_id', $pu['id'])->select();
+        if (!empty($hxList)) {
+            foreach ($hxList as $hx) {
+                $fy = CapitalFy::get($hx['cap_fy_id']);
+                if ($fy['fymx_create_type'] == 2) {
+                    throw new Exception("该单据已有费用单据");
+                }
+            }
+        }
+
+//Example ech = new Example(TbEcjsGcfljsdMx .class);
+//        ech . createCriteria() . andCondition("purchase_mx_id=", tbCgPurchaseMx . getId());
+//        List<TbEcjsGcfljsdMx > chList = this . chDao . selectByExample(ech);
+//        if (chList . size() > 0) {
+//            throw new Exception("该单据已被钢厂返利冲红单引用");
+//        }
+//        Example ejs = new Example(TbEcjsGtjsdMx .class);
+//        ejs . createCriteria() . andCondition("zfd_id=", tbCgPurchaseMx . getId());
+//        List<TbEcjsGtjsdMx > jsList = this . jsDao . selectByExample(ejs);
+//        if (jsList . size() > 0) {
+//            throw new Exception("该单据已被钢厂结算单引用");
+//        }
+//        Example eec = new Example(TbCgEcjsMx .class);
+//        eec . createCriteria() . andCondition("mx_id=", tbCgPurchaseMx . getId());
+//        List<TbCgEcjsMx > ecList = this . ecDao . selectByExample(eec);
+//        if (ecList . size() > 0) {
+//            throw new Exception("该单据已执行二次结算");
+//        }
+
+        $mdList = KcRkMd::where('data_id', $mx['id'])->select();
+
+        if (!empty($mdList)) {
+            foreach ($mdList as $tbMd) {
+                $spList = KcSpot::where('rk_md_id', $tbMd['id'])->select();
+                if (!empty($spList)) {
+                    foreach ($spList as $spot) {
+                        if ($spot['status'] == 2) {
+                            throw new Exception("该单据已执行清库操作");
+                        }
+                        $shList = KcYlSh::where('spot_id', $spot['id'])->select();
+                        if (!empty($shList)) {
+                            throw new Exception("该单据已预留锁货！");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param $dataId
+     * @param $moshiType
+     * @return array|false|\PDOStatement|string|\think\Model
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws Exception
+     * @throws ModelNotFoundException
+     */
+    public function deleteCaigou($dataId, $moshiType)
+    {
+        $cg = self::where('data_id', $dataId)->where('moshi_type', $moshiType)->find();
+        if (empty($cg)) {
+            throw new Exception("对象不存在");
+        }
+
+        CgPurchaseMx::destroy(function (Query $query) use ($cg) {
+            $query->where('purchase_id', $cg['id']);
+        });
+        $cg->delete();
+        return $cg;
+    }
+
+    /**
+     * @param $dataId
+     * @return CgPurchase|null
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws Exception
+     * @throws ModelNotFoundException
+     */
+    public static function cancelCaigou($dataId)
+    {
+        $list = CgPurchaseMx::where('data_id', $dataId)->select();
+        $cg = null;
+        if (!empty($list)) {
+            foreach ($list as $tbCgMx) {
+                $cg = self::get($tbCgMx['purchase_id']);
+                if (empty($cg)) {
+                    throw new Exception("对象不存在");
+                }
+                $cg->status = 1;
+                $cg->save();
+            }
+        }
+        return $cg;
     }
 }
