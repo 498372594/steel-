@@ -211,7 +211,7 @@ class Ylsh extends Right
         try {
             $data = request()->post();
 
-            $validate = new \app\admin\validate\KcDiaobo();
+            $validate = new \app\admin\validate\KcDiaoboMx();
             if (!$validate->check($data)) {
                 throw new Exception($validate->getError());
             }

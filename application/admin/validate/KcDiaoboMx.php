@@ -6,7 +6,7 @@ namespace app\admin\validate;
 
 use think\Validate;
 
-class Kcdiaobo extends Validate
+class KcdiaoboMx extends Validate
 {
     protected $rule = [
         'zhongliang' => 'require',

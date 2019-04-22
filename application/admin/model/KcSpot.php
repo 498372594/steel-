@@ -392,6 +392,7 @@ class KcSpot extends Base
         return $spot;
     }
 
+
     /**
      * @param $mdid
      * @throws DbException
