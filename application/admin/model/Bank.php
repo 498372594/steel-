@@ -22,7 +22,7 @@ class Bank extends Base
      * @throws DbException
      * @throws Exception
      */
-    public function deleteBank($dataId, $ywType, $fangxiang)
+    public static function deleteBank($dataId, $ywType, $fangxiang)
     {
         $bank = CapitalBank::where('data_id', $dataId)->where('capbank_type', $ywType)->where('fangxiang', $fangxiang)->find();
         if (!empty($bank)) {

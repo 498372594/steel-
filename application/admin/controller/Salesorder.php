@@ -130,7 +130,7 @@ class Salesorder extends Right
             $xs->save();
             $mxList = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->select();
             if ($xs['ckfs'] == 1) {
-                (new StockOut())->cancelChuku($xs['id'], 4);
+                StockOut::cancelChuku($xs['id'], 4);
             } else {
                 $ckTzDaoTmpl = new KucunCktz();
                 foreach ($mxList as $mx) {
@@ -146,7 +146,7 @@ class Salesorder extends Right
                 }
             }
             (new CapitalFy())->deleteByDataIdAndType($xs['id'], 1);
-            (new \app\admin\model\CapitalHk())->deleteHk($xs['id'], 12);
+            \app\admin\model\CapitalHk::deleteHk($xs['id'], 12);
 
             Db::commit();
             return returnSuc();

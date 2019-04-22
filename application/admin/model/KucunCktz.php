@@ -275,4 +275,39 @@ class KucunCktz extends Base
         }
         $tz->save();
     }
+
+    /**
+     * @param $tzid
+     * @param $counts
+     * @param $zhongliang
+     * @throws DbException
+     * @throws Exception
+     */
+    public static function addTzById($tzid, $counts, $zhongliang)
+    {
+        if (empty($counts) && empty($zhongliang)) {
+            throw new Exception("请传入数量,重量等");
+        }
+
+        $counts = empty($counts) ? 0 : $counts;
+        $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
+        $tz = self::get($tzid);
+
+        if ($counts != 0) {
+
+            $newCounts = $tz['counts'] + $counts;
+            if ($tz['zhijian'] == 0) {
+                $tz['lingzhi'] = $newCounts;
+            } else {
+                $tz['jianshu'] = floor($newCounts / $tz['zhijian']);
+                $tz['lingzhi'] = $newCounts % $tz['zhijian'];
+            }
+            $tz->count = $newCounts;
+        }
+
+        if ($zhongliang != 0) {
+            $tz->zhongliang = $tz['zhongliang'] + $zhongliang;
+        }
+        $tz->save();
+    }
 }

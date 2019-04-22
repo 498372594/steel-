@@ -122,11 +122,10 @@ class CapitalOther extends Base
     /**
      * @param $id
      * @param $money
-     * @param $yfkMoney
      * @param $zhongliang
      * @throws DbException
      */
-    public function jianMoney($id, $money, $zhongliang)
+    public static function jianMoney($id, $money, $zhongliang)
     {
         $money = empty($money) ? 0 : $money;
         $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
@@ -138,5 +137,16 @@ class CapitalOther extends Base
             $obj['hxzhongliang'] -= $zhongliang;
         }
         $obj->save();
+    }
+
+    /**
+     * @param CapitalOther $obj
+     * @throws Exception
+     */
+    public static function ifHx(CapitalOther $obj)
+    {
+        if ($obj['hxmoney'] > 0 || $obj['hxzhongliang'] > 0) {
+            throw new Exception("已经有结算信息!");
+        }
     }
 }

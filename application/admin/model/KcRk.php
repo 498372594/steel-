@@ -4,6 +4,7 @@ namespace app\admin\model;
 
 use Exception;
 use think\db\exception\{DataNotFoundException, ModelNotFoundException};
+use think\db\Query;
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -100,6 +101,7 @@ class KcRk extends Base
     }
 
     /**
+     * 修改入库单
      * @param $dataId
      * @param $rukuType
      * @param $storeId
@@ -138,6 +140,7 @@ class KcRk extends Base
     }
 
     /**
+     * 插入入库明细和码单
      * @param $rk
      * @param $dataId
      * @param $rukuType
@@ -351,6 +354,113 @@ class KcRk extends Base
         }
         $rk->save($rk);
 
+    }
+
+    /**
+     * 删除入库单
+     * @param $dataId
+     * @param $rukuType
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public function deleteRuku($dataId, $rukuType)
+    {
+        if (empty($dataId)) {
+            throw new Exception("请传入dataId");
+        }
+        if ($rukuType != 1 && $rukuType != 2 && $rukuType != 3 && $rukuType != 4 && $rukuType != 7 && $rukuType != 8 && $rukuType != 9 && $rukuType != 10 && $rukuType != 13 && $rukuType != 15) {
+            throw new Exception("请传入匹配的入库类型[rukuType]");
+        }
+
+
+        $rk = self::where('data_id', $dataId)->where('ruku_type', $rukuType)->find();
+        if (empty($rk)) {
+            throw new Exception("对象不存在");
+        }
+
+        $mdList = KcRkMd::where('kc_rk_id', $rk['id'])->select();
+        if (!empty($mdList)) {
+            foreach ($mdList as $tbKcRkMd) {
+                $spList = KcSpot::where('rk_md_id', $tbKcRkMd['id'])->select();
+                if (!empty($spList)) {
+                    foreach ($spList as $spot) {
+                        if ($spot['status'] == 2) {
+                            throw new Exception("该单据已执行清库操作");
+                        }
+                        $shList = KcYlSh::where('spot_id', $spot['id'])->select();
+                        if (!empty($shList)) {
+                            throw new Exception("该单据已预留锁货！");
+                        }
+                    }
+                }
+            }
+        }
+
+
+        $listids = KcRkMd::findIdsByRkid($rk['id']);
+        foreach ($listids as $mdid) {
+            (new KcSpot())->deleteSpotByRkMd($mdid);
+        }
+        KcRkMx::destroy(function (Query $query) use ($rk) {
+            $query->where('kc_rk_id', $rk['id']);
+        });
+
+        KcRkMd::destroy(function (Query $query) use ($rk) {
+            $query->where('kc_rk_id', $rk['id']);
+        });
+
+        $rk->delete();
+    }
+
+    /**
+     * 入库单作废
+     * @param $dataId
+     * @param $rukuType
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public static function cancelRuku($dataId, $rukuType)
+    {
+        if (empty($dataId)) {
+            throw new Exception("请传入dataId");
+        }
+        if ($rukuType != 1 && $rukuType != 2 && $rukuType != 3 && $rukuType != 4 && $rukuType != 7 && $rukuType != 8 && $rukuType != 9 && $rukuType != 10 && $rukuType != 13 && $rukuType != 15) {
+            throw new Exception("请传入匹配的入库类型[rukuType]");
+        }
+
+        $rk = self::where('data_id', $dataId)->where('ruku_type', $rukuType)->find();
+        if (empty($rk)) {
+            throw new Exception("对象不存在");
+        }
+        $rk->satatus = 2;
+
+        $mdList = KcRkMd::where('kc_rk_id', $rk['id'])->select();
+        if (!empty($mdList)) {
+            foreach ($mdList as $tbKcRkMd) {
+                $spList = KcSpot::where('rk_md_id', $tbKcRkMd['id'])->select();
+                if (!empty($spList)) {
+                    foreach ($spList as $spot) {
+                        if ($spot['status'] == 2) {
+                            throw new Exception("该单据已执行清库操作");
+                        }
+                        $esh = KcYlSh::where('spot_id', $spot['id'])->select();
+                        if (!empty($esh)) {
+                            throw new Exception("该单据已预留锁货！");
+                        }
+                    }
+                }
+            }
+        }
+
+        $listids = KcRkMd::where('kc_rk_id', $rk['id'])->column('id');
+        foreach ($listids as $mdid) {
+            (new KcSpot())->deleteSpotByRkMd($mdid);
+        }
+        $rk->save();
     }
 }
 //$rk->yw_time = $ywTime;

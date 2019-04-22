@@ -343,7 +343,7 @@ class CapitalFy extends Base
      * @param $zhongliang
      * @throws DbException
      */
-    public function jianMoney($id, $money, $zhongliang)
+    public static function jianMoney($id, $money, $zhongliang)
     {
         $money = empty($money) ? 0 : $money;
         $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
@@ -382,6 +382,33 @@ class CapitalFy extends Base
             }
 
             $hx->delete();
+        }
+    }
+
+    /**
+     * 作废费用单
+     * @param $dataId
+     * @param $type
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public static function invalidByDataIdAndType($dataId, $type)
+    {
+        $list = CapitalFyhx::where('data_id', $dataId)->where('fyhx_type', $type)->select();
+        foreach ($list as $hx) {
+            $fy = self::get($hx['cap_fy_id']);
+            if ($fy['fymx_create_type'] == 1) {
+                if ($fy['hxmoney'] > 0 || $fy['hxzhongliang'] > 0) {
+                    throw new Exception("已经有结算信息!");
+                }
+
+                $fy->status = 2;
+                $fy->save();
+            } else {
+                throw new Exception("已做费用单,禁止删除!");
+            }
         }
     }
 }

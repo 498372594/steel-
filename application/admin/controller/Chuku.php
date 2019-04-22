@@ -7,7 +7,6 @@ use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
-    db\Query,
     exception\DbException,
     Request,
     response\Json};
@@ -25,19 +24,6 @@ class Chuku extends Right
             return;
         }
         (new KucunCktz())->allowField(true)->saveAll($data);
-    }
-
-    /**
-     * 清理出库通知
-     * @param $dataId
-     * @param $type
-     */
-    public function cancelNotify($dataId, $type)
-    {
-        KucunCktz::destroy(function (Query $query) use ($type, $dataId) {
-            $query->where('kucun_type', $type)
-                ->where('data_id', $dataId);
-        });
     }
 
     /**
@@ -211,16 +197,16 @@ class Chuku extends Right
                 throw new Exception('出库单禁止修改');
 //            ck = (TbKcCk) getDao() . selectByPrimaryKey(id);
 //            if (ck == null) {
-//                throw new ValidateException("对象不存在");
+//                throw new Exception("对象不存在");
 //            }
 //            if (!ck . getUserId() . equals(ck . getUserId())) {
-//                throw new ValidateException("对象不存在");
+//                throw new Exception("对象不存在");
 //            }
 //            if ("1" . equals(ck . getStatus())) {
-//                throw new ValidateException("该单据已经作废");
+//                throw new Exception("该单据已经作废");
 //            }
 //            if ("1" . equals(ck . getChukuFangshi())) {
-//                throw new ValidateException("自动出库单据不允许修改");
+//                throw new Exception("自动出库单据不允许修改");
 //            }
 //            ck . setBeizhu(beizhu);
 //            ck . setCustomerId(customerId);
@@ -485,115 +471,48 @@ class Chuku extends Right
     }
 
     /**
-     * 审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function audit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            $stockOut = StockOut::where('id', $id)
-                ->where('companyid', $this->getCompanyId())
-                ->find();
-            if (empty($stockOut)) {
-                return returnFail('数据不存在');
-            }
-            if ($stockOut->status == 3) {
-                return returnFail('此单已审核');
-            }
-            if ($stockOut->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $stockOut->status = 3;
-            $stockOut->check_operator_id = $this->getAccountId();
-            $stockOut->save();
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
-    }
-
-    /**
-     * 反审核
-     * @param Request $request
-     * @param int $id
-     * @return Json
-     * @throws DbException
-     */
-    public function unAudit(Request $request, $id = 0)
-    {
-        if ($request->isPut()) {
-            $stockOut = StockOut::where('id', $id)
-                ->where('companyid', $this->getCompanyId())
-                ->find();
-            if (empty($stockOut)) {
-                return returnFail('数据不存在或已作废');
-            }
-            if ($stockOut->status == 1) {
-                return returnFail('此单未审核');
-            }
-            if ($stockOut->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $stockOut->status = 1;
-            $stockOut->check_operator_id = null;
-            $stockOut->save();
-            return returnSuc();
-        }
-        return returnFail('请求方式错误');
-    }
-
-    /**
      * 作废
      * @param Request $request
      * @param int $id
-     * @param bool $isWeb
      * @return bool|Json
-     * @throws DbException
-     * @throws DataNotFoundException
-     * @throws ModelNotFoundException
      * @throws Exception
      */
-    public function cancel(Request $request, $id = 0, $isWeb = true)
+    public function cancel(Request $request, $id = 0)
     {
-        if ($request->isPost()) {
-
-            if ($isWeb) {
-                $stockOut = StockOut::where('id', $id)
-                    ->where('companyid', $this->getCompanyId())
-                    ->find();
-            } else {
-                $stockOut = StockOut::where('data_id', $id)
-                    ->where('companyid', $this->getCompanyId())
-                    ->find();
-            }
-            if (empty($stockOut)) {
-                return returnFail('数据不存在');
-            }
-            if (!empty($stockOut->data_id)) {
-                if ($isWeb) {
-                    return returnFail('此销售单禁止直接作废');
-                } else {
-                    $stockOut->status = 2;
-                    $stockOut->check_operator_id = null;
-                    $stockOut->save();
-                    return true;
-                }
-            } elseif (!$isWeb) {
-                throw new Exception('此单已有出库信息，禁止作废');
-            }
-            if ($stockOut->status == 3) {
-                return returnFail('此单已审核，禁止作废');
-            }
-            if ($stockOut->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $stockOut->status = 2;
-            $stockOut->save();
-            return returnSuc();
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
         }
-        return returnFail('请求方式错误');
+        Db::startTrans();
+        try {
+            $ck = StockOut::get($id);
+            if (empty($ck)) {
+                throw new Exception("对象不存在");
+            }
+            if ($ck->companyid != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if (!empty($ck['data_id'])) {
+                throw new Exception("当前单据是只读单据,请到关联单据作废");
+            }
+            if ($ck['status'] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+
+            $ckmd = StockOutMd::where('stock_out_id', $ck['id'])->select();
+            $spotModel = new KcSpot();
+            foreach ($ckmd as $md) {
+                $spotModel->adjustSpotById($md['kc_spot_id'], true, $md['counts'], $md['zhongliang'], $md['jijiafangshi_id'], $md['cb_shuie']);
+                KucunCktz::addTzById($md['kucun_cktz_id'], $md['counts'], $md['zhongliang']);
+            }
+
+            $ck->status = 2;
+            $ck->save();
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
     }
 
 }

@@ -8,6 +8,7 @@ use app\admin\model\Admin as AdminModel;
 
 class Account extends Right
 {
+    protected $role = 4;
     /**
      * @param Request $request
      * @return \think\response\Json

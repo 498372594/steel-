@@ -203,7 +203,7 @@ class CapitalHk extends Base
      * @param $zhongliang
      * @throws DbException
      */
-    public function jianMoney($id, $money, $zhongliang)
+    public static function jianMoney($id, $money, $zhongliang)
     {
         $money = empty($money) ? 0 : $money;
         $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
@@ -225,7 +225,7 @@ class CapitalHk extends Base
      * @throws ModelNotFoundException
      * @throws Exception
      */
-    public function deleteHk($dataId, $ywType)
+    public static function deleteHk($dataId, $ywType)
     {
         $obj = CapitalHk::where('data_id', $dataId)->where('hk_type', $ywType)->find();
         if (empty($obj)) {

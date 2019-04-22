@@ -215,57 +215,41 @@ class Feiyong extends Signin
      * @param Request $request
      * @param int $id
      * @return Json
-     * @throws DbException
      */
     public function cancel(Request $request, $id = 0)
     {
-        if ($request->isPost()) {
-            $salesorder = CapitalFy::where('id', $id)
-                ->where('companyid', $this->getCompanyId())
-                ->find();
-            if (empty($salesorder)) {
-                return returnFail('数据不存在');
-            }
-            if ($salesorder->fymx_create_type != 2) {
-                return returnFail('业务生成费用单，请操作原单');
-            }
-            if ($salesorder->status == 3) {
-                return returnFail('此单已审核，禁止作废');
-            }
-            if ($salesorder->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $salesorder->status = 2;
-            $salesorder->save();
-            (new Chuku())->cancel($request, $id, false);
-            return returnSuc();
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
         }
-        return returnFail('请求方式错误');
-    }
+        Db::startTrans();
+        try {
+            $fy = CapitalFy::get($id);
+            if (empty($fy)) {
+                throw new Exception("对象不存在");
+            }
+            if ($fy->companyid != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if ($fy['status'] == 2) {
+                throw new Exception("该单据已经作废");
+            }
 
-    /**
-     * @param $dataId
-     * @param int $fyhxType 1-销售单，2-采购单，3-销售退货单，4-采购退货单
-     * @return bool|string
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
-     * @throws Exception
-     */
-    public function cancelByRelation($dataId, $fyhxType)
-    {
-        $capFyIds = CapitalFyhx::where('data_id', $dataId)
-            ->where('fyhx_type', $fyhxType)
-            ->column('cap_fy_id');
-        $capitalFys = CapitalFy::where('id', 'in', $capFyIds)->select();
-        foreach ($capitalFys as $item) {
-            if ($item->hxmoney != 0 || $item->hxzhongliang != 0) {
-                throw new Exception('已有结算信息');
+            if ($fy['fymx_create_type'] == 1) {
+                throw new Exception("业务生成费用单,请操作原单");
             }
-            $item->status = 2;
-            $item->check_operator_id = null;
-            $item->save();
+
+            (new \app\admin\model\Inv())->deleteInv($fy['id'], 7);
+            $fy->status = 2;
+            $fy->save();
+
+            CapitalFyhx::destroy(function (Query $query) use ($fy) {
+                $query->where('cap_fy_id', $fy['id']);
+            });
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
         }
-        return true;
     }
 }

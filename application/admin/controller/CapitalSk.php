@@ -185,7 +185,7 @@ class CapitalSk extends Right
                     $data['deleteMxIds'] = explode(',', $data['deleteMxIds']);
                 }
                 foreach ($data['deleteMxIds'] as $string) {
-                    (new Bank())->deleteBank($string, 4, 1);
+                    Bank::deleteBank($string, 4, 1);
                 }
                 CapitalSkjsfs::destroy(function (Query $query) use ($data) {
                     $query->where('id', 'in', $data['deleteMxIds']);
@@ -213,11 +213,11 @@ class CapitalSk extends Right
                 $hxList = CapitalSkhx::where('id', 'in', $data['deleteHxIds'])->select();
                 foreach ($hxList as $hx) {
                     if ($hx->skhx_type == 1 || $hx->skhx_type == 16) {
-                        (new CapitalOtherModel())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                        CapitalOtherModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                     } else if ($hx->skhx_type == 2) {
-                        (new CapitalFy())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                        CapitalFy::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                     } else {
-                        (new CapitalHkModel())->jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                        CapitalHkModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                     }
                 }
                 CapitalSkhx::destroy(function (Query $query) use ($data) {
@@ -333,54 +333,45 @@ class CapitalSk extends Right
      * @param Request $request
      * @param int $id
      * @return Json
-     * @throws DbException
      */
     public function cancel(Request $request, $id = 0)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
         }
-        $shoukuan = CapitalSkModel::where('id', $id)
-            ->where('companyid', $this->getCompanyId())
-            ->find();
-        if (empty($shoukuan)) {
-            return returnFail('数据不存在');
-        }
-        if ($shoukuan->status == 3) {
-            return returnFail('此单已审核，禁止作废');
-        }
-        if ($shoukuan->status == 2) {
-            return returnFail('此单已作废');
-        }
         Db::startTrans();
         try {
-            $shoukuan->status = 2;
-            $shoukuan->save();
-            //核销记录退回
-            foreach ($shoukuan->details as $item) {
-                if ($item['skhx_type'] == CapitalHk::CAPITAL_OTHER) {
-                    $relation = CapitalOtherModel::where('fangxiang', 1)
-                        ->where('id', $item['data_id'])
-                        ->where('status', '<>', '2')
-                        ->find();
-                } elseif ($item['skhx_type'] == CapitalHk::CAPITAL_COST) {
-                    $relation = CapitalFy::where('fang_xiang', 1)
-                        ->where('id', $item['data_id'])
-                        ->where('status', '<>', '2')
-                        ->find();
-                } else {
-                    $relation = CapitalHkModel::where('id', $item['data_id'])
-                        ->where('fangxiang', 1)
-                        ->where('status', '<>', '2')
-                        ->find();
-                }
-                if (empty($relation)) {
-                    throw new Exception('未知错误');
-                }
-                $relation->hxmoney -= $item->hx_money;
-                $relation->hxzhongliang -= $item->hx_zhongliang;
-                $relation->save();
+            $sk = CapitalSkModel::get($id);
+            if (empty($sk)) {
+                throw new Exception("对象不存在");
             }
+            if ($sk['companyid'] != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if ($sk['status'] == 2) {
+                throw new Exception("该单据已经作废");
+            }
+            if ($sk['sk_type'] == 2) {
+                CapitalHkModel::deleteHk($sk['id'], 22);
+            }
+
+            $list = CapitalSkjsfs::where('sk_id', $sk['id'])->select();
+            foreach ($list as $jsfs) {
+                Bank::deleteBank($jsfs['id'], 4, 1);
+            }
+
+            $list1 = CapitalSkhx::where('sk_id', $sk['id'])->select();
+            foreach ($list1 as $hx) {
+                if ($hx['skhx_type'] == 1 || $hx['skhx_type'] == 16) {
+                    CapitalOtherModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                } elseif ($hx['skhx_type'] == 2) {
+                    CapitalFy::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                } else {
+                    \app\admin\model\CapitalHk::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                }
+            }
+            $sk->status = 2;
+            $sk->save();
             Db::commit();
             return returnSuc();
         } catch (Exception $e) {

@@ -217,28 +217,36 @@ class StockOtherOut extends Right
      * @param Request $request
      * @param int $id
      * @return Json
-     * @throws DbException
      */
     public function cancel(Request $request, $id = 0)
     {
-        if ($request->isPost()) {
-            $salesorder = \app\admin\model\StockOtherOut::where('id', $id)
-                ->where('companyid', $this->getCompanyId())
-                ->find();
-            if (empty($salesorder)) {
-                return returnFail('数据不存在');
-            }
-            if ($salesorder->status == 3) {
-                return returnFail('此单已审核，禁止作废');
-            }
-            if ($salesorder->status == 2) {
-                return returnFail('此单已作废');
-            }
-            $salesorder->status = 2;
-            $salesorder->save();
-            return returnSuc();
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
         }
-        return returnFail('请求方式错误');
+        Db::startTrans();
+        try {
+            $rk = \app\admin\model\StockOtherOut::get($id);
+            if (empty($rk)) {
+                throw new Exception("没有此对象");
+            }
+            if ($rk->companyid != $this->getCompanyId()) {
+                throw new Exception("没有此对象");
+            }
+
+            $rk->status = 2;
+            $rk->save();
+
+            $mxList = StockOtherOutDetails::where('stock_other_out_id', $rk['id'])->select();
+            $cktzModel = new KucunCktz();
+            foreach ($mxList as $mx) {
+                $cktzModel->deleteByDataIdAndChukuType($mx['id'], 3);
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
     }
 
 }

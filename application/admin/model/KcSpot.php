@@ -3,6 +3,8 @@
 namespace app\admin\model;
 
 use Exception;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\ModelNotFoundException;
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -77,26 +79,6 @@ class KcSpot extends Base
         $zhongliang = $data["zhongliang"] - $zhongliang;
         return $zhongliang;
     }
-
-    // 验证规则
-    public $rules = [
-
-    ];
-
-    // 验证错误信息
-    public $msg = [
-
-    ];
-
-    // 场景
-    public $scene = [
-
-    ];
-
-    // 表单-数据表字段映射
-    public $map = [
-
-    ];
 
     /**
      * @param $spotId
@@ -316,6 +298,7 @@ class KcSpot extends Base
     }
 
     /**
+     * 插入资源单
      * @param $rukuFangshi
      * @param $rukuType
      * @param $jijiafangshiId
@@ -397,7 +380,7 @@ class KcSpot extends Base
             $spot->mizhong = $mizhong;
         }
 
-        $calSpot = self::calSpot($changdu, $kuandu, $jijiafangshiId, $spot->mizhong, $jianzhong, $counts, $zhijian, $zhongliang,$price, $shuiprice,$shuie);
+        $calSpot = self::calSpot($changdu, $kuandu, $jijiafangshiId, $spot->mizhong, $jianzhong, $counts, $zhijian, $zhongliang, $price, $shuiprice, $shuie);
         $spot->lisuan_zhongliang = $calSpot->lisuan_zhongliang;
         $spot->lisuan_price = $calSpot->lisuan_price;
         $spot->lisuan_shui_price = $calSpot->lisuan_shui_price;
@@ -436,14 +419,41 @@ class KcSpot extends Base
 
         return $spot;
     }
-    public function deleteSpotByRkMd($mdid){
-        $spot=Self::where("rk_md_id",$mdid)->find();
-        if(empty($spot)){
-            throw new Exception("库存未找到");
 
+
+    /**
+     * @param $mdid
+     * @throws DbException
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public function deleteSpotByRkMd($mdid)
+    {
+        $ss = self::where('rk_md_id', $mdid)->find();
+        if (empty($ss)) {
+            throw new Exception("库存未找到");
         }
-        $count=StockOutMd::alias("md")->join("stock_out ck","ck.id=md.kc_ck_id and md.kc_spot_id=$mdid and (ck.is_delete=0 and md.is_delete=0) and ck.status!=1","inner")->count();
-        if($count>0){
+
+        $this->ifCkMd($ss['id']);
+
+        $ss->delete();
+    }
+
+    /**
+     * @param $id
+     * @throws \think\Exception
+     * @throws Exception
+     */
+    private function ifCkMd($id)
+    {
+        $c = StockOutMd::alias('md')
+            ->join('__STOCK_OUT__ ck', 'ck.id=md.stock_out_id')
+            ->where('md.kc_spot_id', $id)
+            ->where('ck.status', '<>', 2)
+            ->count();
+
+        if ($c > 0) {
             throw new Exception("已有发货记录,操作终止");
         }
     }
