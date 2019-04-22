@@ -11,6 +11,7 @@ use app\admin\model\{CapitalFy,
     SalesMoshi,
     SalesMoshiMx,
     SalesorderDetails,
+    SalesReturnDetails,
     StockOut,
     StockOutMd};
 use app\admin\validate\{SalesMoshiDetails};
@@ -130,9 +131,7 @@ class Zhifa extends Right
 
             $addList = [];
             $updateList = [];
-//        $deleteList = [];
             $ja = $data['details'];
-//        $ja1 = $data['other'];
             $jqDataType1 = null;
             $companyId = $this->getCompanyId();
             if (!empty($ja)) {
@@ -246,9 +245,6 @@ class Zhifa extends Right
                         $mdList = StockOutMd::where('kc_spot_id', $spot['id'])->select();
                         if (!empty($mdList)) {
                             foreach ($mdList as $md) {
-//                            TbKcCkMd ckMd = new TbKcCkMd();
-//                            ckMd . setId(md . getId());
-//                            ckMd . setCbPrice(spot . getCbPrice());
                                 $md->cb_price = $spot['cb_price'];
                                 $jjfs = Jsfs::where('id', $mx['jsfs_id'])->cache(true, 60)->value('jj_type');
                                 if ($jjfs == 1 || $jjfs == 2) {
@@ -290,35 +286,73 @@ class Zhifa extends Right
      * @param Request $request
      * @param int $id
      * @return Json
-     * @throws DbException
      */
-    public function cancel(Request $request, $id = 0)
+    public function cancel(Request $request, $id=0)
     {
-        if ($request->isPost()) {
-            $cgzfd = SalesMoshi::get($id);
-            if (empty($cgzfd)) {
-                return returnFail('数据不存在');
-            }
-            if ($cgzfd->status == 3) {
-                return returnFail('此单已审核，无法作废');
-            }
-            if ($cgzfd->status == 2) {
-                return returnFail('此单已作废');
-            }
-            Db::startTrans();
-            try {
-                $cgzfd->status = 2;
-                $cgzfd->save();
-                (new Salesorder())->cancel($request, $id, 2, false);
-
-                //todo 作废采购单
-                Db::commit();
-                return returnSuc();
-            } catch (Exception $e) {
-                Db::rollback();
-                return returnFail($e->getMessage());
-            }
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
         }
-        return returnFail('请求方式错误');
+        Db::startTrans();
+        try {
+            $ms = SalesMoshi::get($id);
+            if (empty($ms)) {
+                throw new Exception("对象不存在");
+            }
+            if ($ms['status'] == 2) {
+                throw new Exception("该单据已经作废");
+            }
+            $ms['status'] = 2;
+            $ms->save();
+
+            $sale = \app\admin\model\Salesorder::where('data_id', $ms['id'])->where('ywlx', $ms['moshi_type'])->find();
+
+            $tbCg = CgPurchase::where('data_id', $ms['id'])->where('moshi_type', $ms['moshi_type'])->find();
+
+            (new StockOut())->deleteChuku($sale['id'], 4);
+
+            (new KcRk())->deleteRuku($tbCg['id'], 4);
+
+            $cglist = CgPurchaseMx::where('purchase_id', $tbCg['id'])->select();
+            $invModel = new \app\admin\model\Inv();
+            foreach ($cglist as $mx) {
+                CgPurchase::allPanduanByMxId($mx);
+                $invModel->deleteInv($mx['id'], 2);
+            }
+
+            $xslist = SalesorderDetails::where('order_id', $sale['id'])->select();
+
+            foreach ($xslist as $tbXsSaleMx) {
+                $invModel->deleteInv($tbXsSaleMx['id'], 3);
+
+                $thMxList = SalesReturnDetails::where('xs_sale_mx_id', $tbXsSaleMx['id'])->select();
+                if (!empty($thMxList)) {
+                    throw new Exception("该单据已有退货信息，禁止该操作！");
+                }
+
+//            Example esetter = new Example(TbXsEcjsMx .class);
+//            esetter . createCriteria() . andCondition("mx_id=", tbXsSaleMx . getId());
+//            List<TbXsEcjsMx > ecmxList = this . ecmxDao . selectByExample(esetter);
+//            if (ecmxList . size() > 0) {
+//                throw new Exception("该单据已有二次结算信息，禁止该操作！");
+//            }
+            }
+
+            (new \app\admin\model\CapitalHk())->deleteHk($tbCg['id'], 11);
+            (new \app\admin\model\CapitalHk())->deleteHk($sale['id'], 12);
+
+            (new CapitalFy())->deleteByDataIdAndType($sale['id'], 1);
+
+//        this . fxDaoImpl . delFaxiPrice(sale . getId());
+
+            (new \app\admin\model\Salesorder())->deleteSale($ms['id'], 2);
+
+            (new CgPurchase())->deleteCaigou($mx['id'], 2);
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+
     }
 }
