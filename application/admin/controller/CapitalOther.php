@@ -178,4 +178,37 @@ class CapitalOther extends Right
         }
     }
 
+    /**
+     * 其他款项作废
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     */
+    public function cancel(Request $request, $id = 0)
+    {
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $qt = \app\admin\model\CapitalOther::get($id);
+            if (empty($qt)) {
+                throw new Exception("对象不存在");
+            }
+            if ($qt->companyid != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if ($qt['status'] == 2) {
+                throw new Exception("该单据已经作废");
+            }
+            \app\admin\model\CapitalOther::ifHx($qt);
+            $qt->status = 1;
+            $qt->save();
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
 }

@@ -335,7 +335,7 @@ class CapitalFk extends Right
      * @param int $id
      * @return Json
      */
-    public function cancel(Request $request, $id)
+    public function cancel(Request $request, $id = 0)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
