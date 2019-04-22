@@ -8,6 +8,7 @@ use app\admin\model\Admin as AdminModel;
 
 class Account extends Right
 {
+    protected $role = 4;
     /**
      * @param Request $request
      * @return \think\response\Json
@@ -92,34 +93,6 @@ class Account extends Right
         if($request->isPost()){
             $res = AdminModel::destroy($request->param('id'));
             return returnRes($res,'数据删除失败');
-        }
-    }
-
-    /**
-     * 修改密码
-     * @param Request $request
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
-     */
-    public function changePwd(Request $request)
-    {
-        if($request->isPut()){
-            $params = $request->param();
-            $id = $this->getAccountId();
-            $admin = AdminModel::where(['id' => $id])->find();
-            if($admin['password'] != md5($params['old_pwd'])){
-                return returnFail('旧密码不对应');
-            }
-            if($params['new_pwd'] != $params['confirm_pwd']){
-                return returnFail('两次密码不对应');
-            }
-            if($admin['password'] == md5($params['new_pwd'])){
-                return returnFail('新密码与旧密码相同');
-            }
-            $res = AdminModel::where(['id' => $id])->update(['password' => md5($params['new_pwd'])]);
-            return returnRes($res,'密码修改失败');
         }
     }
 }

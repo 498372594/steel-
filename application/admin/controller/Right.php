@@ -292,9 +292,4 @@ class Right extends Signin
         return $id;
     }
 
-    public function delete()
-    {
-        return returnFail('禁止跳号删除');
-    }
-
 }
