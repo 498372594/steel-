@@ -92,6 +92,8 @@ class KcSpot extends Base
      */
     public function adjustSpotById($spotId, $isJia, $counts, $zhongliang, $jijiafangshiId, $shuie)
     {
+        $counts *= 1;
+        $zhongliang *= 1;
         if (empty($counts) && empty($zhongliang)) {
             throw new Exception("请传入数量,重量等");
         }
