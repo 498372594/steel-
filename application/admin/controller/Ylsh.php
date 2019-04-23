@@ -202,6 +202,11 @@ class Ylsh extends Right
             return returnRes(true, '', $data);
         }
     }
+
+    /**添加调拨
+     * @return \think\response\Json
+     * @throws \Exception
+     */
     public function adddiaobo(){
         if (!request()->isPost()) {
             return returnFail('请求方式错误');
@@ -211,7 +216,7 @@ class Ylsh extends Right
         try {
             $data = request()->post();
 
-            $validate = new \app\admin\validate\KcDiaoboMx();
+            $validate = new \app\admin\validate\KcDiaobo();
             if (!$validate->check($data)) {
                 throw new Exception($validate->getError());
             }
