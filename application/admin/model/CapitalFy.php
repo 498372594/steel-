@@ -148,7 +148,7 @@ class CapitalFy extends Base
             ->whereTime('create_time', 'today')
             ->where('companyid', $companyId)
             ->count();
-        $fy->system_number = "FYD" . date('Ymd') . str_pad($count++, 3, '0', STR_PAD_LEFT);
+        $fy->system_number = "FYD" . date('Ymd') . str_pad(++$count, 3, '0', STR_PAD_LEFT);
         $fy->yw_time = $ywTime;
         $fy->fymx_create_type = "1";
         $fy->fang_xiang = $fangxiang;
