@@ -802,18 +802,18 @@ class Steelmanage extends Right
             $data['add_name'] = $this->getAccount()['name'];
             $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
-                if (!model("paymentclass")->where("name", $data['class'])->find()) {
-                    $data1['name'] = $data['class'];
+                if (!model("paymentclass")->where("name", $data['name'])->find()) {
+                    $data1['name'] = $data['name'];
                     $data1['companyid'] = $this->getCompanyId();
                     $data1['add_name'] = $this->getAccount()['name'];
                     $data1['add_id'] = $this->getAccountId();
-                    model("paymentclass")->save($data1);
+                    model("paymentclass")->allowField(true)->save($data1);
                 }
                 $data['sort'] = request()->post("sort");
                 $data['companyid'] = $this->getCompanyId();
                 $data['add_name'] = $this->getAccount()['name'];
                 $data['add_id'] = $this->getAccountId();
-                $result = model("paymenttype")->save($data);
+                $result = model("paymenttype")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
             } else {
                 $id = request()->post("id");
