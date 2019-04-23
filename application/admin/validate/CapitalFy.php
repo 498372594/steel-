@@ -14,7 +14,6 @@ class CapitalFy extends Validate
         'shouzhifenlei_id|收支类别' => 'require',
         'shouzhimingcheng_id|收支名称' => 'require',
         'piaoju_id|票据类型' => 'require',
-        'yw_time|业务时间' => 'require',
 
     ];
 

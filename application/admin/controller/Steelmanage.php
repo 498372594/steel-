@@ -4,6 +4,7 @@ namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
 use app\admin\model\Classname;
+use app\admin\model\Productname;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
 use think\db\Query;
@@ -87,6 +88,12 @@ class Steelmanage extends Right
                     return returnSuc();
 //                    return returnRes($result, '删除失败');
                 }
+                break;
+            case 'productname':
+                Productname::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                return returnSuc();
                 break;
             default:
                 $result = model("$model")->where($where)->update(array("delete_time" => date("Y-m-d H:i:s")));

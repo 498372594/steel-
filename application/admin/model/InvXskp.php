@@ -11,7 +11,7 @@ class InvXskp extends Base
 
     public function details()
     {
-        return $this->hasMany('InvCgspHx', 'cgsp_id', 'id');
+        return $this->hasMany('InvXskpHx', 'inv_xskp_id', 'id');
     }
 
     public function customData()
