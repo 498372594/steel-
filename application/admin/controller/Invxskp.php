@@ -194,4 +194,48 @@ class Invxskp extends Right
             return returnSuc($data);
         }
     }
+
+    /**
+     * 销售开票作废
+     * @param Request $request
+     * @param int $id
+     * @return Json
+     */
+    public function cancle(Request $request, $id = 0)
+    {
+        if (!$request->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $sp = \app\admin\model\InvXskp::get($id);
+            if (empty($sp)) {
+                throw new Exception("对象不存在");
+            }
+            if ($sp->company != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if ($sp['status'] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            if (!empty($sp['jcx_id'])) {
+                throw new Exception("该单据只读状态,不能作废");
+            }
+
+            $list1 = \app\admin\model\InvXskpHx::where('inv_xskp_id', $sp['id'])->select();
+            $invModel = new \app\admin\model\Inv();
+            foreach ($list1 as $hx) {
+                if (!empty($hx['data_id'])) {
+                    $invModel->jianMoney($hx['data_id'], $hx['sum_shui_price'], $hx['zhongliang']);
+                }
+            }
+            $sp->status = 2;
+            $sp->save();
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
 }
