@@ -227,4 +227,43 @@ class Invcgsp extends Right
             return returnFail($e->getMessage());
         }
     }
+
+    /**
+     * 采购收票作废
+     */
+    public function cancel($id = 0)
+    {
+        if (!request()->isPost()) {
+            return returnFail('请求方式错误');
+        }
+        Db::startTrans();
+        try {
+            $cgsp = \app\admin\model\InvCgsp::get($id);
+//            $bank = \app\admin\model\CapitalCqk::get($id);
+            if (empty($cgsp)) {
+                throw new Exception("对象不存在");
+            }
+            if ($cgsp["status"] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            if (!empty($cgsp["jcx_id"])) {
+                throw new Exception("该单据只读状态,不能作废");
+            }
+            $cgsp->status = 1;
+            $cgsp->save();
+            $list = \app\admin\model\InvCgsp::where("cgsp_id", $cgsp["id"])->select();
+
+            foreach ($list as $hx) {
+                if(!empty($hx["data_id"])){
+                    (new \app\admin\model\Inv())->jianMoney($hx["data_id"], $hx["sum_shui_price"],$hx["zhongliang"]);
+                }
+
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
 }
