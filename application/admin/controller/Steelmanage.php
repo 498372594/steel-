@@ -2,7 +2,6 @@
 
 namespace app\admin\controller;
 
-use app\admin\library\traits\Backend;
 use app\admin\library\tree\Tree;
 use app\admin\model\Classname;
 use think\db\exception\DataNotFoundException;
@@ -10,12 +9,11 @@ use think\db\exception\ModelNotFoundException;
 use think\db\Query;
 use think\Exception;
 use think\exception\DbException;
+use think\Request;
 use think\response\Json;
 
 class Steelmanage extends Right
 {
-    use Backend;
-
     /**
      * 大类列表接口
      * @return Json
@@ -66,13 +64,15 @@ class Steelmanage extends Right
 
     /**
      * 删除
+     * @param Request $request
      * @return Json
      * @throws Exception
      */
-    public function delete()
+    public function delete(Request $request)
     {
-        $model = request()->param('tablename');
-        $ids = request()->param("id");
+        $data = $request->param();
+        $model = $data['tablename'];
+        $ids = $data["id"];
         $where["id"] = ["in", $ids];
         switch ($model) {
             case "classname":
