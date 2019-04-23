@@ -47,41 +47,41 @@ class KcRk extends Base
         }
         switch ($rukuType) {
             case 1:
-                $rk->remark = "库存调拨单," . $cacheDataPnumber;
+                $rk->beizhu = "库存调拨单," . $cacheDataPnumber;
                 break;
             case 2:
-                $rk->remark = "盘盈入库," . $cacheDataPnumber;
+                $rk->beizhu = "盘盈入库," . $cacheDataPnumber;
                 break;
             case 3:
-                $rk->remark = "其它出库单," . $cacheDataPnumber;
+                $rk->beizhu = "其它出库单," . $cacheDataPnumber;
 
                 break;
             case 4:
-                $rk->remark = "采购单," . $cacheDataPnumber;
+                $rk->beizhu = "采购单," . $cacheDataPnumber;
 
                 break;
             case 7:
-                $rk->remark = "销售退货单," . $cacheDataPnumber;
+                $rk->beizhu = "销售退货单," . $cacheDataPnumber;
 
                 break;
             case 8:
-                $rk->remark = "库存期初余额," . $cacheDataPnumber;
+                $rk->beizhu = "库存期初余额," . $cacheDataPnumber;
 
                 break;
             case 9:
-                $rk->remark = "卷板开平加工," . $cacheDataPnumber;
+                $rk->beizhu = "卷板开平加工," . $cacheDataPnumber;
 
                 break;
             case 10:
-                $rk->remark = "卷板纵剪加工," . $cacheDataPnumber;
+                $rk->beizhu = "卷板纵剪加工," . $cacheDataPnumber;
 
                 break;
             case 13:
-                $rk->remark = "卷板切割加工," . $cacheDataPnumber;
+                $rk->beizhu = "卷板切割加工," . $cacheDataPnumber;
 
                 break;
             case 15:
-                $rk->remark = "通用加工," . $cacheDataPnumber;
+                $rk->beizhu = "通用加工," . $cacheDataPnumber;
                 break;
             default:
                 throw new Exception("请传入匹配的出库类型[chukuType]");
@@ -94,7 +94,7 @@ class KcRk extends Base
         $rk->sale_operator_id = $saleOperatorId;
         $count = self::withTrashed()->where('companyid', $companyId)->whereTime('create_time', 'today')->count();
         $rk->system_number = 'RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-        $rk->ywTime = $ywTime;
+        $rk->yw_time = $ywTime;
         $rk->status = 0;
         $rk->save();
         return $rk;
@@ -205,7 +205,7 @@ class KcRk extends Base
             $pinmingId = $gg['productname_id'] ?? '';
         }
 
-        $addNumberCount = empty($rk['id']) ? 1 : CgPurchaseMx::where('kc_rk_id', $rk['id'])->max('system_number');
+        $addNumberCount = empty($rk['id']) ? 1 : KcRkMx::where('kc_rk_id', $rk['id'])->max('system_number');
         $mx->companyid = $companyId;
         $mx->kc_rk_id = $rk["id"];
         $mx->ruku_type = $rukuType;
@@ -243,6 +243,7 @@ class KcRk extends Base
         $mx->huohao = $huohao;
         $mx->beizhu = $beizhu;
         $mx->chehao = $chehao;
+
         $mx->system_number = $addNumberCount + 1;
         if (empty($mizhong)) {
             $gg = ViewSpecification::get($guigeId);

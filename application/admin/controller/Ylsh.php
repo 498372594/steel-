@@ -228,7 +228,7 @@ class Ylsh extends Right
             if (!empty($ja)) {
 
                 $num = 1;
-                $detailsValidate = new \app\admin\validate\KcQtrkMx();
+                $detailsValidate = new \app\admin\validate\KcDiaoboMx();
                 foreach ($ja as $object) {
 
                     $object['companyid'] = $companyId;
@@ -302,24 +302,23 @@ class Ylsh extends Right
                 $mx->allowField(true)->save($mjo);
                 $rk=(new KcRk())->insertRuku($mx["id"],1,$db["yw_time"],$db["group_id"],$db["system_number"],$db["create_operator_id"],$this->getAccountId(),$companyId);
                 $ck=(new StockOut())->insertChuku($mx["id"],1,$db["yw_time"],$db["group_id"],$db["system_number"],$db["create_operator_id"],$this->getAccountId(),$companyId);
-                $spot= KcSpot::where("id",$mjo["data_id"])->find();
+                $spot= KcSpot::where("id",$mjo["spot_id"])->find();
                 $mjo["cb_price"]=$spot["cb_price"];
-                (new KcRk())->insertRkMxMd($rk, $mx["id"], 1, $db["yw_time"], $db["system_number"], null, $db["customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
-                    , $mx["jijiafangshi_id"], $mx["store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], $data["piaoju_id"], $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
-                    $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $mx["sumprice"], $mx["shui_price"], $mx["sum_shui_price"], $mx["shuie"], null,null, $this->getAccountId(), $this->getCompanyId());
 
-                (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "1",
-                    $mx['yw_time'], $db['system_number'], $db['customer_id'], $mx['pinming_id'], $mx['caizhi'], $mx['chandi'],
-                    $mx['jijiafangshi_id'], $db['store_id'], $mx['houdu'] ?? 0, $mx['kuandu'] ?? 0,
+                (new KcRk())->insertRkMxMd($rk, $mx["id"], 1, $db["yw_time"], $db["system_number"], null, $mjo["gf_customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
+                    , $mx["jijiafangshi_id"], $mx["old_store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"],null, $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
+                    $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $calSpot["sumprice"], $mx["shuiprice"], $calSpot["sum_shui_price"], $calSpot["shuie"], null,null, $this->getAccountId(), $this->getCompanyId());
+               (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "1",
+                   $db['yw_time'], $db['system_number'], $mjo['gf_customer_id'], $mx['pinming_id'], $mx['caizhi_id'], $mx['chandi_id'],
+                    $mx['jijiafangshi_id'], $mx['old_store_id'], $mx['houdu'] ?? 0, $mx['kuandu'] ?? 0,
                     $mx['changdu'] ?? 0, $mx['zhijian'], $mx['lingzhi'] ?? 0, $mx['jianshu'],
-                    $mx['counts'] ?? 0, $mx['zhongliang'], $mx['price'], $mx['sum_price'],
+                    $mx['counts'] ?? 0, $mx['zhongliang'], $mx['price'], $mx['sumprice'],
                     $mx['shuiprice'] ?? 0, $mx['sum_shui_price'], $mx['shuie'], null,
-                    null, null, '', $this->getAccount(), $this->getCompanyId());
+                    null, null, '', $this->getAccountId(), $this->getCompanyId());
             }
-
             Db::commit();
             return returnSuc(['id' => $db['id']]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
         }
