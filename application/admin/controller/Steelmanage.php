@@ -29,10 +29,11 @@ class Steelmanage extends Right
             $data['companyid'] = $this->getCompanyId();
             $data['add_name'] = $this->getAccount()['name'];
             $data['add_id'] = $this->getAccountId();
-            if(Db::table('classname')->where(['classname' => $data['classname']])->find()){
-                return returnFail('该类已经存在');
-            }
+
             if (empty(request()->post("id"))) {
+                if(Db::table('classname')->where(['classname' => $data['classname']])->find()){
+                    return returnFail('该类已经存在');
+                }
                 $result = model("classname")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
             } else {

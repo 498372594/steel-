@@ -140,9 +140,10 @@ class Purchase extends Right
                         $mx = \app\admin\model\CgPurchaseMx::where('id', $mjo['id'])->find();
                         $mx->allowField(true)->data($mjo)->isUpdate(true)->save();
                         (new KcRkTz())->updateRukuTz($mx["id"], $mx["ruku_type"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"]
-                            , $mx["houdu"], $mx["changdu"], $mx["kuandu"], $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["shui_price"]
-                            , $mx["pihao"], $mx["beizhu"], $mx["chehao"], $mx["cache_ywtime"], $mx["cache_data_number"], $mx["cache_data_pnumber"], $mx["cache_customer_Id"]
-                            , $mx["store_id"], $mx["cache_piaoju_id"], $mx["mizhong"], $mx["jianzhong"]);
+                            , $mx["houdu"], $mx["changdu"], $mx["kuandu"], $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["sum_shui_price"],$mx["price"],
+                            $mx["shui_price"],$mx["huohao"]
+                            , $mx["pihao"], $mx["beizhu"], $mx["chehao"], $cg["yw_time"],null, $cg["system_number"], $mx["customer_id"]
+                            , $mx["store_id"], $cg["piaoju_id"], $mx["mizhong"], $mx["jianzhong"]);
                         (new \app\admin\model\Inv())->updateInv($mx["id"], 2, null, $mx["customerId"], $mx["yw_time"], $mx["changdu"], $mx["kuandu"], $mx["houdu"]
                             , $mx["guige_id"], $mx["jijiafangshi_id"], $mx["piaoju_id"], $mx["pinming_id"], $mx["zhongliang"], $mx["price"], $mx["sum_price"], $mx["sum_shui_price"], $mx["shui_price"]);
                     }
@@ -173,7 +174,7 @@ class Purchase extends Right
 
                         (new KcRkTz())->insertRukuTz($mx["id"], 4, $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["houdu"], $mx["changdu"], $mx["kuandu"],
                             $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["shui_price"], $mx["sumprice"], $mx["sum_shui_price"], $mx["shuie"], $mx["price"], $mx["huohao"],
-                            $mx["pihao"], $mx["beizhu"], $mx["chehao"], $mx["cache_ywtime"], null, $data["system_number"], $data["customer_id"], $mx["store_id"], $this->getAccountId(),
+                            $mx["pihao"], $mx["beizhu"], $mx["chehao"], $cg["yw_time"], null, $cg["system_number"], $data["customer_id"], $mx["store_id"], $this->getAccountId(),
                             $mx["mizhong"], $mx["jianzhong"], $this->getCompanyId());
                     }
                     (new \app\admin\model\Inv())->insertInv($mx["id"], 2, 2, $mx["changdu"], $mx["kuandu"], $mx["houdu"], $mx["guige_id"], $mx["jijiafangshi_id"], $data["piaoju_id"], $mx["pinming_id"],
@@ -181,8 +182,11 @@ class Purchase extends Right
                 }
 
             }
-
+            if(empty($data['delete_other_ids'])){
+                $data['delete_other_ids']=null;
+            }
             (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+            return returnSuc(['id' => $cg['id']]);
             Db::commit();
             return returnSuc();
         } catch (Exception $e) {

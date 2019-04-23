@@ -476,6 +476,9 @@ class Rk extends Right
         return returnRes($res, '清库失败');
     }
 
+    /**其它入库列表
+     * @return \think\response\Json
+     */
     public function qtrklist()
     {
         $params = request()->param();
@@ -498,6 +501,13 @@ class Rk extends Right
 
     }
 
+    /**其他入库明细
+     * @param int $id
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
     public function qtrkmx($id = 0)
     {
         $data = \app\admin\model\KcQtrk::with([
@@ -607,7 +617,10 @@ class Rk extends Right
 //            return returnFail('请求方式错误');
 //        }
 //    }
-
+    /**添加其它入库
+     * @return \think\response\Json
+     * @throws \Exception
+     */
     public function addqtrk()
     {
 
@@ -730,7 +743,7 @@ class Rk extends Right
         }
     }
     /**
-     * 作废
+     * 其它作废
      * @param Request $request
      * @param int $id
      * @return Json
