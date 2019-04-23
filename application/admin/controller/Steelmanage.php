@@ -353,7 +353,7 @@ class Steelmanage extends Right
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
-    /**
+    /**添加件支数
      * @return Json
      * @throws DataNotFoundException
      * @throws DbException
