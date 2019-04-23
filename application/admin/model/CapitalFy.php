@@ -67,9 +67,7 @@ class CapitalFy extends Base
         if (!empty($fyLists)) {
             $validate = new \app\admin\validate\CapitalFy();
             foreach ($fyLists as $index => $jo) {
-                if ($index == 'deleteIds') {
-                    continue;
-                }
+                $jo['yw_time'] = date('Y-m-d H:i:s');
                 if (!$validate->check($jo)) {
                     throw new Exception($validate->getError());
                 }
