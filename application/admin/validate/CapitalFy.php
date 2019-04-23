@@ -15,11 +15,10 @@ class CapitalFy extends Validate
         'shouzhimingcheng_id|收支名称' => 'require',
         'piaoju_id|票据类型' => 'require',
         'yw_time|业务时间' => 'require',
-        'details' => 'require|min:1'
+
     ];
 
     protected $message = [
-        'details.require' => '明细至少出现一行',
-        'details.min' => '明细至少出现一行'
+
     ];
 }

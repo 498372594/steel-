@@ -62,14 +62,15 @@ class CapitalFy extends Base
     {
         $addFyList = [];
         $updateFyList = [];
-
         $flag = true;
+
         if (!empty($fyLists)) {
             $validate = new \app\admin\validate\CapitalFy();
             foreach ($fyLists as $index => $jo) {
-                if ($index == 'deleteIds') {
+                if ($index === 'deleteIds') {
                     continue;
                 }
+
                 if (!$validate->check($jo)) {
                     throw new Exception($validate->getError());
                 }
@@ -79,6 +80,7 @@ class CapitalFy extends Base
                     $updateFyList[] = $jo;
                 }
             }
+
         } else {
             $flag = false;
         }
@@ -89,6 +91,7 @@ class CapitalFy extends Base
                 $this->deleteFyMx($obj);
             }
         }
+
         foreach ($updateFyList as $obj) {
             $this->updateFyMx($obj['id'], $obj['beizhu'], $obj['customer_id'], $obj['fang_xiang'], $obj['piaoju_id'],
                 $groupId, $saleOperatorId, $obj['danjia'], $obj['money'], $obj['price_and_tax'] ?? 0, $obj['tax_rate'] ?? 0,

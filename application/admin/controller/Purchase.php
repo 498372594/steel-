@@ -121,7 +121,7 @@ class Purchase extends Right
             if (!empty($data["delete_mx_ids"])) {
                 $deleteList = model("cg_purchase_mx")->where('id', 'in', $data["delete_mx_ids"])->select();
                 foreach ($deleteList as $cg) {
-                    if ($cg["rukr_fangshi"] == 1) {
+                    if ($cg["ruku_fangshi"] == 1) {
                         throw new Exception('自动入库单禁止删除');
                     } else {
                         (new KcRkTz())->deleteByDataIdAndRukuType($cg["id"], 4);
@@ -185,10 +185,11 @@ class Purchase extends Right
             if(empty($data['delete_other_ids'])){
                 $data['delete_other_ids']=null;
             }
+
             (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
-            return returnSuc(['id' => $cg['id']]);
+
             Db::commit();
-            return returnSuc();
+            return returnSuc(['id' => $cg['id']]);
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
