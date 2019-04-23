@@ -318,44 +318,6 @@ class KcRk extends Base
             $md->shuiprice, $md->sum_shui_price, $md->shuie, $md->mizhong, $md->jianzhong, $md->cb_price, $md->cb_shuie, $md->sumprice, $md->sum_shui_price, $companyId);
     }
 
-    public function cancelRuku($dataId, $rukuType)
-    {
-        if (empty($dataId)) {
-            throw new Exception("请传入dataId");
-        }
-        if ($rukuType !== 1 && $rukuType !== 2 && $rukuType !== 3 && $rukuType !== 4 && $rukuType !== 7 && $rukuType !== 8 && $rukuType !== 9 && $rukuType !== 10 && $rukuType !== 13 && $rukuType !== 15) {
-            throw new Exception("请传入匹配的入库类型[rukuType]");
-        }
-        $rk = new self();
-        $rk = $rk->where(array("data_id" => $dataId, "ruku_type" => $rukuType))->find();
-        if (empty($rk)) {
-            throw new Exception("对象不存在");
-        }
-        $mdlist = KcRkMd::where("rk_md_id", $rk["id"])->select();
-        if (!empty($mdlist)) {
-            foreach ($mdlist as $md) {
-                $spList = KcSpot::where("rk_md_id", $md["id"])->select();
-                if (!empty($spList)) {
-                    foreach ($spList as $sp) {
-                        if ($sp["status"] == 2) {
-                            throw new Exception("该单据已执行清库操作");
-                        }
-                        $shList=KcYlSh::where("spot_id",$sp["id"])->select();
-                        if(!empty($shList)){
-                            throw new Exception("该单据已预留锁货！");
-                        }
-                    }
-                }
-            }
-        }
-        $idList=KcRkMd::where("kc_rk_id",$rk["id"])->field("id")->select();
-        foreach ($idList as $id){
-            KcSpot::deleteSpotByRkMd($id);
-        }
-        $rk->save($rk);
-
-    }
-
     /**
      * 删除入库单
      * @param $dataId
@@ -401,7 +363,7 @@ class KcRk extends Base
 
         $listids = KcRkMd::findIdsByRkid($rk['id']);
         foreach ($listids as $mdid) {
-            (new KcSpot())->deleteSpotByRkMd($mdid);
+            KcSpot::deleteSpotByRkMd($mdid);
         }
         KcRkMx::destroy(function (Query $query) use ($rk) {
             $query->where('kc_rk_id', $rk['id']);
@@ -458,9 +420,31 @@ class KcRk extends Base
 
         $listids = KcRkMd::where('kc_rk_id', $rk['id'])->column('id');
         foreach ($listids as $mdid) {
-            (new KcSpot())->deleteSpotByRkMd($mdid);
+            KcSpot::deleteSpotByRkMd($mdid);
         }
         $rk->save();
+    }
+
+    /**
+     * @param KcRkMd $tbKcRkMd
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    public static function allPanduanByMxId(KcRkMd $tbKcRkMd)
+    {
+        $spList = KcSpot::where('rk_md_id', $tbKcRkMd['id'])->select();
+        if (!empty($spList)) {
+            foreach ($spList as $spot) {
+                if ($spot['status'] == 2) {
+                    throw new Exception("该单据已执行清库操作");
+                }
+                $shList = KcYlSh::where('spot_id', $spot['id'])->find();
+                if (!empty($shList)) {
+                    throw new Exception("该单据已预留锁货！");
+                }
+            }
+        }
     }
 }
 //$rk->yw_time = $ywTime;

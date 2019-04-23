@@ -220,7 +220,7 @@ class Purchase extends Right
             $cg->isUpdate(true)->allowField(true)->save(array("status"=>1,"id"=>$id));
             $mxList=\app\admin\model\CgPurchaseMx::where("purchase_id",$cg["id"])->select();
             if($cg["ruku_fangshi"]==1){
-                (new KcRk())->cancelRuku($cg["id"],4);
+                KcRk::cancelRuku($cg["id"],4);
             }
             Db::commit();
             return returnSuc(['id' => $cg['id']]);

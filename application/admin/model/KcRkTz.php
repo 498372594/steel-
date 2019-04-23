@@ -135,7 +135,7 @@ class KcRkTz extends Base
      * @throws ModelNotFoundException
      */
     public function updateRukuTz($dataId, $rukuType, $pinmingId, $guigeId, $caizhiId, $chandiId, $jijiafangshiId, $houdu, $changdu, $kuandu,
-                                 $counts, $jianshu, $lingzhi, $zhijian, $zhongliang,$sumShuiPrice,$price, $shuiPrice, $huohao, $pihao, $beizhu, $chehao, $cacheYwTime, $cacheDataNumber, $cacheDataPnumber
+                                 $counts, $jianshu, $lingzhi, $zhijian, $zhongliang, $sumShuiPrice, $price, $shuiPrice, $huohao, $pihao, $beizhu, $chehao, $cacheYwTime, $cacheDataNumber, $cacheDataPnumber
         , $cacheCustomerId, $storeId, $cachePiaojuId, $mizhong, $jianzhong)
     {
 
@@ -277,24 +277,42 @@ class KcRkTz extends Base
 
     }
 
+    /**
+     * @param $tzid
+     * @param $counts
+     * @param $zhongliang
+     * @throws DbException
+     * @throws Exception
+     */
+    public static function addTzById($tzid, $counts, $zhongliang)
+    {
+        $counts *= 1;
+        $zhongliang *= 1;
+        if (empty($counts) && empty($zhongliang)) {
+            throw new Exception("请传入数量,重量等");
+        }
 
-    // 验证规则
-    public $rules = [
+        $tz = KcRk::get($tzid);
 
-    ];
+        if ($counts != 0) {
+            $newCounts = $tz['counts'] + $counts;
+            if ($tz['zhijian'] == 0) {
+                $tz->lingzhi = $newCounts;
+            } else {
+                $tz->jianshu = floor($newCounts / $tz['zhijian']);
+                $tz->lingzhi = $newCounts % $tz['zhijian'];
+            }
+            $tz->counts = $newCounts;
+        }
 
-    // 验证错误信息
-    public $msg = [
-
-    ];
-
-    // 场景
-    public $scene = [
-
-    ];
-
-    // 表单-数据表字段映射
-    public $map = [
-
-    ];
+        if ($zhongliang != 0) {
+            $tz->zhongliang = $tz['zhongliang'] + $zhongliang;
+        }
+//        $guige = ViewSpecification::where('id', $tz['guige_id'])->cache(true, 60)->find();
+//        $jjfs=Jsfs::where('id',$tz['jijiafangshi_id'])->cache(true,60)->find();
+//        Spot s = SpotUtil . calSpotZhongliang(pinming, tz . getChangdu(), tz . getKuandu(), jjfs . getBaseJijialeixingId(), tz . getMizhong(), tz . getJianzhong(), tz . getCounts(), tz . getLingzhi(), tz . getZhongliang(), zt);
+//        tz . setGuobangZhongliang(s . getGuobangZhongliang());
+//        tz . setLisuanZhongliang(s . getLisuanZhongliang());
+        $tz->save();
+    }
 }

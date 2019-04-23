@@ -20,6 +20,6 @@ class CapitalOtherDetails extends Base
     public function szflData()
     {
         return $this->belongsTo('Paymentclass', 'shouzhileibie_id', 'id')
-            ->field('id,name')->bind(['shouzhileibie' => 'class']);
+            ->field('id,name')->bind(['shouzhileibie' => 'name']);
     }
 }
