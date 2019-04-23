@@ -303,5 +303,4 @@ class Right extends Signin
         }
         return returnFail('404 not found');
     }
-
 }
