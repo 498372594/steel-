@@ -293,10 +293,10 @@ class Chuku extends Right
             }
 
             Db::commit();
-            return returnSuc();
+            return returnSuc(['id' => $ck['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage() . $e->getFile() . $e->getLine());
+            return returnFail($e->getMessage());
         }
     }
 

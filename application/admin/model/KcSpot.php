@@ -131,15 +131,15 @@ class KcSpot extends Base
 
         if ($zhongliang != 0) {
             $spot->zhongliang = $calSpot->zhongliang;
-            $spot->guobangZhongliang = $calSpot->guobang_zhongliang;
-            $spot->lisuanZhongliang = $calSpot->lisuan_zhongliang;
+            $spot->guobang_zhongliang = $calSpot->guobang_zhongliang;
+            $spot->lisuan_zhongliang = $calSpot->lisuan_zhongliang;
             if ($spot['zhongliang'] < 0) {
                 throw new Exception("不允许出现负库存!");
             }
         }
 
         $spot->sumprice = $calSpot->sumprice;
-        $spot->sumShuiPrice = $calSpot->sum_shui_price;
+        $spot->sum_shui_price = $calSpot->sum_shui_price;
         $spot->shuie = $calSpot->shuie;
         $spot->save();
     }
@@ -167,13 +167,13 @@ class KcSpot extends Base
         if (empty($baseJijialeixingId)) {
             throw new Exception("请传入计价方式中的计价类型");
         }
-        if (empty($counts)) {
+        if (is_null($counts)) {
             throw new Exception("请传入数量");
         }
-        if (empty($zhongliang)) {
+        if (is_null($zhongliang)) {
             throw new Exception("请传入重量");
         }
-        if (empty($price)) {
+        if (is_null($price)) {
             throw new Exception("请传入单价");
         }
         if (empty($mizhong)) {
