@@ -254,6 +254,13 @@ class Feiyong extends Signin
         }
     }
 
+    /**
+     * 获取源单
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function getSources(Request $request, $pageLimit = 10)
     {
         if (!$request->isGet()) {
@@ -262,6 +269,7 @@ class Feiyong extends Signin
         $params = $request->param();
         $list = ViewFySources::with('custom')
             ->where('companyid', $this->getCompanyId())
+            ->where('status', '<>', 2)
             ->order('yw_time', 'desc');
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
