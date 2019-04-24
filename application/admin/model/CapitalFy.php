@@ -62,14 +62,11 @@ class CapitalFy extends Base
     {
         $addFyList = [];
         $updateFyList = [];
-
         $flag = true;
+
         if (!empty($fyLists)) {
             $validate = new \app\admin\validate\CapitalFy();
             foreach ($fyLists as $index => $jo) {
-                if ($index == 'deleteIds') {
-                    continue;
-                }
                 if (!$validate->check($jo)) {
                     throw new Exception($validate->getError());
                 }
@@ -79,6 +76,7 @@ class CapitalFy extends Base
                     $updateFyList[] = $jo;
                 }
             }
+
         } else {
             $flag = false;
         }
@@ -89,6 +87,7 @@ class CapitalFy extends Base
                 $this->deleteFyMx($obj);
             }
         }
+
         foreach ($updateFyList as $obj) {
             $this->updateFyMx($obj['id'], $obj['beizhu'], $obj['customer_id'], $obj['fang_xiang'], $obj['piaoju_id'],
                 $groupId, $saleOperatorId, $obj['danjia'], $obj['money'], $obj['price_and_tax'] ?? 0, $obj['tax_rate'] ?? 0,
@@ -148,7 +147,7 @@ class CapitalFy extends Base
             ->whereTime('create_time', 'today')
             ->where('companyid', $companyId)
             ->count();
-        $fy->system_number = "FYD" . date('Ymd') . str_pad($count++, 3, '0', STR_PAD_LEFT);
+        $fy->system_number = "FYD" . date('Ymd') . str_pad(++$count, 3, '0', STR_PAD_LEFT);
         $fy->yw_time = $ywTime;
         $fy->fymx_create_type = "1";
         $fy->fang_xiang = $fangxiang;

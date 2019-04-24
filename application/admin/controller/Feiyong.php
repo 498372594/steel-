@@ -6,6 +6,7 @@ use app\admin\model\CapitalFy;
 use app\admin\model\CapitalFyhx;
 use app\admin\model\CgPurchase;
 use app\admin\model\CgTh;
+use app\admin\model\ViewFySources;
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -251,5 +252,38 @@ class Feiyong extends Signin
             Db::rollback();
             return returnFail($e->getMessage());
         }
+    }
+
+    /**
+     * 获取源单
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function getSources(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $params = $request->param();
+        $list = ViewFySources::with('custom')
+            ->where('companyid', $this->getCompanyId())
+            ->where('status', '<>', 2)
+            ->order('yw_time', 'desc');
+        if (!empty($params['ywsjStart'])) {
+            $list->where('yw_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        if (!empty($params['customer_id'])) {
+            $list->where('customer_id', $params['customer_id']);
+        }
+        if (isset($params['type']) && $params['type'] !== '') {
+            $list->where('type_id', $params['type']);
+        }
+        $list = $list->paginate($pageLimit);
+        return returnRes(true, '', $list);
     }
 }

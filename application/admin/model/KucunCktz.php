@@ -251,6 +251,8 @@ class KucunCktz extends Base
 
     public function subtractTzById($tzid, $counts, $zhongliang)
     {
+        $counts *= 1;
+        $zhongliang *= 1;
         if (empty($counts) && empty($zhongliang)) {
             throw new Exception("请传入数量,重量等");
         }

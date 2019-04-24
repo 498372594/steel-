@@ -1,7 +1,9 @@
 <?php
 
 namespace app\admin\model;
+
 use traits\model\SoftDelete;
+
 class Productname extends Base
 {
     use SoftDelete;
@@ -26,8 +28,10 @@ class Productname extends Base
     public $map = [
 
     ];
-    public function setClassnameAttr($data,$value){
-        $classname=model("classname")->where("id",$data['classid'])->value("classname");
+
+    public function setClassnameAttr($value, $data)
+    {
+        $classname = model("classname")->where("id", $data['classid'])->value("classname");
         return $classname;
     }
 }

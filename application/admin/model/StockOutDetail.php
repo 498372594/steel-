@@ -98,7 +98,7 @@ class StockOutDetail extends Base
         $mx->zhijian = $zhijian;
         $mx->price = $price;
         $mx->sumprice = $sumPrice;
-        $mx->shui_price = $shuiPrice;
+        $mx->shuiprice = $shuiPrice;
         $mx->sum_shui_price = $sumShuiPrice;
         $mx->shuie = $shuie;
 
@@ -123,7 +123,7 @@ class StockOutDetail extends Base
         }
 
         $addNumberCount = empty($ck['id']) ? 1 : StockOutDetail::where('stock_out_id', $ck['id'])->max('system_number');
-        $mx->systemNumber = $addNumberCount;
+        $mx->system_number = $addNumberCount;
         $mx->save();
         return $mx;
     }

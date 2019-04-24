@@ -238,51 +238,53 @@ class Chuku extends Right
                     $mx = new StockOutDetail();
                     $mx->allowField(true)->data($mjo)->save();
 
-                    foreach ($mjo['mdList'] as $tmd) {
-                        $s = KcSpot::get($tmd['kc_spot_id']);
+                    if (!empty($mjo['mdList'])) {
+                        foreach ($mjo['mdList'] as $tmd) {
+                            $s = KcSpot::get($tmd['kc_spot_id']);
 
-                        $tmd['stock_out_id'] = $ck['id'];
-                        $tmd['stock_out_detail_id'] = $mx['id'];
-                        $tmd['data_id'] = $mx['data_id'];
-                        $tmd['chuku_type'] = $mx['chuku_type'];
-                        $tmd['out_mode'] = 2;
+                            $tmd['stock_out_id'] = $ck['id'];
+                            $tmd['stock_out_detail_id'] = $mx['id'];
+                            $tmd['data_id'] = $mx['data_id'];
+                            $tmd['chuku_type'] = $mx['chuku_type'];
+                            $tmd['out_mode'] = 2;
 
-                        $tmd['pinming_id'] = $s['pinming_id'];
-                        $tmd['caizhi'] = $s['caizhi_id'];
-                        $tmd['chandi'] = $s['chandi_id'];
-                        $tmd['guige_id'] = $s['guige_id'];
-                        $tmd['houdu'] = $s['houdu'];
-                        $tmd['kuandu'] = $s['kuandu'];
-                        $tmd['changdu'] = $s['changdu'];
-                        $tmd['tax_rate'] = $s['shui_price'];
-                        $tmd['mizhong'] = $mx['mizhong'];
-                        $tmd['jianzhong'] = $s['jianzhong'];
-                        $tmd['zhijian'] = $s['zhijian'];
-                        $tmd['cb_price'] = $s['cb_price'];
-                        $jjfs = Jsfs::where('id', $tmd['jijiafangshi_id'])->cache(true, 60)->value('jj_type');
-                        if ($jjfs == 1 || $jjfs == 2) {
-                            $tmd['sum_shui_price'] = $tmd['price'] * $tmd['zhongliang'];
-                            $tmd['cb_sum_shuiprice'] = $tmd['cb_price'] * $tmd['zhongliang'];
-                        } elseif ($jjfs == 3) {
-                            $tmd['sum_shui_price'] = $tmd['price'] * $tmd['counts'];
-                            $tmd['cb_sum_shuiprice'] = $tmd['cb_price'] * $tmd['counts'];
-                        }
+                            $tmd['pinming_id'] = $s['pinming_id'];
+                            $tmd['caizhi'] = $s['caizhi_id'];
+                            $tmd['chandi'] = $s['chandi_id'];
+                            $tmd['guige_id'] = $s['guige_id'];
+                            $tmd['houdu'] = $s['houdu'];
+                            $tmd['kuandu'] = $s['kuandu'];
+                            $tmd['changdu'] = $s['changdu'];
+                            $tmd['tax_rate'] = $s['shui_price'];
+                            $tmd['mizhong'] = $mx['mizhong'];
+                            $tmd['jianzhong'] = $s['jianzhong'];
+                            $tmd['zhijian'] = $s['zhijian'];
+                            $tmd['cb_price'] = $s['cb_price'];
+                            $jjfs = Jsfs::where('id', $tmd['jijiafangshi_id'])->cache(true, 60)->value('jj_type');
+                            if ($jjfs == 1 || $jjfs == 2) {
+                                $tmd['sum_shui_price'] = $tmd['price'] * $tmd['zhongliang'];
+                                $tmd['cb_sum_shuiprice'] = $tmd['cb_price'] * $tmd['zhongliang'];
+                            } elseif ($jjfs == 3) {
+                                $tmd['sum_shui_price'] = $tmd['price'] * $tmd['counts'];
+                                $tmd['cb_sum_shuiprice'] = $tmd['cb_price'] * $tmd['counts'];
+                            }
 //                    $tmd['sumprice'](WuziUtil . calSumPrice(md . getSumShuiPrice(), md . getShuiprice()));
 //                    $tmd['shuie'](WuziUtil . calShuie(md . getSumShuiPrice(), md . getShuiprice()));
 //                    $tmd['cb_sum_price'](WuziUtil . calSumPrice(md . getCbSumShuiPrice(), md . getShuiprice()));
 //                    $tmd['cb_shuie'](WuziUtil . calShuie(md . getCbSumShuiPrice(), md . getShuiprice()));
 //                    $tmd['fy_sz'](md . getCbSumShuiPrice() . subtract(md . getSumShuiPrice()));
-                        $tmd['huohao'] = $s['huohao'];
-                        $tmd['chehao'] = $s['chehao'];
-                        $tmd['pihao'] = $s['pihao'];
-                        $tmd['beizhu'] = $s['beizhu'];
-                        $tmd['store_id'] = $mx['store_id'];
-                        $md = new StockOutMd();
-                        $md->allowField(true)->data($tmd)->save();
+                            $tmd['huohao'] = $s['huohao'];
+                            $tmd['chehao'] = $s['chehao'];
+                            $tmd['pihao'] = $s['pihao'];
+                            $tmd['beizhu'] = $s['beizhu'];
+                            $tmd['store_id'] = $mx['store_id'];
+                            $md = new StockOutMd();
+                            $md->allowField(true)->data($tmd)->save();
 
-                        (new KcSpot())->adjustSpotById($md['kc_spot_id'], false, $md['counts'], $md['zhongliang'], $md['jijiafangshi_id'], $md['cb_shuie'] ?? 0);
+                            (new KcSpot())->adjustSpotById($md['kc_spot_id'], false, $md['counts'], $md['zhongliang'], $md['jijiafangshi_id'], $md['cb_shuie'] ?? 0);
 
-                        (new KucunCktz())->subtractTzById($md['kucun_cktz_id'], $md['counts'], $md['zhongliang']);
+                            (new KucunCktz())->subtractTzById($md['kucun_cktz_id'], $md['counts'], $md['zhongliang']);
+                        }
                     }
                 }
             }
@@ -291,10 +293,10 @@ class Chuku extends Right
             }
 
             Db::commit();
-            return returnSuc();
+            return returnSuc(['id' => $ck['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage().$e->getFile().$e->getLine());
+            return returnFail($e->getMessage());
         }
     }
 

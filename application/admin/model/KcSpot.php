@@ -92,6 +92,8 @@ class KcSpot extends Base
      */
     public function adjustSpotById($spotId, $isJia, $counts, $zhongliang, $jijiafangshiId, $shuie)
     {
+        $counts *= 1;
+        $zhongliang *= 1;
         if (empty($counts) && empty($zhongliang)) {
             throw new Exception("请传入数量,重量等");
         }
@@ -129,15 +131,15 @@ class KcSpot extends Base
 
         if ($zhongliang != 0) {
             $spot->zhongliang = $calSpot->zhongliang;
-            $spot->guobangZhongliang = $calSpot->guobang_zhongliang;
-            $spot->lisuanZhongliang = $calSpot->lisuan_zhongliang;
+            $spot->guobang_zhongliang = $calSpot->guobang_zhongliang;
+            $spot->lisuan_zhongliang = $calSpot->lisuan_zhongliang;
             if ($spot['zhongliang'] < 0) {
                 throw new Exception("不允许出现负库存!");
             }
         }
 
         $spot->sumprice = $calSpot->sumprice;
-        $spot->sumShuiPrice = $calSpot->sum_shui_price;
+        $spot->sum_shui_price = $calSpot->sum_shui_price;
         $spot->shuie = $calSpot->shuie;
         $spot->save();
     }
@@ -165,13 +167,13 @@ class KcSpot extends Base
         if (empty($baseJijialeixingId)) {
             throw new Exception("请传入计价方式中的计价类型");
         }
-        if (empty($counts)) {
+        if (is_null($counts)) {
             throw new Exception("请传入数量");
         }
-        if (empty($zhongliang)) {
+        if (is_null($zhongliang)) {
             throw new Exception("请传入重量");
         }
-        if (empty($price)) {
+        if (is_null($price)) {
             throw new Exception("请传入单价");
         }
         if (empty($mizhong)) {
@@ -400,14 +402,14 @@ class KcSpot extends Base
      * @throws ModelNotFoundException
      * @throws Exception
      */
-    public function deleteSpotByRkMd($mdid)
+    public static function deleteSpotByRkMd($mdid)
     {
         $ss = self::where('rk_md_id', $mdid)->find();
         if (empty($ss)) {
             throw new Exception("库存未找到");
         }
 
-        $this->ifCkMd($ss['id']);
+        self::ifCkMd($ss['id']);
 
         $ss->delete();
     }
@@ -417,7 +419,7 @@ class KcSpot extends Base
      * @throws \think\Exception
      * @throws Exception
      */
-    private function ifCkMd($id)
+    private static function ifCkMd($id)
     {
         $c = StockOutMd::alias('md')
             ->join('__STOCK_OUT__ ck', 'ck.id=md.stock_out_id')

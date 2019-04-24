@@ -2,23 +2,28 @@
 
 namespace app\admin\controller;
 
-use app\admin\library\traits\Backend;
+use app\admin\model\{KcQtrk, KcQtrkMx, KcRkMd, KcRkMx, KcRkTz, KcSpot, ViewQingku};
 use app\admin\model\KcRk;
-use app\admin\model\{CgPurchase, KcQtrk, KcQtrkMx, KcRkMx, KcRkTz, KcSpot};
-use think\{Db, Request};
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    db\Query,
+    exception\DbException,
+    Request,
+    response\Json};
 use think\Exception;
 use think\Session;
 
 class Rk extends Right
 {
     /**入库单列表
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function getrk()
     {
         $params = request()->param();
-        $list = \app\admin\model\KcRk::with([
+        $list = KcRk::with([
             'custom',
         ])->where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
@@ -41,12 +46,12 @@ class Rk extends Right
     }
 
     /**入库单明细
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function getrkmx($id = 0)
     {
-        $data = \app\admin\model\KcRk::with([
+        $data = KcRk::with([
             'custom',
             'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData', 'customData'],
         ])->where('companyid', $this->getCompanyId())
@@ -60,14 +65,14 @@ class Rk extends Right
     }
 
     /**获取待入库明细
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function getrktz()
     {
         $params = request()->param();
 
-        $list = \app\admin\model\KcRkTz::with(['storage', 'pinmingData', 'caizhiData', 'chandiData'])->where('companyid', $this->getCompanyId());
+        $list = KcRkTz::with(['storage', 'pinmingData', 'caizhiData', 'chandiData'])->where('companyid', $this->getCompanyId());
         $list->where("jianshu", ">", 0)->where("lingzhi", ">", 0)->where("counts", ">", 0);
 
         if (!empty($params['ids'])) {
@@ -118,7 +123,7 @@ class Rk extends Right
      * @param int $moshi_type
      * @param array $data
      * @param bool $return
-     * @return string|\think\response\Json
+     * @return string|Json
      * @throws \Exception
      */
     public function add()
@@ -181,17 +186,17 @@ class Rk extends Right
                 throw new Exception('入库单禁止修改');
 //                  rk = (TbKcRk)getDao() . selectByPrimaryKey(id);
 //            if (rk == null) {
-//                throw new ValidateException("对象不存在");
+//                throw new Exception("对象不存在");
 //            }
 //             if (!rk . getUserId() . equals(rk . getUserId())) {
-//                 throw new ValidateException("对象不存在");
+//                 throw new Exception("对象不存在");
 //             }
 //             if ("1" . equals(rk . getStatus())) {
 //
-//                 throw new ValidateException("该单据已经作废");
+//                 throw new Exception("该单据已经作废");
 //             }
 //            if (rk . getDataId() != null) {
-//                throw new ValidateException("当前单据是只读单据,请到关联单据修改");
+//                throw new Exception("当前单据是只读单据,请到关联单据修改");
 //            }
 //            rk . setBeizhu(beizhu);
 //             rk . setCustomerId(gysId);
@@ -271,7 +276,7 @@ class Rk extends Right
             if (empty($data)) {
                 $data = $request->post();
             }
-            if($data["id"]){
+            if ($data["id"]) {
                 throw new Exception('入库单禁止修改');
             }
             $data['create_operator'] = $this->getAccount()['name'];
@@ -418,23 +423,23 @@ class Rk extends Right
     }
 
     /**清库列表
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DbException
      */
     public function clearstoragelist()
     {
         $params = request()->param();
-        $list = \app\admin\model\ViewQingku::where(array("companyid" => $this->getCompanyId()));
+        $list = ViewQingku::where(array("companyid" => $this->getCompanyId()));
         $list = $this->getsearchcondition($params, $list);
-      if(!empty($params['status'])){
-          $list->where('status', $params['status']);
-      }else{
-          $list->where('status', 1);
-      }
-        if(!empty($params['guobang_zhongliang'])){
+        if ($params['qingku_status']) {
+            $list->where('status', 2);
+        } else {
+            $list->where('status', 1);
+        }
+        if (!$params['guobang_zhongliang']) {
             $list->where('guobang_zhongliang', 0);
         }
-        if(!empty($params['counts'])){
+        if (!$params['counts']) {
             $list->where('counts', 0);
         }
         $list = $list->paginate(10);
@@ -443,64 +448,67 @@ class Rk extends Right
 
     /**
      * 清库
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
+     * @throws \Exception
      */
     public function clearspot()
     {
         $ids = request()->param("ids");
         $type = request()->param("type");
-        $ids=explode(",",$ids);
-        foreach ($ids as $id){
-            $st=KcSpot::where("id",$id)->find();
-            if(empty($st)){
-                throw new \Exception("没有数据");
-            }else{
-                if($type==1){
-                    if($st["status"]==1){
-                        throw new \Exception("该单据未清库，禁止反清库！");
-                        $st["status"]=1;
-                }
-            }elseif( $type==2){
-                    if($st["status"]==2){
-                        throw new \Exception("该单据已清库，禁止再次清库！");
-                        $st["status"]=2;
+        $ids = explode(",", $ids);
+        foreach ($ids as $id) {
+            $st = KcSpot::where("id", $id)->find();
+            if (empty($st)) {
+                throw new Exception("没有数据");
+            } else {
+                if ($type == 1) {
+                    if ($st["status"] == 1) {
+                        throw new Exception("该单据未清库，禁止反清库！");
                     }
-            }else{
-                    throw new \Exception("非法参数");
+                    $st["status"] = 1;
+                } elseif ($type == 2) {
+                    if ($st["status"] == 2) {
+                        throw new Exception("该单据已清库，禁止再次清库！");
+                    }
+                    $st["status"] = 2;
+                } else {
+                    throw new Exception("非法参数");
                 }
                 $st->isUpdate(true)->allowField(true)->save($st);
-                return returnSuc(['id' => $xs['id']]);
+                return returnSuc(['id' => $st['id']]);
             }
 
         }
-        $res = model("KcSpot")->where("id", "in", $id)->update(array("status" => 2));
+        $res = model("KcSpot")->where("id", "in", $ids)->update(array("status" => 2));
         return returnRes($res, '清库失败');
     }
 
+    /**其它入库列表
+     * @return \think\response\Json
+     */
     public function qtrklist()
     {
         $params = request()->param();
-        try {
-            $list = $list = \app\admin\model\KcQtrk::with(['customData',])->where('companyid', Session::get('uinfo.companyid', 'admin'));
-            if (!empty($params['system_number'])) {
-                $list->where("system_number", $params['system_number']);
-            }
-            if (!empty($params['customer_id'])) {
-                $list->where("customer_id", $params['customer_id']);
-            }
-            if (!empty($params['beizhu'])) {
-                $list->where("beizhu", $params['beizhu']);
-            }
-            $list = $list->paginate(10);
-            return returnRes(true, '', $list);
-        }catch (Exception $e){
-
-        }
+        $list = $list = KcQtrk::with(['customData','createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid', $this->getCompanyId());
+        $list = $this->getsearchcondition($params, $list);
+        $list = $list->paginate(10);
+        return returnRes(true, '', $list);
 
     }
 
+    /**其他入库明细
+     * @param int $id
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
     public function qtrkmx($id = 0)
     {
-        $data = \app\admin\model\KcQtrk::with([
+        $data = KcQtrk::with([
             'customData',
             'details' => ['specification', 'jsfs', 'storage', 'chandiData', 'customData', 'caizhiData', 'pinmingData'],
         ])
@@ -607,7 +615,11 @@ class Rk extends Right
 //            return returnFail('请求方式错误');
 //        }
 //    }
-
+    /**添加其它入库
+     * @return \think\response\Json
+     * @return Json
+     * @throws \Exception
+     */
     public function addqtrk()
     {
 
@@ -665,21 +677,21 @@ class Rk extends Right
             }
 
             if (empty($data['id'])) {
-                $count = \app\admin\model\KcQtrk::withTrashed()->whereTime('create_time', 'today')
+                $count = KcQtrk::withTrashed()->whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
                     ->count();
 
                 $data['system_number'] = 'QTRKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
                 $data['create_operator_id'] = $this->getAccountId();
                 $data['companyid'] = $companyId;
-                $qt = new \app\admin\model\KcQtrk();
-               $qt->allowField(true)->save($data);
+                $qt = new KcQtrk();
+                $qt->allowField(true)->save($data);
             } else {
-                $qt = \app\admin\model\KcQtrk::where('companyid', $companyId)
+                $qt = KcQtrk::where('companyid', $companyId)
                     ->where('id', $data['id'])
                     ->find();
                 $data['update_operator_id'] = $this->getAccountId();
-                 $qt->allowField(true)->save($data);
+                $qt->allowField(true)->save($data);
                 $mxList = KcQtrkMx::where('kc_rk_qt_id', $qt['id'])->select();
                 if (!empty($mxList)) {
                     foreach ($mxList as $obj) {
@@ -689,7 +701,7 @@ class Rk extends Right
                     }
                 }
             }
-            if(!empty($data['deleteMxIds'])){
+            if (!empty($data['deleteMxIds'])) {
                 foreach ($data['deleteMxIds'] as $obj) {
                     KcRkTz::destroy(function (Query $query) use ($obj) {
                         $query->where('data_id', $obj);
@@ -704,10 +716,10 @@ class Rk extends Right
             foreach ($updateList as $mjo) {
                 $mx = new KcQtrkMx();
                 $mx->isUpdate(true)->allowField(true)->save($mjo);
-                (new KcRkTz())->updateRukuTz($mx['id'], "3", $mx["pinming_id"],$mx['guige_id'], $mx['caizhi_id'], $mx['chandi_id'],
-                    $mx['jijiafangshi_id'],  $mx['houdu'], $mx['changdu'], $mx['kuandu'], $mx['counts'],
-                    $mx['jianshu'], $mx['lingzhi'], $mx['zhijian'], $mx['zhongliang'], $mx['sum_shui_price'],$mx["price"],$mx["shuiprice"],$mx["huohao"],$mx["pihao"],$qt["beizhu"],$mx["chehao"],
-                    $qt["yw_time"],null, $qt['system_number'], $qt['customer_id'],$mx["store_id"],$data["piaoju_id"],$mx["mizhong"],$mx["jianzhong"]);
+                (new KcRkTz())->updateRukuTz($mx['id'], "3", $mx["pinming_id"], $mx['guige_id'], $mx['caizhi_id'], $mx['chandi_id'],
+                    $mx['jijiafangshi_id'], $mx['houdu'], $mx['changdu'], $mx['kuandu'], $mx['counts'],
+                    $mx['jianshu'], $mx['lingzhi'], $mx['zhijian'], $mx['zhongliang'], $mx['sum_shui_price'], $mx["price"], $mx["shuiprice"], $mx["huohao"], $mx["pihao"], $qt["beizhu"], $mx["chehao"],
+                    $qt["yw_time"], null, $qt['system_number'], $qt['customer_id'], $mx["store_id"], $data["piaoju_id"], $mx["mizhong"], $mx["jianzhong"]);
             }
 
             foreach ($addList as $mjo) {
@@ -716,15 +728,58 @@ class Rk extends Right
                 $mjo['kc_rk_qt_id'] = $qt['id'];
                 $mx = new KcQtrkMx();
                 $mx->allowField(true)->save($mjo);
-                  (new KcRkTz())->insertRukuTz($mx['id'], "3", $mx["pinming_id"],$mx['guige_id'], $mx['caizhi_id'], $mx['chandi_id'],
-                    $mx['jijiafangshi_id'],  $mx['houdu'], $mx['changdu'], $mx['kuandu'], $mx['counts'],
-                    $mx['jianshu'], $mx['lingzhi'], $mx['zhijian'], $mx['zhongliang'], $mx['shuiprice'],$mx["sumprice"],$mx["sum_shui_price"],$mx["shuie"],$mx["price"],$mx["huohao"],$mx["pihao"],$qt["beizhu"],$mx["chehao"],
-                    $qt["yw_time"], null,$qt['system_number'], $qt['customer_id'],$mx["store_id"],$this->getAccountId(),$mx["mizhong"],$mx["jianzhong"],$this->getCompanyId());
+                (new KcRkTz())->insertRukuTz($mx['id'], "3", $mx["pinming_id"], $mx['guige_id'], $mx['caizhi_id'], $mx['chandi_id'],
+                    $mx['jijiafangshi_id'], $mx['houdu'], $mx['changdu'], $mx['kuandu'], $mx['counts'],
+                    $mx['jianshu'], $mx['lingzhi'], $mx['zhijian'], $mx['zhongliang'], $mx['shuiprice'], $mx["sumprice"], $mx["sum_shui_price"], $mx["shuie"], $mx["price"], $mx["huohao"], $mx["pihao"], $qt["beizhu"], $mx["chehao"],
+                    $qt["yw_time"], null, $qt['system_number'], $qt['customer_id'], $mx["store_id"], $this->getAccountId(), $mx["mizhong"], $mx["jianzhong"], $this->getCompanyId());
             }
 
             Db::commit();
             return returnSuc(['id' => $qt['id']]);
         } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+
+
+    /**
+     * 其它作废
+     * @param Request $request
+     * @param $id
+     * @return Json
+     */
+    public function cancel(Request $request, $id)
+    {
+        Db::startTrans();
+        try {
+            $rk = KcRk::get($id);
+            if (empty($rk)) {
+                throw new Exception("对象不存在");
+            }
+            if ($rk->companyid != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if (!empty($rk['data_id'])) {
+                throw new Exception("当前单据是只读单据,请到关联单据作废");
+            }
+            if ($rk['status'] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            $rk->status = 1;
+            $rk->save();
+
+            $mdList = KcRkMd::where('kc_rk_id', $rk['id'])->select();
+            foreach ($mdList as $tbKcRkMd) {
+
+                KcRk::allPanduanByMxId($tbKcRkMd);
+
+                KcSpot::deleteSpotByRkMd($tbKcRkMd['id']);
+                KcRkTz::addTzById($tbKcRkMd['kc_rk_tz_id'], $tbKcRkMd['counts'], $tbKcRkMd['zhongliang']);
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (\Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
         }

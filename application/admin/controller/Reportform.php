@@ -16,14 +16,14 @@ class Reportform extends Right
     /**
      * 采购单明细admin/purchase/getpurchaselist
      */
-    public function getpurchasedetails( $pageLimit = 10){
+    public function getpurchasemx( $pageLimit = 10){
         $params = request()->param();
-        $list = \app\admin\model\Purchasedetails::where('companyid', $this->getCompanyId());
+        $list = \app\admin\model\ViewCgPurchaseMx::where('companyid', $this->getCompanyId());
 
         if (!empty($params['ywsjStart'])) {
-            $list->where('service_time', '>=', $params['ywsjStart']);
+            $list->where('yw_time', '>=', $params['ywsjStart']);
         }
-        if (!empty($params['ywsjEnd'])) {
+        if (!empty($params['yw_time'])) {
             $list->where('service_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
         if (!empty($params['storage_id'])) {
@@ -32,8 +32,8 @@ class Reportform extends Right
         if (!empty($params['status'])) {
             $list->where('status', $params['status']);
         }
-        if (!empty($params['rkfs'])) {
-            $list->where('rkfs', $params['rkfs']);
+        if (!empty($params['ruku_fangshi_id'])) {
+            $list->where('ruku_fangshi_id', $params['ruku_fangshi_id']);
         }
         if (!empty($params['jsfs'])) {
             $list->where('jsfs', $params['jsfs']);

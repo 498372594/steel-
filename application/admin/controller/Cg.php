@@ -273,6 +273,7 @@ class Cg extends Right
                 if ($data["ruku_fangshi"] == 1) {
                     throw new Exception('自动入库单禁止修改');
                 }
+
                 $mxList = (new CgPurchaseMx())->where("purchase_id", $cg["id"])->select();
                 if (!empty($mxList)) {
                     foreach ($mxList as $mx) {
@@ -304,7 +305,7 @@ class Cg extends Right
             if (!empty($data["delete_mx_ids"])) {
                 $deleteList = model("cg_purchase_mx")->where('id', 'in', $data["delete_mx_ids"])->select();
                 foreach ($deleteList as $cg) {
-                    if ($cg["rukr_fangshi"] == 1) {
+                    if ($cg["ruku_fangshi"] == 1) {
                         throw new Exception('自动入库单禁止删除');
                     } else {
                         (new KcRkTz())->deleteByDataIdAndRukuType($cg["id"], 4);
