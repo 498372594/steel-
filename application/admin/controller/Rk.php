@@ -492,22 +492,10 @@ class Rk extends Right
     public function qtrklist()
     {
         $params = request()->param();
-        try {
-            $list = $list = KcQtrk::with(['customData',])->where('companyid', Session::get('uinfo.companyid', 'admin'));
-            if (!empty($params['system_number'])) {
-                $list->where("system_number", $params['system_number']);
-            }
-            if (!empty($params['customer_id'])) {
-                $list->where("customer_id", $params['customer_id']);
-            }
-            if (!empty($params['beizhu'])) {
-                $list->where("beizhu", $params['beizhu']);
-            }
-            $list = $list->paginate(10);
-            return returnRes(true, '', $list);
-        } catch (Exception $e) {
-
-        }
+        $list = $list = KcQtrk::with(['customData'])->where('companyid', $this->getCompanyId());
+        $list = $this->getsearchcondition($params, $list);
+        $list = $list->paginate(10);
+        return returnRes(true, '', $list);
 
     }
 

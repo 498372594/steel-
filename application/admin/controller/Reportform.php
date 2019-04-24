@@ -18,7 +18,7 @@ class Reportform extends Right
      */
     public function getpurchasedetails( $pageLimit = 10){
         $params = request()->param();
-        $list = \app\admin\model\Purchasedetails::where('companyid', $this->getCompanyId());
+        $list = \app\admin\model\Purchasedetails::with([""])->where('companyid', $this->getCompanyId());
 
         if (!empty($params['ywsjStart'])) {
             $list->where('service_time', '>=', $params['ywsjStart']);
