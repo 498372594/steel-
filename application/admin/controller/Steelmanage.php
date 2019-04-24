@@ -166,10 +166,11 @@ class Steelmanage extends Right
 
     /**
      * 规格列表
+     * @param int $pageLimt
      * @return Json
      * @throws DbException
      */
-    public function specification()
+    public function specification($pageLimt = 10)
     {
         if (request()->param("productname_id")) {
             $ids = request()->param("productname_id");
@@ -182,7 +183,7 @@ class Steelmanage extends Right
                 'companyid' => $this->getCompanyId()
             );
         }
-        $list = model("view_specification")->where($where)->paginate(10);
+        $list = model("view_specification")->where($where)->paginate($pageLimt);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -483,22 +484,23 @@ class Steelmanage extends Right
         $list = model("custom")->where("companyid", $this->getCompanyId())->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
+
     public function invcgsp()
     {
         $params = request()->param();
         $list = \app\admin\model\Custom::where('companyid', $this->getCompanyId());
         //业务时间
         if (!empty($params['name'])) {
-            $list->where('custom|zjm|',  '%' . $params['name'] . '%');
+            $list->where('custom|zjm|', '%' . $params['name'] . '%');
         }
-        if (!empty($params['iscustom']&&$params['iscustom']==1)) {
-            $list->where('iscustom',  1);
+        if (!empty($params['iscustom'] && $params['iscustom'] == 1)) {
+            $list->where('iscustom', 1);
         }
-        if (!empty($params['issupplier']&&$params['issupplier']==1)) {
-            $list->where('issupplier',  1);
+        if (!empty($params['issupplier'] && $params['issupplier'] == 1)) {
+            $list->where('issupplier', 1);
         }
-        if (!empty($params['other']&&$params['other']==1)) {
-            $list->where('other',  1);
+        if (!empty($params['other'] && $params['other'] == 1)) {
+            $list->where('other', 1);
         }
         $list = $list->paginate(10);
         return returnRes(true, '', $list);

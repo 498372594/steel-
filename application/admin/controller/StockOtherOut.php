@@ -111,7 +111,7 @@ class StockOtherOut extends Right
             $updateList = [];
             $ja = $data['details'];
             $companyId = $this->getCompanyId();
-            if (empty($ja)) {
+            if (!empty($ja)) {
                 $num = 1;
                 $detailsValidate = new \app\admin\validate\StockOtherOutDetails();
                 foreach ($ja as $object) {
@@ -130,7 +130,7 @@ class StockOtherOut extends Right
 
                     if ($object['lingzhi'] > 0 || $object['jianshu'] > 0 || $object['zhijian'] > 0) {
                         $jCount = $object['jianshu'] * $object['zhijian'] + $object['lingzhi'];
-                        if ($jCount != $object['count']) {
+                        if ($jCount != $object['counts']) {
                             throw new Exception('计算的数量:' . $jCount . ',您实际输入的数量:' . $object['counts'] . ',计算数量与实际数量不相等');
                         }
                         if ($object['zhijian'] > 0 && $object['lingzhi'] >= $object['zhijian']) {
@@ -138,7 +138,7 @@ class StockOtherOut extends Right
                         }
                     }
 
-                    if (empty($object)) {
+                    if (empty($object['id'])) {
                         $addList[] = $object;
                     } else {
                         $updateList[] = $object;
@@ -154,7 +154,7 @@ class StockOtherOut extends Right
                 $data['create_operator_id'] = $this->getAccountId();
                 $data['companyid'] = $companyId;
                 $qt = new \app\admin\model\StockOtherOut();
-                $qt->allowField($data)->data($data)->save();
+                $qt->allowField(true)->data($data)->save();
 
             } else {
                 $qt = \app\admin\model\StockOtherOut::where('companyid', $companyId)
@@ -172,12 +172,17 @@ class StockOtherOut extends Right
                 }
             }
 
-            foreach ($data['deleteMxIds'] as $obj) {
-                (new KucunCktz())->deleteByDataIdAndChukuType($obj, 3);
+            if (!empty($data['deleteMxIds'])) {
+                if (is_string($data['deleteMxIds'])) {
+                    $data['deleteMxIds'] = explode(',', $data['deleteMxIds']);
+                }
+                foreach ($data['deleteMxIds'] as $obj) {
+                    (new KucunCktz())->deleteByDataIdAndChukuType($obj, 3);
 
-                StockOtherOutDetails::destroy(function (Query $query) use ($obj, $companyId) {
-                    $query->where('id', $obj)->where('companyid', $companyId);
-                });
+                    StockOtherOutDetails::destroy(function (Query $query) use ($obj, $companyId) {
+                        $query->where('id', $obj)->where('companyid', $companyId);
+                    });
+                }
             }
 
             foreach ($updateList as $mjo) {
