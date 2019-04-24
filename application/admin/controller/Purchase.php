@@ -606,8 +606,8 @@ class Purchase extends Right
         if (!empty($params['beizhu'])) {
             $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
         }
-        if (!empty($params['yw_type'])) {
-            $list->where('yw_type', $params['yw_type']);
+        if (!empty($params['moshi_type'])) {
+            $list->where('moshi_type', $params['moshi_type']);
         }
         if (!empty($params['shou_huo_dan_wei'])) {
             $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);

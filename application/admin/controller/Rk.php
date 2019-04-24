@@ -492,7 +492,7 @@ class Rk extends Right
     public function qtrklist()
     {
         $params = request()->param();
-        $list = $list = KcQtrk::with(['customData'])->where('companyid', $this->getCompanyId());
+        $list = $list = KcQtrk::with(['customData','createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid', $this->getCompanyId());
         $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);

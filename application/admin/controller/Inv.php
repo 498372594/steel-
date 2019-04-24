@@ -129,4 +129,8 @@ class Inv extends Right
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
+    public function invywtype(){
+        $list=model("InvYwtype")->select();
+        return returnRes(true, '', $list);
+    }
 }
