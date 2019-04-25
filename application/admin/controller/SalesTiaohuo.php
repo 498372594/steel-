@@ -239,7 +239,7 @@ class SalesTiaohuo extends Right
                 }
             }
 
-            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $xs['id'], $xs['ywsj'], 1,
+            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'] ?? [], $xs['id'], $xs['ywsj'], 1,
                 $ms['department'], $ms['employer'], null, $this->getAccountId(), $companyId);
 
 
