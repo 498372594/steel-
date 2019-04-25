@@ -24,6 +24,26 @@ class KcRk extends Base
         return $this->belongsTo('Custom', 'customer_id', 'id')->cache(true, 60)
             ->field('id,custom')->bind(['custom_name' => 'custom']);
     }
+    public function createoperatordata()
+    {
+        return $this->belongsTo('admin', 'create_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator' => 'name']);
+    }
+    public function saleoperatordata()
+    {
+        return $this->belongsTo('admin', 'sale_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['sale_operator' => 'name']);
+    }
+    public function udpateoperatordata()
+    {
+        return $this->belongsTo('admin', 'update_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['update_operator' => 'name']);
+    }
+    public function checkoperatordata()
+    {
+        return $this->belongsTo('admin', 'check_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['check_operator' => 'name']);
+    }
 
     /**
      * 添加入库单

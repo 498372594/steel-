@@ -16,7 +16,7 @@ class Instorage extends Right
      */
     public function getrk(){
         $params = request()->param();
-        $list = \app\admin\model\KcRk::where('companyid', $this->getCompanyId());
+        $list = \app\admin\model\KcRk::with(['createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])->where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }

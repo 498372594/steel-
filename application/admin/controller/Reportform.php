@@ -216,12 +216,12 @@ class Reportform extends Right
      * @param int $pageLimit
      * @return \think\response\Json
      */
+
     public function rkcbmx($pageLimit=10){
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageOrder::where(array("companyid"=>$this->getCompanyId(),"in_out"=>1));
-        $list=$this->getsearch($params,$list);
+        $list = \app\admin\model\ViewRkcbmx::where('companyid', $this->getCompanyId());
+       $list=$this->getsearchcondition($params,$list);
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
-
 }
