@@ -117,7 +117,7 @@ class CapitalSk extends Right
 
             $addFyList = [];
             $updateFyList = [];
-            $ja1 = $data['fy'];
+            $ja1 = $data['hxDetails'];
             if (!empty($ja1)) {
                 foreach ($ja1 as $object) {
                     $object['companyid'] = $companyid;
