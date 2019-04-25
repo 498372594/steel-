@@ -114,14 +114,14 @@ class Bank extends Base
     {
         $bank = new CapitalBank();
         $bank->companyid = $companyId;
-        $bank->capbankType = $ywType;
-        $bank->dataId = $dataId;
+        $bank->capbank_type = $ywType;
+        $bank->data_id = $dataId;
         $bank->fangxiang = $fangxiang;
         $bank->money = $money;
-        $bank->ywTime = $ywTime;
-        $bank->bankId = $bankId;
-        $bank->cacheCustomerId = $cacheCustomer;
-        $bank->cacheSystemNumber = $cacheYwSystem;
+        $bank->yw_time = $ywTime;
+        $bank->bank_id = $bankId;
+        $bank->cache_customer_id = $cacheCustomer;
+        $bank->cache_system_number = $cacheYwSystem;
         $bank->save();
 
         $ba = self::get($bankId);

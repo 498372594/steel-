@@ -119,11 +119,10 @@ class CapitalFk extends Right
 
             $addFyList = [];
             $updateFyList = [];
-            $ja1 = $data['hxDetails'];
-            if (!empty($ja1)) {
+            if (!empty($data['hxDetails'])) {
                 $detailsValidate = new CapitalFkhxValidate();
 
-                foreach ($ja1 as $object) {
+                foreach ($data['hxDetails'] as $object) {
 
                     if (!$detailsValidate->check($object)) {
                         throw new Exception($detailsValidate->getError());
