@@ -13,11 +13,11 @@ class CapitalFk extends Validate
         'fk_type|付款类型' => 'require',
         'money|本次付款' => 'require',
         'yw_time|业务时间' => 'require',
-        'mingxi' => 'require|min:1',
+        'details' => 'require|min:1',
     ];
 
     protected $message = [
-        'mingxi.require' => '付款明细至少出现一行',
-        'mingxi.min' => '付款明细至少出现一行'
+        'details.require' => '付款明细至少出现一行',
+        'details.min' => '付款明细至少出现一行'
     ];
 }

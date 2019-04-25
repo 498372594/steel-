@@ -42,7 +42,7 @@ class Feiyong extends Signin
             $updateFyList = [];
             $ja1 = $data['details'];
             $companyid = $this->getCompanyId();
-            if (empty($ja1)) {
+            if (!empty($ja1)) {
                 foreach ($ja1 as $object) {
                     $object['companyid'] = $companyid;
 
@@ -126,7 +126,7 @@ class Feiyong extends Signin
             }
 
             Db::commit();
-            return returnSuc();
+            return returnSuc(['id' => $sk['id']]);
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());

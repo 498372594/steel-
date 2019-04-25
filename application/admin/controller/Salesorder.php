@@ -337,7 +337,7 @@ class Salesorder extends Right
                         $mx['tax_rate'] ?? 0, $mx['total_fee'] ?? 0, $mx['price_and_tax'] ?? 0, $mx['weight'], $this->getCompanyId());
                 }
             }
-            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $xs['id'], $xs['ywsj'], 1, $xs['department'] ?? '', $xs['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'] ?? [], $xs['id'], $xs['ywsj'], 1, $xs['department'] ?? '', $xs['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
             $mxList = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->select();
 
             if (!empty($mxList)) {
@@ -469,7 +469,7 @@ class Salesorder extends Right
                         $mx['tax_rate'] ?? 0, $mx['total_fee'] ?? 0, $mx['price_and_tax'] ?? 0, $mx['weight'], $this->getCompanyId());
                 }
             }
-            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $xs['id'], $xs['ywsj'], 1, $xs['department'] ?? '', $xs['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'] ?? [], $xs['id'], $xs['ywsj'], 1, $xs['department'] ?? '', $xs['employer'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
 
             $sumMoney = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->sum('price_and_tax');
             $sumZhongliang = \app\admin\model\SalesorderDetails::where('order_id', $xs['id'])->sum('weight');
@@ -490,6 +490,7 @@ class Salesorder extends Right
     }
 
     /**
+     * 客户销量排行榜
      * @param Request $request
      * @param int $pageLimit
      * @return Json
@@ -542,7 +543,286 @@ FROM (SELECT xsmx.weight AS xszhongliang,
             $sqlParams['customerId'] = $param['customer_id'];
         }
         $sql .= ' GROUP BY tb_mingxi.customer_id)';
-        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('th_zhongliang','asc')->paginate($pageLimit);
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('th_zhongliang', 'asc')->paginate($pageLimit);
+        return returnSuc($data);
+    }
+
+    /**
+     * 销售明细表
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function mxList(Request $request, $pageLimit = 10)
+    {
+        $params = $request->param();
+        $sqlParams = [];
+        $sql = '(SELECT mx.id,
+       mx.id              xsSaleMxId,
+       mx.order_id,
+       s.resource_number,
+       z.ywsj,
+       z.system_no,
+       z.status,
+       z.ywlx,
+       gg.productname_id,
+       gg.productname,
+       mx.wuzi_id,
+       gg.`specification` guige_name,
+       mx.houdu,
+       mx.width,
+       mx.length,
+       mx.caizhi,
+       cz.`texturename`   caizhi_name,
+       mx.chandi,
+       cd.`originarea`    chandi_name,
+       mx.jsfs_id,
+       jjfs.`jsfs`        jijiafangshi_name,
+       mx.lingzhi,
+       mx.num,
+       mx.jzs,
+       mx.count,
+       mx.weight,
+       mx.batch_no,
+       mx.storage_id,
+       ck.`storage`       store_name,
+       mx.price,
+       mx.total_fee,
+       mx.tax_rate,
+       mx.tax,
+       mx.price_and_tax,
+       mx.remark,
+       mx.car_no,
+       sale.name          zhiyuan,
+       gg.mizhong_name,
+       cu.`custom`        customerName,
+       pjlx.pjlx          piaoju_name
+FROM salesorder_details mx
+         LEFT JOIN kc_spot s ON s.id = mx.kc_spot_id
+         LEFT JOIN salesorder z ON z.id = mx.order_id
+         LEFT JOIN view_specification gg ON gg.id = mx.wuzi_id
+         LEFT JOIN texture cz ON cz.id = mx.caizhi
+         LEFT JOIN originarea cd ON cd.id = mx.chandi
+         LEFT JOIN storage ck ON ck.id = mx.storage_id
+         LEFT JOIN jsfs jjfs ON jjfs.id = mx.jsfs_id
+         LEFT JOIN custom cu ON cu.`id` = z.`custom_id`
+         LEFT JOIN admin sale ON sale.id = z.employer
+         left join pjlx on pjlx.id = z.pjlx
+    WHERE mx.delete_time is null
+         and z.delete_time is null';
+        if (!empty($params['ywlx'])) {
+            $sql .= ' and z.ywlx=:ywlx';
+            $sqlParams['ywlx'] = $params['ywlx'];
+        }
+        if (!empty($params['exclude_ywlx'])) {
+            $sql .= ' and z.ywlx!=:excludeYwlx';
+            $sqlParams['excludeYwlx'] = $params['exclude_ywlx'];
+        }
+        if (!empty($params['employer'])) {
+            $sql .= ' and sale.id=:employer';
+            $sqlParams['employer'] = $params['employer'];
+        }
+        if (!empty($params['department'])) {
+            $sql .= ' and z.department=:department';
+            $sqlParams['department'] = $params['department'];
+        }
+        if (!empty($params['ywsjStart'])) {
+            $sql .= ' and z.ywsj >= :ywsjStart';
+            $sqlParams['ywsjStart'] = $params['ywsjStart'];
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $sql .= ' and z.ywsj <:ywsjEnd';
+            $sqlParams['ywsjEnd'] = date('Y-m-d H:i:s', strtotime($params['ywsjEnd'] . ' +1 day'));
+        }
+        if (!empty($params['kuanduStart'])) {
+            $sql .= ' and mx.width >= :kuanduStart';
+            $sqlParams['kuanduStart'] = $params['kuanduStart'];
+        }
+        if (!empty($params['kuanduEnd'])) {
+            $sql .= ' and mx.width <= :kuanduEnd';
+            $sqlParams['kuanduEnd'] = $params['kuanduEnd'];
+        }
+        if (!empty($params['store_id'])) {
+            $sql .= ' and ck.id=:storeId';
+            $sqlParams['storeId'] = $params['store_id'];
+        }
+        if (!empty($params['pinming'])) {
+            $sql .= ' and gg.productname like :pinming';
+            $sqlParams['pinming'] = '%' . $params['pinming'] . '%';
+        }
+        if (!empty($params['guige'])) {
+            $sql .= ' and gg.specification like :guige';
+            $sqlParams['guige'] = '%' . $params['guige'] . '%';
+        }
+        if (!empty($params['houduStart'])) {
+            $sql .= ' and mx.houdu >= :houduStart';
+            $sqlParams['houduStart'] = $params['houduStart'];
+        }
+        if (!empty($params['houduEnd'])) {
+            $sql .= ' and mx.houdu <= :houduEnd';
+            $sqlParams['houduEnd'] = $params['houduEnd'];
+        }
+        if (!empty($params['changduStart'])) {
+            $sql .= ' and mx.length >=:changduStart';
+            $sqlParams['changduStart'] = $params['changduStart'];
+        }
+        if (!empty($params['changduEnd'])) {
+            $sql .= ' and mx.length <= :changduEnd';
+            $sqlParams['changduEnd'] = $params['changduEnd'];
+        }
+        if (!empty($params['jsfs'])) {
+            $sql .= ' and mx.jsfs=:jsfs';
+            $sqlParams['jsfs'] = $params['jsfs'];
+        }
+        if (!empty($params['caizhi'])) {
+            $sql .= ' and mx.caizhi=:caizhi';
+            $sqlParams['caizhi'] = $params['caizhi'];
+        }
+        if (!empty($params['chandi'])) {
+            $sql .= ' and mx.chandi=:chandi';
+            $sqlParams['chandi'] = $params['chandi'];
+        }
+        if (!empty($params['status'])) {
+            $sql .= ' and z.status=:status';
+            $sqlParams['status'] = $params['status'];
+        }
+        if (!empty($params['customer_id'])) {
+            $sql .= ' and cu.id=:customerId';
+            $sqlParams['customerId'] = $params['customer_id'];
+        }
+        if (!empty($params['piaoju'])) {
+            $sql .= ' and z.pjlx=:piaoju';
+            $sqlParams['piaoju'] = $params['piaoju'];
+        }
+        if (!empty($params['system_number'])) {
+            $sql .= ' and z.system_no like :systemNumber';
+            $sqlParams['systemNumber'] = '%' . $params['systemNumber'] . '%';
+        }
+        if (!empty($params['beizhu'])) {
+            $sql .= ' and mx.remark like :beizhu';
+            $sqlParams['beizhu'] = '%' . $params['beizhu'] . '%';
+        }
+        $sql .= ' )';
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('ywsj', 'desc')->paginate($pageLimit);
+        return returnSuc($data);
+    }
+
+    public function bangcha(Request $request, $pageLimit = 10)
+    {
+        $params = $request->param();
+        $sqlParams = [];
+        $sql = '(SELECT mx.id,
+       st.storage                                                                  cangku,
+       cus.custom                                                                  wanglai,
+       gg.productname                                                              pinming,
+       gg.specification                                                            guige,
+       se.system_no,
+       cz.texturename                                                              caizhi,
+       cd.originarea                                                               chandi,
+       mx.houdu                                                                    houdu,
+       mx.width                                                                    kuandu,
+       pjlx.pjlx                                                                   piaoju_name,
+       mx.length                                                                   changdu,
+       se.status,
+       jjfs.jsfs                                                                   jijiafangshi,
+       mx.lingzhi                                                                  kaidan_lingzhi,
+       mx.num                                                                      kaidan_jianshu,
+       mx.count                                                                    kaidan_shuliang,
+       IFNULL(ckmd.counts, 0)                                                      fahuo_shuliang,
+       mx.weight                                                                   kaidan_zhongliang,
+       IFNULL(ckmd.zhongliang, 0)                                                  fahuo_zhongliang,
+       mx.price                                                                    danjia,
+       (IFNULL(mx.weight, 0) - IFNULL(ckmd.zhongliang, 0))                         bangcha_zhongliang,
+       CASE
+           WHEN (IFNULL(mx.weight, 0) - IFNULL(ckmd.zhongliang, 0)) > 0
+               THEN \'涨磅\'
+           WHEN (IFNULL(mx.weight, 0) - IFNULL(ckmd.zhongliang, 0)) = 0
+               THEN \'平磅\'
+           WHEN (IFNULL(mx.weight, 0) - IFNULL(ckmd.zhongliang, 0)) < 0
+               THEN \'亏磅\'
+           END                                                                     bangcha_fangxiang,
+       ((IFNULL(mx.weight, 0) - IFNULL(ckmd.zhongliang, 0)) * IFNULL(mx.price, 0)) bangcha_jiashuiheji,
+       ((IFNULL(mx.weight, 0) - IFNULL(ckmd.zhongliang, 0)) * IFNULL(mx.price, 0) / (1 + mx.tax_rate / 100) *
+        mx.tax_rate / 100)                                                         bangcha_shuie,
+       ((IFNULL(mx.weight, 0) - IFNULL(ckmd.zhongliang, 0)) * IFNULL(mx.price, 0) -
+        (IFNULL(mx.weight, 0) - IFNULL(ckmd.zhongliang, 0)) * IFNULL(mx.price, 0) / (1 + mx.tax_rate / 100) *
+        mx.tax_rate / 100)                                                         bangcha_jine,
+       mx.jzs                                                                      jianzhishu,
+       mx.remark,
+       se.ywsj
+FROM salesorder_details mx
+         LEFT JOIN storage st ON mx.storage_id = st.id
+         LEFT JOIN salesorder se ON mx.order_id = se.id
+         LEFT JOIN custom cus ON se.custom_id = cus.id
+         LEFT JOIN view_specification gg ON mx.wuzi_id = gg.id
+         LEFT JOIN pjlx pjlx ON se.pjlx = pjlx.id
+         LEFT JOIN texture cz ON mx.caizhi = cz.id
+         LEFT JOIN originarea cd ON mx.chandi = cd.id
+         LEFT JOIN jsfs jjfs ON mx.jsfs_id = jjfs.id
+         LEFT JOIN stock_out_md ckmd ON ckmd.data_id = mx.id
+         LEFT JOIN stock_out ck ON ck.id = ckmd.stock_out_id
+WHERE se.delete_time is null
+  AND mx.delete_time is null
+  AND ck.delete_time is null
+  AND ckmd.delete_time is null
+  AND ck.status != 2
+   AND (mx.weight - IFNULL(ckmd.zhongliang, 0)) != 0
+  AND ckmd.data_id = mx.id';
+        if (!empty($params['ywsjStart'])) {
+            $sql .= ' and se.ywsj>=:ywsjStart';
+            $sqlParams['ywsjStart'] = $params['ywsjStart'];
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $sql .= ' and se.ywsj<=:ywsjEnd';
+            $sqlParams['ywsjEnd'] = date('Y-m-d H:i:s', strtotime($params['ywsjEnd'] . ' +1 day'));
+        }
+        if (!empty($params['customer_id'])) {
+            $sql .= ' and cus.id = :customerId';
+            $sqlParams['customerId'] = $params['customer_id'];
+        }
+        if (!empty($params['system_number'])) {
+            $sql .= ' and se.system_no like :systemNumber';
+            $sqlParams['systemNumber'] = $params['system_number'];
+        }
+        if (!empty($params['status'])) {
+            $sql .= ' and se.status = :status';
+            $sqlParams['status'] = $params['status'];
+        }
+        if (!empty($params['pjlx'])) {
+            $sql .= ' and pjlx.id=:pjlx';
+            $sqlParams['pjlx'] = $params['pjlx'];
+        }
+        if (!empty($params['store_id'])) {
+            $sql .= ' and st.id=:storeId';
+            $sqlParams['storeId'] = $params['store_id'];
+        }
+        if (!empty($params['pinming_id'])) {
+            $sql .= ' and gg.productname_id=:pingmingId';
+            $sqlParams['pinmingId'] = $params['pinming_id'];
+        }
+        if (!empty($params['guige_id'])) {
+            $sql .= ' and gg.id=:guigeId';
+            $sqlParams['guigeId'] = $params['guige_id'];
+        }
+        if (!empty($params['caizhi_id'])) {
+            $sql .= ' and cz.id=:caizhiId';
+            $sqlParams['caizhiId'] = $params['caizhi_id'];
+        }
+        if (!empty($params['chandi_id'])) {
+            $sql .= ' and cd.id=:chandiId';
+            $sqlParams['chandiId'] = $params['chandi_id'];
+        }
+        if (!empty($params['jjfs'])) {
+            $sql .= ' and jjfs.id=:jjfsId';
+            $sqlParams['jjfsId'] = $params['jjfs'];
+        }
+        if (!empty($params['beizhu'])) {
+            $sql .= ' and mx.remark=:beizhu';
+            $sqlParams['beizhu'] = $params['beizhu'];
+        }
+        $sql .= ')';
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('ywsj', 'desc')->paginate($pageLimit);
         return returnSuc($data);
     }
 }
