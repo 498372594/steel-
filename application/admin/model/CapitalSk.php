@@ -5,6 +5,8 @@ namespace app\admin\model;
 
 
 use think\Db;
+use think\exception\DbException;
+use think\Paginator;
 use traits\model\SoftDelete;
 
 class CapitalSk extends Base
@@ -28,6 +30,12 @@ class CapitalSk extends Base
             ->field('id,custom')->bind(['custom_name' => 'custom']);
     }
 
+    /**
+     * @param $params
+     * @param int $pageLimit
+     * @return Paginator
+     * @throws DbException
+     */
     public function getTongjiHuizongList($params, $pageLimit = 10)
     {
         $ywsjStart = '';
@@ -520,9 +528,25 @@ from (SELECT t1.id,
 #                 </if>
     }
 
-    function getTongjiMxList($customer_id)
+    /**
+     * @param $customer_id
+     * @param $params
+     * @param int $pageLimit
+     * @return Paginator
+     * @throws DbException
+     */
+    function getTongjiMxList($customer_id, $params, $pageLimit = 10)
     {
-        $sql = 'select null          id,
+        $ywsjStart = '';
+        if (!empty($params['ywsjStart'])) {
+            $ywsjStart = $params['ywsjStart'];
+        }
+        $ywsjEnd = '';
+        if (!empty($params['ywsjEnd'])) {
+            $ywsjEnd = $params['ywsjEnd'];
+        }
+        $sqlParams = [];
+        $sql = '(select null          id,
        \'\'            status,
        null          yw_time,
        basecu.custom wanglai,
@@ -538,44 +562,55 @@ from (SELECT t1.id,
          WHERE mx.delete_time is null
            AND sale.delete_time is null
            AND sale.status != 2
-           AND sale.custom_id = \'往来单位id\'
-           AND sale.ywsj <= (\'业务时间开始\')
-        ) + IFNULL((SELECT IFNULL(SUM(fy.money), 0)
+           AND sale.custom_id = ?
+           AND sale.ywsj <= ?';
+        $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= ') + IFNULL((SELECT IFNULL(SUM(fy.money), 0)
                     FROM capital_fy fy
                     WHERE fy.fang_xiang = 1
                       AND fy.delete_time is null
                       AND fy.status != 2
-                      AND fy.customer_id = \'往来单位id\'
-                      AND fy.yw_time <= (\'业务时间开始\')), 0) +
-        IFNULL((SELECT SUM(IFNULL(mx.money, 0))
+                      AND fy.customer_id = ?
+                      AND fy.yw_time <= ?), 0) +';
+        $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= 'IFNULL((SELECT SUM(IFNULL(mx.money, 0))
                 FROM init_ysfk_mx mx
                          LEFT JOIN init_ysfk ysfk ON mx.ysfk_id = ysfk.id
                 WHERE ysfk.type = 0
                   and ysfk.delete_time is null
                   AND mx.delete_time is null
-                  AND mx.customer_id = \'往来单位id\'
+                  AND mx.customer_id = ?
                   AND ysfk.status != 1
-                  AND ysfk.yw_time <= (\'业务时间开始\')), 0) + IFNULL(
-                (SELECT - SUM(IFNULL(mx.sum_shui_price, 0))
+                  AND ysfk.yw_time <= ?), 0) + IFNULL(';
+        $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= '(SELECT - SUM(IFNULL(mx.sum_shui_price, 0))
                  FROM sales_return_details mx
                           LEFT JOIN sales_return th ON mx.xs_th_id = th.id
-                 WHERE th.customer_id = \'往来单位id\'
+                 WHERE th.customer_id = ?
                    AND th.delete_time is null
                    AND th.status != 1
-                   AND th.yw_time <= (\'业务时间开始\')), 0) -
-        IFNULL((SELECT SUM(sk.money + IFNULL(sk.msmoney, 0))
+                   AND th.yw_time <= ?), 0) -';
+        $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= 'IFNULL((SELECT SUM(sk.money + IFNULL(sk.msmoney, 0))
                 FROM capital_sk sk
                 WHERE sk.delete_time is null
                   AND sk.status != 2
-                  AND sk.customer_id = \'往来单位id\'
-                  AND sk.yw_time <= (\'业务时间开始\')), 0)
-           )         yue,
+                  AND sk.customer_id = ?
+                  AND sk.yw_time <= ?), 0)';
+        $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= ')         yue,
        basecu.id     customer_id,
        null          beizhu,
        \'\'            signPerson
 FROM custom basecu
-where basecu.id = \'往来单位id\'
-    GROUP BY basecu.`id`
+where basecu.id = ?';
+        $sqlParams[] = $customer_id;
+        $sql .= ' GROUP BY basecu.`id`
     union all
     select t3.id
     , t3.status
@@ -789,10 +824,46 @@ where basecu.id = \'往来单位id\'
               WHERE ysfk.type = 0
             and mx.delete_time is null
             and ysfk.delete_time is null
-            and mx.customer_id = \'往来单位id\'
-              GROUP BY mx.customer_id
+            and mx.customer_id = ?';
+        $sqlParams[] = $customer_id;
+        $sql .= ' GROUP BY mx.customer_id
               , ysfk.id
          ) t2
-    where 1 = 1) t3;';
+    where 1 = 1';
+        if (!empty($params['customer_id'])) {
+            $sql .= ' and t2.customer_id= ?';
+            $sqlParams[] = $params['customer_id'];
+        }
+        if (!empty($params['ywsjStart'])) {
+            $sql .= ' and t2.yw_time >= ?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $sql .= ' and t2.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        if (!empty($params['status'])) {
+            $sql .= ' and t2.status = ?';
+            $sqlParams[] = $params['status'];
+        }
+        if (!empty($params['djlx'])) {
+            $sql .= ' and t2.danju_leixing like ?';
+            $sqlParams[] = '%' . $params['djlx'] . '%';
+        }
+        if (!empty($params['group_id'])) {
+            $sql .= ' and t2.bu_men = ?';
+            $sqlParams[] = $params['group_id'];
+        }
+        if (!empty($params['yewuyuan'])) {
+            $sql .= ' and t2.yewu_yuan like ?';
+            $sqlParams[] = '%' . $params['yewuyuan'] . '%';
+        }
+        if (!empty($params['system_no'])) {
+            $sql .= ' and t2.bian_hao like ?';
+            $sqlParams[] = '%' . $params['system_no'] . '%';
+        }
+        $sql .= ') t3)';
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('yw_time')->paginate($pageLimit);
+        return $data;
     }
 }
