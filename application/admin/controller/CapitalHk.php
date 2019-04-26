@@ -26,54 +26,6 @@ class CapitalHk extends Right
     const INIT_PAYABLE = 27;//应付账款余额期初
 
     /**
-     * 添加单据
-     * @param $data
-     */
-    public function add($data)
-    {
-        /*$data = [
-            'hk_type' => '',
-            'data_id' => '',
-            'fangxiang' => '',
-            'customer_id' => '',
-            'jiesuan_id' => '',
-            'system_number' => '',
-            'yw_time' => '',
-            'beizhu' => '',
-            'money' => '',
-            'group_id' => '',
-            'sale_operator_id' => '',
-            'create_operator_id' => '',
-            'zhongliang' => '',
-            'cache_pjlx_id' => '',
-        ];*/
-        (new \app\admin\model\CapitalHk())->allowField(true)->save($data);
-    }
-
-    /**
-     * 单据作废
-     * @param $id
-     * @param $type
-     * @return bool|string
-     * @throws DataNotFoundException
-     * @throws ModelNotFoundException
-     * @throws DbException
-     */
-    public function cancel($id, $type)
-    {
-        $capitalHK = \app\admin\model\CapitalHk::where('data_id', $id)
-            ->where('type', $type)
-            ->find();
-        if (empty($capitalHK)) {
-            return true;
-        }
-        if ($capitalHK->hxmoney != 0 || $capitalHK->hxzhongliang != 0) {
-            return '此单据已有结算信息！';
-        }
-        return true;
-    }
-
-    /**
      * 获取收款单、付款单源单
      * @param Request $request
      * @param int $pageLimit

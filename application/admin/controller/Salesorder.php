@@ -158,10 +158,9 @@ class Salesorder extends Right
 
     /**
      * @param Request $request
-     * @param int $ywlx
      * @return Json
      */
-    public function add(Request $request, $ywlx = 7)
+    public function add(Request $request)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
@@ -207,7 +206,7 @@ class Salesorder extends Right
                 $data['add_id'] = $this->getAccountId();
                 $data['companyid'] = $companyId;
                 $data['system_no'] = $systemNumber;
-                $data['ywlx'] = $ywlx;
+                $data['ywlx'] = 7;
 
                 $xs = new \app\admin\model\Salesorder();
                 $xs->allowField(true)->data($data)->save();

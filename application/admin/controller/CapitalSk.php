@@ -366,7 +366,7 @@ class CapitalSk extends Right
                 } elseif ($hx['skhx_type'] == 2) {
                     CapitalFy::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                 } else {
-                    \app\admin\model\CapitalHk::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
+                    CapitalHkModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                 }
             }
             $sk->status = 2;
@@ -377,6 +377,10 @@ class CapitalSk extends Right
             Db::rollback();
             return returnFail($e->getMessage());
         }
+    }
+
+    public function getYingshouList(){
+
     }
 
 }
