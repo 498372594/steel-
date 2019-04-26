@@ -84,7 +84,7 @@ class Ylsh extends Right
      * @throws \think\exception\DbException
      */
     public function storespot($store_id=0){
-        $list=model("KcSpot")->where(array("companyid"=> $this->getCompanyId(),"store_id"=>$store_id))->select();
+        $list=model("ViewSpotMx")->where(array("companyid"=> $this->getCompanyId(),"store_id"=>$store_id))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
 
     }
@@ -156,7 +156,7 @@ class Ylsh extends Right
      */
     public function pandianmx($id = 0)
     {
-        $data = \app\admin\model\KcPandian::with(['details'])
+        $data = \app\admin\model\KcPandian::with(['details' => ['specification', 'jsfs', 'storage', 'chandiData', 'caizhiData', 'pinmingData','pjlxData','createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata', 'storageData'])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();

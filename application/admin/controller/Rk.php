@@ -431,15 +431,15 @@ class Rk extends Right
         $params = request()->param();
         $list = ViewQingku::where(array("companyid" => $this->getCompanyId()));
         $list = $this->getsearchcondition($params, $list);
-        if ($params['qingku_status']) {
+        if (!empty($params['qingku_status'])&&$params['qingku_status']) {
             $list->where('status', 2);
         } else {
             $list->where('status', 1);
         }
-        if (!$params['guobang_zhongliang']) {
+        if (!empty($params['guobang_zhongliang'])&&$params['guobang_zhongliang']) {
             $list->where('guobang_zhongliang', 0);
         }
-        if (!$params['counts']) {
+        if (!empty($params['counts'])&&$params['counts']) {
             $list->where('counts', 0);
         }
         $list = $list->paginate(10);
