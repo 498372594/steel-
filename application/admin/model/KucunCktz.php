@@ -59,6 +59,18 @@ class KucunCktz extends Base
             ->field('id,name')->bind(['add_name' => 'name']);
     }
 
+    public function caizhiData()
+    {
+        return $this->belongsTo('Texture', 'caizhi', 'id')->cache(true, 60)
+            ->field('id,texturename')->bind(['caizhi_name' => 'texturename']);
+    }
+
+    public function chandiData()
+    {
+        return $this->belongsTo('Originarea', 'chandi', 'id')->cache(true, 60)
+            ->field('id,originarea')->bind(['chandi_name' => 'originarea']);
+    }
+
     /**
      * 更新出库通知
      * @param $dataId

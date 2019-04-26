@@ -16,6 +16,12 @@ class StockOut extends Base
     use SoftDelete;
     protected $autoWriteTimestamp = true;
 
+    public function addData()
+    {
+        return $this->belongsTo('Admin', 'create_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator_name' => 'name']);
+    }
+
     public function wait()
     {
         return $this->hasMany('StockOutDetail', 'stock_out_id', 'id');

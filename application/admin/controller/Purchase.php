@@ -3,8 +3,8 @@
 namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
-use app\admin\model\{CapitalFy, CgPurchase, KcRk, KcRkTz, KcSpot};
-use app\admin\validate\{CgPurchaseMx, FeiyongDetails};
+use app\admin\model\{CapitalFy, CgPurchase, Classname, KcRk, KcRkTz, KcSpot};
+use app\admin\validate\{CgPurchaseMx};
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -140,9 +140,9 @@ class Purchase extends Right
                         $mx = \app\admin\model\CgPurchaseMx::where('id', $mjo['id'])->find();
                         $mx->allowField(true)->data($mjo)->isUpdate(true)->save();
                         (new KcRkTz())->updateRukuTz($mx["id"], $mx["ruku_type"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"]
-                            , $mx["houdu"], $mx["changdu"], $mx["kuandu"], $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["sum_shui_price"],$mx["price"],
-                            $mx["shui_price"],$mx["huohao"]
-                            , $mx["pihao"], $mx["beizhu"], $mx["chehao"], $cg["yw_time"],null, $cg["system_number"], $mx["customer_id"]
+                            , $mx["houdu"], $mx["changdu"], $mx["kuandu"], $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["sum_shui_price"], $mx["price"],
+                            $mx["shui_price"], $mx["huohao"]
+                            , $mx["pihao"], $mx["beizhu"], $mx["chehao"], $cg["yw_time"], null, $cg["system_number"], $mx["customer_id"]
                             , $mx["store_id"], $cg["piaoju_id"], $mx["mizhong"], $mx["jianzhong"]);
                         (new \app\admin\model\Inv())->updateInv($mx["id"], 2, null, $mx["customerId"], $mx["yw_time"], $mx["changdu"], $mx["kuandu"], $mx["houdu"]
                             , $mx["guige_id"], $mx["jijiafangshi_id"], $mx["piaoju_id"], $mx["pinming_id"], $mx["zhongliang"], $mx["price"], $mx["sum_price"], $mx["sum_shui_price"], $mx["shui_price"]);
@@ -182,8 +182,8 @@ class Purchase extends Right
                 }
 
             }
-            if(empty($data['delete_other_ids'])){
-                $data['delete_other_ids']=null;
+            if (empty($data['delete_other_ids'])) {
+                $data['delete_other_ids'] = null;
             }
 
             (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
@@ -196,7 +196,7 @@ class Purchase extends Right
         }
     }
 
-    public function cancel($id=0)
+    public function cancel($id = 0)
     {
         if (!request()->isPost()) {
             return returnFail('请求方式错误');
@@ -218,10 +218,10 @@ class Purchase extends Right
                     throw new Exception("该采购单是由采购直发单自动生成的，禁止直接作废！");
                 }
             }
-            $cg->isUpdate(true)->allowField(true)->save(array("status"=>1,"id"=>$id));
-            $mxList=\app\admin\model\CgPurchaseMx::where("purchase_id",$cg["id"])->select();
-            if($cg["ruku_fangshi"]==1){
-                KcRk::cancelRuku($cg["id"],4);
+            $cg->isUpdate(true)->allowField(true)->save(array("status" => 1, "id" => $id));
+            $mxList = \app\admin\model\CgPurchaseMx::where("purchase_id", $cg["id"])->select();
+            if ($cg["ruku_fangshi"] == 1) {
+                KcRk::cancelRuku($cg["id"], 4);
             }
             Db::commit();
             return returnSuc(['id' => $cg['id']]);
@@ -562,7 +562,7 @@ class Purchase extends Right
      */
     public function getclassnamelist()
     {
-        $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
+        $list = Classname::field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
         $list = new Tree($list);
         $list = $list->leaf();
         return returnRes($list, '没有数据，请添加后重试', $list);
@@ -669,8 +669,8 @@ class Purchase extends Right
             'custom',
             'pjlxData',
             'jsfsData',
-            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData','wuziData','jijiafangshiData'],
-            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom','szflData']],
+            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData', 'wuziData', 'jijiafangshiData'],
+            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']],
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();

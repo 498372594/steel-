@@ -28,6 +28,8 @@ class Chuku extends Right
             'jsfs',
             'specification',
             'storage',
+            'caizhiData',
+            'chandiData'
         ])->where('companyid', $this->getCompanyId());
         if (!empty($params['id'])) {
             $list->where('id', $params['id']);
@@ -94,7 +96,8 @@ class Chuku extends Right
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = StockOut::where('companyid', $this->getCompanyId())
+        $list = StockOut::with(['addData'])
+            ->where('companyid', $this->getCompanyId())
             ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);

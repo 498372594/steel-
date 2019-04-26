@@ -158,10 +158,9 @@ class Salesorder extends Right
 
     /**
      * @param Request $request
-     * @param int $ywlx
      * @return Json
      */
-    public function add(Request $request, $ywlx = 7)
+    public function add(Request $request)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
@@ -207,7 +206,7 @@ class Salesorder extends Right
                 $data['add_id'] = $this->getAccountId();
                 $data['companyid'] = $companyId;
                 $data['system_no'] = $systemNumber;
-                $data['ywlx'] = $ywlx;
+                $data['ywlx'] = 7;
 
                 $xs = new \app\admin\model\Salesorder();
                 $xs->allowField(true)->data($data)->save();
@@ -498,10 +497,14 @@ class Salesorder extends Right
      */
     public function khxlList(Request $request, $pageLimit = 10)
     {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
         $param = $request->param();
         $sqlParams = [];
         $sql = '(SELECT tb_mingxi.customer_id,
        tb_mingxi.customer_name,
+       tb_mingxi.short_name,
        tb_mingxi.zjm                                                                    code,
        SUM(IFNULL(tb_mingxi.xszhongliang, 0)) - SUM(IFNULL(thmx.zhongliang, 0))      AS th_zhongliang,
        COUNT(tb_mingxi.xs_saleId)                                                    AS th_cishu,
@@ -512,8 +515,9 @@ FROM (SELECT xsmx.weight AS xszhongliang,
              xs.customer_name,
              xs.customer_id,
              xs.zjm,
-             xsmx.price_and_tax
-      FROM (SELECT custom.zjm, custom.custom customer_name, custom.id AS customer_id, tb_xs_sale.id AS xs_saleId
+             xsmx.price_and_tax,
+             xs.short_name
+      FROM (SELECT custom.zjm, custom.custom customer_name, custom.id AS customer_id, tb_xs_sale.id AS xs_saleId,custom.short_name
             FROM custom
                      LEFT JOIN salesorder tb_xs_sale ON custom.id = tb_xs_sale.custom_id
                 WHERE custom.iscustom = 1
@@ -526,7 +530,7 @@ FROM (SELECT xsmx.weight AS xszhongliang,
         }
         if (!empty($param['ywsjEnd'])) {
             $sql .= ' and tb_xs_sale.ywsj < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sqlParams['ywsjEnd'] = date('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
         }
         $sql .= ') AS xs
                INNER JOIN salesorder_details xsmx ON xs.xs_saleId = xsmx.order_id
@@ -648,12 +652,12 @@ FROM salesorder_details mx
             $sqlParams['storeId'] = $params['store_id'];
         }
         if (!empty($params['pinming'])) {
-            $sql .= ' and gg.productname like :pinming';
-            $sqlParams['pinming'] = '%' . $params['pinming'] . '%';
+            $sql .= ' and gg.productname_id = :pinming';
+            $sqlParams['pinming'] = $params['pinming'];
         }
         if (!empty($params['guige'])) {
-            $sql .= ' and gg.specification like :guige';
-            $sqlParams['guige'] = '%' . $params['guige'] . '%';
+            $sql .= ' and gg.id = :guige';
+            $sqlParams['guige'] = $params['guige'];
         }
         if (!empty($params['houduStart'])) {
             $sql .= ' and mx.houdu >= :houduStart';
@@ -708,6 +712,12 @@ FROM salesorder_details mx
         return returnSuc($data);
     }
 
+    /**
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function bangcha(Request $request, $pageLimit = 10)
     {
         $params = $request->param();
