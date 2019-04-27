@@ -5,9 +5,11 @@ namespace app\admin\controller;
 
 
 use app\admin\model\ViewInv;
+use Exception;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
 use think\exception\DbException;
+use think\Request;
 use think\response\Json;
 
 class Inv extends Right
@@ -61,6 +63,10 @@ class Inv extends Right
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
 
+    /**
+     * @param $data
+     * @throws Exception
+     */
     public function add($data)
     {
         /*$data = {[ 'companyid' => $companyId,
@@ -87,6 +93,10 @@ class Inv extends Right
         model("inv")->allowField(true)->saveAll($data);
     }
 
+    /**
+     * @return Json
+     * @throws DbException
+     */
     public function getjxfpmxhx()
     {
         $params = request()->param();
@@ -129,8 +139,32 @@ class Inv extends Right
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
-    public function invywtype(){
-        $list=model("InvYwtype")->select();
+
+    /**
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    public function invywtype()
+    {
+        $list = model("InvYwtype")->select();
         return returnRes(true, '', $list);
+    }
+
+    /**
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function summaryYk(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $model = new \app\admin\model\Inv();
+        $data = $model->getYkfpHuizong($request->param(), $pageLimit);
+        return returnSuc($data);
     }
 }
