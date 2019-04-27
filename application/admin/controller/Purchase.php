@@ -831,6 +831,12 @@ class Purchase extends Right
         $list = model("admin")->where(array("companyid" => $this->getCompanyId()))->field("id,originarea")->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
+
+    /**应付账款汇总表
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function cgyfzk($pageLimit=10){
         $ywsjStart = '';
         $param=request()->param();
@@ -1465,4 +1471,406 @@ where 1 = 1";
         return returnSuc($data);
     }
 
+    /**应付账款明细表
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function getYfzkTongjiMxList( $customer_id,$pageLimit = 10){
+        $params=request()->param();
+        $ywsjStart = '';
+        if (!empty($params['ywsjStart'])) {
+            $ywsjStart = $params['ywsjStart'];
+        }
+        $ywsjEnd = '';
+        if (!empty($params['ywsjEnd'])) {
+            $ywsjEnd = $params['ywsjEnd'];
+        }
+        $sqlParams = [];
+        $sql="(SELECT
+    NULL id,
+       '' STATUS,
+       NULL yw_time,
+       basecu.custom wanglai,
+       '期初' danju_leixing,
+       NULL yewu_yuan,
+       NULL bian_hao,
+       '0.00' yingfu_jine,
+       '0.00' shifu_jine,
+       ((IFNULL(
+           (SELECT
+                   SUM(IFNULL(mx.sum_shui_price, 0))
+            FROM
+                 cg_purchase_mx mx
+                   LEFT JOIN cg_purchase pur
+                     ON mx.purchase_id = pur.id
+            WHERE mx.delete_time is null
+              AND pur.delete_time is null
+              AND pur.customer_id = ?
+              AND pur.status != 1
+              AND pur.yw_time <=?";
+ $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+               ),
+               0) + IFNULL(
+                      (SELECT
+                              SUM(IFNULL(fy.money, 0))
+                       FROM
+                            capital_fy fy
+                       WHERE fy.fang_xiang = 2
+                         AND fy.delete_time is null
+                         AND fy.status != 1
+                         AND fy.customer_id =?
+
+                         AND fy.yw_time <=?
+                         ";
+ $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+                          ),
+                          0) + IFNULL(
+                                 (SELECT
+                                         SUM(IFNULL(mx.money, 0))
+                                  FROM
+                                       init_ysfk_mx mx
+                                         LEFT JOIN init_ysfk ysfk
+                                           ON mx.ysfk_id = ysfk.id
+                                  WHERE ysfk.type = 1
+                                    AND ysfk.delete_time is null
+                                    and mx.delete_time is null
+                                    AND mx.customer_id = ?
+                                    AND ysfk.status != 1
+
+                                    AND ysfk.yw_time  <=?
+                                    ";
+ $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+                                     ),
+                                     0)
+                          ) + IFNULL(
+                                (SELECT
+                                        - SUM(IFNULL(mx.sum_shui_price, 0))
+                                 FROM
+                                      cg_th_mx mx
+                                        LEFT JOIN cg_th th
+                                          ON mx.cg_th_id = th.id
+                                 WHERE th.customer_id = ?
+                                   AND th.delete_time is null
+                                   and mx.delete_time is null
+                                   AND th.status != 1
+
+                                   AND th.yw_time  <=?
+                                   ";
+ $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+                                    ),
+                                    0) - IFNULL(
+                                           (SELECT
+                                                   SUM(fk.money + IFNULL(fk.mfmoney, 0))
+                                            FROM
+                                                 capital_fk fk
+                                            WHERE fk.delete_time is null
+                                              AND fk.status != 1
+                                              AND fk.customer_id =?
+
+                                              AND fk.yw_time  <=?
+                                              ";
+ $sqlParams[] = $customer_id;
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+                                               ),
+                                               0)
+                                    ) yue,
+                                basecu.id customer_id,
+                                NULL beizhu,'' signPerson FROM custom basecu
+                                where basecu.iscustom=1
+                                and basecu.id=?";
+                                $sqlParams[] = $customer_id;
+                                $sql .= "
+                                            /*  <if test='param.isOperatorSelectcustomer==\"2\"'> and
+                                                  (
+                                                      basecu.`id`  in
+                                                      (
+                                                      SELECT cust.`id` FROM custom cust
+                                                      WHERE
+                                                          (cust.`basesys_customer_type` = 1 AND cust.`moren_yewuyuan`=#{param.moren_ywwuyuan_id})
+                                                             OR
+                                                           (cust.basesys_customer_type !=1 OR cust.basesys_customer_type IS NULL) )
+                                                      )
+                                                        </if>*/
+                                                      GROUP BY basecu.`id`
+                                                      union all
+
+                                                      select t3.id,
+                                                             t3.status,
+                                                             t3.yw_time,
+                                                             t3.wanglai,
+                                                             t3.danju_leixing,
+                                                             t3.yewu_yuan,
+                                                             t3.bian_hao,
+                                                             t3.yingfu_jine yingfu_jine,
+                                                             t3.shifu_jine shifu_jine,
+                                                             t3.yue,
+                                                             t3.customer_id,
+                                                             t3.beizhu,
+                                                             t3.signPerson
+from
+                                                      (
+                                                      select t2.id,t2.status,t2.yw_time,t2.wanglai,t2.danju_leixing,
+                                                      t2.yewu_yuan,t2.bian_hao,t2.yingfu_jine yingfu_jine,t2.shifu_jine shifu_jine,t2.yue,t2.customer_id,t2.beizhu,t2.signPerson from
+                                                      (
+                                                      select
+                                                      t1.id,t1.status,t1.yw_time,
+                                                      t1.wanglai,t1.danju_leixing,
+                                                      t1.yewu_yuan,t1.bian_hao,
+                                                      sum(t1.yingfu_jine) yingfu_jine,sum(t1.shifu_jine)shifu_jine,sum(t1.yue) yue,t1.customer_id,t1.beizhu,t1.signPerson
+                                                      from (
+                                                      SELECT
+                                                      se.id,
+                                                      se.`status`,
+                                                      se.yw_time yw_time,
+                                                      cus.`custom` wanglai,
+                                                      '采购单' danju_leixing,
+
+                                                      op.name yewu_yuan,
+                                                      se.system_number bian_hao,
+                                                      mx.sum_shui_price yingfu_jine,
+                                                      null shifu_jine,null yue,
+                                                      se.customer_id,se.beizhu,'' signPerson
+                                                      FROM
+                                                      cg_purchase se
+                                                      LEFT JOIN cg_purchase_mx mx on mx.purchase_id =se.id
+                                                      LEFT JOIN custom cus on se.customer_id =cus.id
+
+                                                      LEFT JOIN admin op on se.sale_operate_id =op.id
+                                                      where
+                                                      mx.delete_time is null
+                                                      and cus.iscustom=1
+
+
+                                                      and se.delete_time is null
+
+                                                     /* union all
+                                                      SELECT
+                                                      eccg.`id`,
+                                                      eccg.`status`,
+                                                      pu.`yw_time` yw_time,
+                                                      cus.`custom` wanglai,
+                                                      '采购二次结算' danju_leixing,
+
+                                                      op.`caozuoyuan` yewu_yuan,
+                                                      eccg.`system_number` bian_hao,
+                                                      (
+                                                      IFNULL(
+                                                      ecmx.`ruku_sum_shui_price`,
+                                                      0
+                                                      ) - IFNULL(cgmx.`sum_shui_price`, 0)
+                                                      ) yingshou_jine,
+                                                      NULL shifu_jine,null yue,
+                                                      pu.customer_id,
+                                                      '二次结算差值' beizhu,'' signPerson
+                                                      FROM
+                                                      ecjs_cg eccg
+                                                      LEFT JOIN ecjs_cg_mx ecmx ON eccg.`id` = ecmx.`ecjs_cg_id`
+                                                      LEFT JOIN cg_purchase_mx cgmx ON cgmx.`id` = ecmx.`mx_id`
+                                                      LEFT JOIN cg_purchase pu ON pu.`id` = cgmx.`purchase_id`
+                                                      LEFT JOIN custom cus ON pu.customer_id = cus.id
+
+                                                      LEFT JOIN admin op ON eccg.sale_operator_id = op.id
+                                                      WHERE
+                                                      cus.iscustom = 1
+                                                      AND ecmx.`ruku_sum_shui_price` IS NOT NULL
+
+                                                      AND eccg.delete_time is null*/
+
+                                                      union all
+                                                      SELECT
+                                                      fk.id,
+                                                      fk.`status`,
+                                                      fk.yw_time yw_time ,
+                                                      cus.`custom` wanglai,
+                                                      '付款单' danju_leixing,
+                                                      op.name yewu_yuan,
+                                                      fk.system_number bian_hao,
+                                                      null yingfu_jine,
+                                                      ifnull(fk.money,0) shifu_jine,null yue,
+                                                      fk.customer_id,fk.beizhu,'' signPerson
+                                                      from
+                                                      capital_fk fk
+                                                      LEFT JOIN custom cus on fk.customer_id =cus.id
+
+                                                      LEFT JOIN admin op on fk.sale_operator_id =op.id
+                                                      where
+                                                      fk.delete_time is null
+
+                                                      and fk.money != 0
+                                                      and cus.iscustom=1
+
+                                                      UNION all
+                                                      SELECT
+                                                      fy.id,
+                                                      fy.`status`,
+                                                      fy.yw_time yw_time,
+                                                      cus.`custom` wanglai,
+                                                      '费用单(付款)' danju_leixing,
+
+                                                      op.name yewu_yuan,
+                                                      fy.system_number bian_hao,
+                                                      fy.money yingfu_jine,
+                                                      null shifu_jine,null yue,
+                                                      fy.customer_id,fy.beizhu,'' signPerson
+                                                      from
+                                                      capital_fy fy
+                                                      LEFT JOIN custom cus on fy.customer_id =cus.id
+
+                                                      LEFT JOIN admin op on fy.sale_operator_id =op.id
+                                                      where
+                                                      fy.fang_xiang=2
+                                                      and fy.delete_time is null
+
+                                                      and cus.iscustom=1
+
+                                                      union ALL
+                                                      SELECT
+                                                      th.id,
+                                                      th.`status`,
+                                                      th.yw_time yw_time,
+                                                      cus.`custom` wanglai,
+                                                      '采购退货单' danju_leixing,
+
+                                                      op.name yewu_yuan,
+                                                      th.system_number bian_hao,
+                                                      -mx.sum_shui_price yingfu_jine,
+                                                      null shifu_jine,null yue,
+                                                      th.customer_id,th.beizhu,'' signPerson
+                                                      FROM
+                                                      cg_th th
+                                                      LEFT JOIN cg_th_mx mx ON mx.cg_th_id = th.id
+                                                      LEFT JOIN custom cus on th.customer_id =cus.id
+
+                                                      LEFT JOIN admin op on th.sale_operate_id =op.id
+                                                      WHERE
+
+                                                      mx.delete_time is null
+                                                      and th.delete_time is null
+                                                      and cus.iscustom=1
+
+                                                      union all
+                                                      SELECT
+                                                      qt.id,
+                                                      qt.`status`,
+                                                      qt.yw_time ,
+                                                      cus.`custom` wang_lai,
+                                                      '其它应付款' danju_leixing,
+                                                      op.name yewu_yuan,
+                                                      qt.system_number bian_hao,
+                                                      sum(mx.money) yingfu_jine,
+                                                      null shifu_jine,null yue,
+                                                      qt.customer_id,
+                                                      qt.beizhu,'' signPerson
+                                                      from  capital_other_details mx
+                                                      LEFT JOIN capital_other qt on mx.cap_qt_id=qt.id
+                                                      LEFT JOIN custom cus on qt.customer_id =cus.id
+
+
+                                                      LEFT JOIN admin op on qt.sale_operator_id = op.id
+                                                      where
+                                                      qt.fangxiang=2
+                                                      and cus.iscustom=1
+
+                                                      and mx.delete_time is null
+                                                      and qt.delete_time is null
+                                                      group by qt.id
+
+                                                      )t1 GROUP BY
+                                                      t1.id
+                                                      union all
+                                                      SELECT
+                                                      fk.id,
+                                                      fk.`status`,
+                                                      fk.yw_time yw_time ,
+                                                      cus.`custom` wanglai,
+                                                      '付款单' danju_leixing,
+                                                      op.name yewu_yuan,
+                                                      fk.system_number bian_hao,
+                                                      null yingfu_jine,
+                                                      ifnull(fk.mfmoney,0) shifu_jine,null yue,
+                                                      fk.customer_id,'付款优惠，红字冲减应付款' beizhu,'' signPerson
+                                                      from
+                                                      capital_fk fk
+                                                      LEFT JOIN custom cus on fk.customer_id =cus.id
+
+                                                      LEFT JOIN admin op on fk.sale_operator_id =op.id
+                                                      where
+                                                      fk.delete_time is null
+
+                                                      and ifnull(fk.mfmoney,0)>0
+                                                      and cus.iscustom=1
+
+                                                      UNION ALL
+                                                      SELECT
+                                                      ysfk.id,
+                                                      ysfk.`status`,
+                                                      ysfk.yw_time yw_time,
+                                                      cus.`custom` wanglai,
+                                                      '期初应付' danju_leixing,
+
+                                                      op.name  yewu_yuan,
+                                                      ysfk.system_number bian_hao,
+                                                      sum(ifnull(mx.money,0)) yingfu_jine,
+                                                      null shifu_jine,null yue,
+                                                      mx.customer_id,ysfk.beizhu,'' signPerson
+                                                      FROM   init_ysfk ysfk
+                                                      LEFT JOIN init_ysfk_mx mx  on mx.ysfk_id =ysfk.id
+                                                      LEFT JOIN custom cus on mx.customer_id =cus.id
+
+                                                      LEFT JOIN admin op on ysfk.sale_operator_id =op.id
+                                                      WHERE
+                                                      ysfk.type=\"1\"
+                                                      and ysfk.delete_time is null
+
+                                                      and ysfk.delete_time is null
+                                                      and cus.iscustom=1
+
+                                                      GROUP BY mx.customer_id,ysfk.id
+                                                      ) t2
+                                                      where
+                                                      1=1";
+        if (!empty($params['customer_id'])) {
+            $sql .= ' and t2.customer_id= ?';
+            $sqlParams[] = $params['customer_id'];
+        }
+        if (!empty($params['ywsjStart'])) {
+            $sql .= ' and t2.yw_time >= ?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $sql .= ' and t2.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        if (!empty($params['status'])) {
+            $sql .= ' and t2.status = ?';
+            $sqlParams[] = $params['status'];
+        }
+        if (!empty($params['djlx'])) {
+            $sql .= ' and t2.danju_leixing like ?';
+            $sqlParams[] = '%' . $params['djlx'] . '%';
+        }
+
+        if (!empty($params['yewuyuan'])) {
+            $sql .= ' and t2.yewu_yuan like ?';
+            $sqlParams[] = '%' . $params['yewuyuan'] . '%';
+        }
+        if (!empty($params['system_number'])) {
+            $sql .= ' and t2.bian_hao like ?';
+            $sqlParams[] = '%' . $params['system_number'] . '%';
+        }
+        $sql .= ') t3)';
+
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('yw_time')->paginate($pageLimit);
+        return returnSuc($data);
+    }
 }
