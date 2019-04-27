@@ -451,10 +451,10 @@ class Inv extends Base
             $sql .= ' and t2.qimo_yue != 0';
         }
         if (!empty($params['hide_no_happend'])) {
-            $sql .= ' and (t2.qichuyingkai > 0 or t2.benqi_yingkai > 0 or t2.benqi_yingkai > 0 or t2.qimo_yue > 0)';
+            $sql .= ' and (t2.qichu_yingkai > 0 or t2.benqi_yingkai > 0 or t2.benqi_yingkai > 0 or t2.qimo_yue > 0)';
         }
         if (!empty($params['customer_id'])) {
-            $sql .= ' and t2.customer_id = ?';
+            $sql .= ' and t2.id = ?';
             $sqlParams[] = $params['customer_id'];
         }
         if (!empty($params['employer'])) {

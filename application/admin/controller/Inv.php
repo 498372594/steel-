@@ -168,6 +168,12 @@ class Inv extends Right
         return returnSuc($data);
     }
 
+    /**
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function detailsYk(Request $request, $pageLimit = 10)
     {
         if (!$request->isGet()) {
