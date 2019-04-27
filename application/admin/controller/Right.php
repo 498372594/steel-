@@ -226,6 +226,9 @@ class Right extends Signin
         if (!empty($params['create_operator_id'])) {
             $list->where('create_operator_id', $params['create_operator_id']);
         }
+        if (!empty($params['kehu_name'])) {
+            $list->where('kehu_name', $params['kehu_name']);
+        }
         return $list;
     }
 

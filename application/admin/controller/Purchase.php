@@ -832,8 +832,16 @@ class Purchase extends Right
         return returnRes($list, '没有数据，请添加后重试', $list);
     }
     public function cgyfzk($pageLimit=10){
+        $ywsjStart = '';
         $param=request()->param();
-        $sqlParams=[];
+        if (!empty($param['ywsjStart'])) {
+            $ywsjStart = $param['ywsjStart'];
+        }
+        $ywsjEnd = '';
+        if (!empty($param['ywsjEnd'])) {
+            $ywsjEnd = date('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+        }
+        $sqlParams = [];
         $sql="(select t2.id             gysid,
        t2.daima,
        t2.wanglai,
@@ -892,13 +900,16 @@ from (SELECT t1.id,
                               AND se.delete_time is null
                               AND se.customer_id = c.id
                               and se.status != 1";
+
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and se.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+
+            $sql .= ' and se.yw_time >= ?';
+            $sqlParams[] = $ywsjStart;
+
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and se.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and se.yw_time <  ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql .= "), 0) + IFNULL((SELECT ifnull(SUM(IFNULL(fy.money, 0)), 0)
                                                                         FROM capital_fy fy
@@ -907,12 +918,12 @@ from (SELECT t1.id,
                                                                           and fy.status != 1
                                                                           AND fy.customer_id = c.id";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and fy.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and fy.yw_time >= ?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and fy.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and fy.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="), 0) + IFNULL(
                               (SELECT ifnull(SUM(IFNULL(mx.money, 0)), 0)
@@ -924,12 +935,12 @@ from (SELECT t1.id,
                                  AND mx.customer_id = c.id
                                  and ysfk.status != 1";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and ysfk.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and ysfk.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and ysfk.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and ysfk.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="), 0) + IFNULL((SELECT -ifnull(SUM(IFNULL(mx.sum_shui_price, 0)), 0)
                                       FROM cg_th_mx mx
@@ -939,12 +950,12 @@ from (SELECT t1.id,
                                         and th.status != 1
                                         and mx.delete_time is null";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and th.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and th.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and th.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and th.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="),0) + (SELECT ifnull( sum(ifnull(mx.money, 0)), 0)
                              from capital_other_details mx
@@ -955,12 +966,12 @@ from (SELECT t1.id,
                                and mx.delete_time is null
                                and qt.delete_time is null";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and qt.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and qt.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and qt.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and qt.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
 
         $sql.=")) yingfu_yue, ( SELECT ifnull(SUM(
@@ -971,12 +982,12 @@ from (SELECT t1.id,
                       AND fk.status != 1
                       AND fk.customer_id = c.id";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and fk.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and fk.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and fk.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and fk.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.=")  shifu_jine,";
         if (!empty($param['ywsjStart'])) {
@@ -993,9 +1004,9 @@ from (SELECT t1.id,
                    AND pur.delete_time is null
                    AND pur.customer_id = c.id
                    and pur.status!=1
-                   and pur.yw_time <:ywsjStart
-
-                   ),0)
+                   and pur.yw_time <?";
+            $sqlParams[] = $ywsjStart;
+            $sql .= "),0)
                    + IFNULL(
                    (
                    SELECT
@@ -1007,7 +1018,9 @@ from (SELECT t1.id,
                    AND fy.delete_time is null
                    and fy.status!=1
                    AND fy.customer_id = c.id
-                   and fy.yw_time <:ywsjStart
+                   and fy.yw_time <?";
+            $sqlParams[] = $ywsjStart;
+            $sql .="
                    ),
                    0
                    ) + IFNULL(
@@ -1023,7 +1036,9 @@ from (SELECT t1.id,
                    and mx.delete_time is null
                    AND mx.customer_id = c.id
                    and ysfk.status!=1
-                   and ysfk.yw_time <:ywsjStart
+                   and ysfk.yw_time <?";
+            $sqlParams[] = $ywsjStart;
+            $sql .="
                    ),
                    0
                    )
@@ -1039,8 +1054,9 @@ from (SELECT t1.id,
                    and th.delete_time is null
                    and th.status!=1
                   
-                   AND th.yw_time  <:ywsjStart
-
+                   AND th.yw_time  <?";
+            $sqlParams[] = $ywsjStart;
+            $sql .="
                    ),
                    0
                    ) -
@@ -1057,7 +1073,9 @@ from (SELECT t1.id,
                    fk.delete_time is null
                    AND fk.status!=1
                    AND fk.customer_id = c.id
-                   and fk.yw_time <:ywsjStart
+                   and fk.yw_time <?";
+            $sqlParams[] = $ywsjStart;
+            $sql .="
                    )
                    ,0)+
                    (SELECT
@@ -1073,11 +1091,10 @@ from (SELECT t1.id,
                    OR qt.`status` = 2)
                    AND mx.delete_time is null
                    AND qt.delete_time is null
-                   AND qt.yw_time <:ywsjStart
-
-
+                   AND qt.yw_time <?";
+            $sqlParams[] = $ywsjStart;
+            $sql .="
                    )) qichu_yue,";
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
         }else{
             $sql.=" 0 qichu_yue,";
         }
@@ -1089,12 +1106,12 @@ from (SELECT t1.id,
                             and sale.status != 1
                             and sale.custom_id = c.id";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and sale.ywsj >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and sale.ywsj >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and sale.ywsj < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and sale.ywsj < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="), 0) +IFNULL(
                          (SELECT SUM(IFNULL(fy.money, 0))
@@ -1104,12 +1121,12 @@ from (SELECT t1.id,
                             and fy.status != 1
                             and fy.customer_id = c.id";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and fy.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and fy.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and fy.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and fy.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="),0) + IFNULL(
                          (SELECT SUM(IFNULL(mx.money, 0))
@@ -1121,12 +1138,12 @@ from (SELECT t1.id,
                             AND mx.customer_id = c.id
                             and ysfk.status != 1";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and ysfk.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and ysfk.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and ysfk.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and ysfk.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
 
          $sql.="),0 ) + IFNULL(
@@ -1140,12 +1157,12 @@ from (SELECT t1.id,
                                     and mx.delete_time is null
                                     AND th.status != 1";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and th.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and th.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and th.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and th.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
 
         $sql.="),0) + ifnull((SELECT sum(ifnull(qt.money, 0))
@@ -1155,12 +1172,12 @@ from (SELECT t1.id,
                                          and qt.delete_time is null
                                          and qt.status != 1";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and qt.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and qt.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and qt.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and qt.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="), 0))ys, ( IFNULL(
                          (SELECT SUM(sk.money + IFNULL(sk.msmoney, 0))
@@ -1169,17 +1186,16 @@ from (SELECT t1.id,
                             and sk.status != 1
                             and sk.delete_time is null";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and sk.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and sk.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and sk.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and sk.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="), 0))yf , 0  gcChPrice,
                    (ifnull(
                          (SELECT SUM(IFNULL(mx.price_and_tax, 0))
-
                           FROM salesorder_details mx
                                  LEFT JOIN salesorder sale ON mx.order_id = sale.id
                           WHERE mx.delete_time is null
@@ -1187,12 +1203,12 @@ from (SELECT t1.id,
                             AND sale.delete_time is null
                             AND sale.custom_id = c.id";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and sale.ywsj >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and sale.ywsj >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and sale.ywsj < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and sale.ywsj < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="), 0)+ IFNULL((SELECT SUM(IFNULL(fy.money, 0))
                               FROM capital_fy fy
@@ -1201,12 +1217,12 @@ from (SELECT t1.id,
                                 and fy.status != 1
                                 AND fy.customer_id = c.id";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and fy.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and fy.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and fy.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and fy.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="),0) + IFNULL((SELECT SUM(IFNULL(mx.money, 0))
                                   FROM init_ysfk_mx mx
@@ -1218,12 +1234,12 @@ from (SELECT t1.id,
                                     and ysfk.status != 1
                                     and ysfk.delete_time is null";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and ysfk.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and ysfk.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and ysfk.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and ysfk.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="),0) + IFNULL((SELECT -SUM(IFNULL(mx.sum_shui_price, 0))
                                   FROM sales_return_details mx
@@ -1233,12 +1249,12 @@ from (SELECT t1.id,
                                     and th.status != 1
                                     and mx.delete_time is null";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and th.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and th.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and th.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and th.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.="
                                ),
@@ -1254,12 +1270,12 @@ from (SELECT t1.id,
                                   and qt.yw_type != 16";
 
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and qt.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and qt.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and qt.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and qt.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.=")+ (SELECT ifnull(sum(ifnull(mx.money, 0)), 0)
 
@@ -1271,12 +1287,12 @@ from (SELECT t1.id,
                               and qt.delete_time is null
                               and qt.yw_type = 16";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and qt.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and qt.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and qt.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and qt.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.=")) yingshou_yue,
                    (SELECT ifnull(SUM(
@@ -1287,12 +1303,12 @@ from (SELECT t1.id,
                       AND sk.status != 1
                       AND sk.customer_id = c.id";
         if (!empty($param['ywsjStart'])) {
-            $sql .= ' and sk.yw_time >=:ywsjStart';
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+            $sql .= ' and sk.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
         }
         if (!empty($param['ywsjEnd'])) {
-            $sql .= ' and sk.yw_time < :ywsjEnd';
-            $sqlParams['ywsjEnd'] = strtotime('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+            $sql .= ' and sk.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
         }
         $sql.=") shishou_jine,";
         if (!empty($param['ywsjStart'])) {
@@ -1308,7 +1324,9 @@ from (SELECT t1.id,
                    AND sale.delete_time is null
                    and sale.status!=1
                    AND sale.custom_id = c.id
-                   and sale.ywsj<:ywsjStart
+                   and sale.ywsj<?";
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
                    )+ IFNULL(
                    (
                    SELECT
@@ -1321,7 +1339,9 @@ from (SELECT t1.id,
                    and fy.status!=1
                    AND fy.customer_id = c.id
                   
-                   and fy.yw_time<:ywsjStart
+                   and fy.yw_time<?";
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
                    ),
                    0
                    ) + IFNULL(
@@ -1338,7 +1358,9 @@ from (SELECT t1.id,
                    AND mx.customer_id = c.id
                    and ysfk.status!=1
                  
-                   and ysfk.yw_time<:ywsjStart
+                   and ysfk.yw_time<?";
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
                    ),
                    0
                    )+IFNULL(
@@ -1355,7 +1377,9 @@ from (SELECT t1.id,
                    and mx.delete_time is null
                    and th.status!=1
                  
-                   and th.yw_time<:ywsjStart
+                   and th.yw_time<?";
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
                    ),
                    0
                    )
@@ -1373,12 +1397,14 @@ from (SELECT t1.id,
                    AND sk.status!=1
                    AND sk.customer_id = c.id
                  
-                   and sk.yw_time<:ywsjStart
+                   and sk.yw_time<?";
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
 
                    )
                    ,0)
                    ) qichu_yue1,";
-            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+
         }else{
             $sql.="  0 qichu_yue1,";
         }
@@ -1425,11 +1451,9 @@ where 1 = 1";
             $sql .= ' and t2.yingshou_yue != :yuEweiLing';
             $sqlParams['yuEweiLing'] = $param['yuEweiLing'];
         }
-        if (!empty($param['wufaShengE'])) {
-            $sql .= " and (t2.benqi_yingfu >:wufaShengE or t2.benqi_shifu >:wufaShengE or t2.qichu_yue >:wufaShengE
- or t2.qimo_yue >:wufaShengE or t2.congying_fu >:wufaShengE or t2.yingshou_yue >:wufaShengE 
- t2.benqi_yingfu >:wufaShengE and t2.benqi_yingshou>:wufaShengE )";
-            $sqlParams['wufaShengE'] = $param['wufaShengE'];
+
+        if (!empty($params['wufaShengE'])) {
+            $sql .= ' and t2.benqi_yingshou > 0';
         }
         if (!empty($param['danwei'])) {
             $sql .= ' and t2.wanglai like concat(:danwei)';
