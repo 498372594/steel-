@@ -30,7 +30,6 @@ class Capital extends Right
     /**
      * 应收账款明细表
      * @param Request $request
-     * @param int $fangxiang
      * @param int $pageLimit
      * @return Json
      * @throws DbException
