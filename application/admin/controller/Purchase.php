@@ -1876,4 +1876,561 @@ from
         $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('yw_time')->paginate($pageLimit);
         return returnSuc($data);
     }
+    public function  ysjxfp($pageLimit=10){
+        $ywsjStart = '';
+        $param=request()->param();
+        if (!empty($param['ywsjStart'])) {
+            $ywsjStart = $param['ywsjStart'];
+        }
+        $ywsjEnd = '';
+        if (!empty($param['ywsjEnd'])) {
+            $ywsjEnd = date('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+        }
+        $sqlParams = [];
+        $sql="(select
+       t2.id gysid,
+       t2.daima,
+       t2.gongying_shang,
+       t2.qichu_yingshou,
+       t2.benqi_yingshou,
+       t2.benqi_yishou,
+       t2.moren_yewuyuan,
+       t2.suoshu_department,
+       t2.create_time,
+       t2.qimo_yue
+from (
+     SELECT
+            t1.id,
+            t1.daima,
+            t1.gongying_shang,
+            t1.qichu_yingshou,
+            t1.benqi_yingshou,
+            t1.benqi_yishou,
+            t1.moren_yewuyuan,
+            t1.suoshu_department,
+            t1.create_time,
+            IFNULL(t1.qichu_yingshou,0)+(IFNULL(t1.benqi_yingshou,0)-IFNULL(t1.benqi_yishou,0))
+         qimo_yue
+     FROM
+          (
+          SELECT
+                 cus.id,
+                 cus.`zjm` daima,
+                 cus.`custom` gongying_shang,
+                 cus.moren_yewuyuan,
+                 cus.create_time,
+                 cus.suoshu_department,";
+        if (!empty($param['ywsjStart'])) {
+            $sql .= "(
+              (
+              ifnull( (SELECT
+              SUM(
+              IFNULL(mx.sum_shui_price, 0)
+              )
+
+              FROM
+              cg_purchase_mx mx
+              LEFT JOIN cg_purchase se ON mx.purchase_id = se.id
+              WHERE
+              se.customer_id = cus.id
+              and se.status!=1
+              and se.delete_time is null
+              and mx.delete_time is null
+              and mx.shui_price > 0
+
+              AND se.yw_time <?";
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+              ),0)
+
+              )+ IFNULL(
+              (
+              SELECT
+              SUM(IFNULL(mx.money, 0))
+              FROM
+              init_yskp_mx mx
+              LEFT JOIN init_yskp yskp ON mx.yskp_id = yskp.id
+              WHERE
+              mx.customer_id = cus.id
+              AND yskp.type = 0
+              and yskp.delete_time is null
+              and yskp.status!=1
+              and mx.delete_time is null
+              AND yskp.yw_time  <?";
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+
+              ),
+              0)
+              +IFNULL(
+              (
+              SELECT
+              -SUM(IFNULL(mx.sum_shui_price, 0))
+              FROM
+              cg_th_mx mx
+              LEFT JOIN cg_th th ON mx.cg_th_id = th.id
+              WHERE
+              th.customer_id = cus.id
+              and mx.shui_price>0
+              and th.delete_time is null
+              and th.status!=1
+              and mx.delete_time is null
+              AND th.yw_time  <?";
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+
+              ),
+              0
+              ) - IFNULL(
+              (
+              SELECT
+              SUM(IFNULL(sp.money, 0)+IFNULL(sp.msmoney, 0))
+              FROM
+              inv_cgsp sp
+              WHERE
+              sp.gys_id = cus.id
+              and sp.status!=1
+              and sp.delete_time is null
+
+              AND sp.yw_time  <?";
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
+              ),
+              0
+              )
+              ) qichu_yingshou,";
+
+        }else{
+
+        $sql.="  0 qichu_yingshou,";
+        }
+        $sql.="
+        
+              (
+              (
+              ifnull(
+              (
+              SELECT
+              SUM(
+              IFNULL(mx.sum_shui_price, 0)
+              )
+              FROM
+              cg_purchase_mx mx
+              LEFT JOIN cg_purchase se ON mx.purchase_id = se.id
+
+              WHERE
+              se.customer_id = cus.id
+              and mx.shui_price > 0
+              and se.status!=1
+              and se.delete_time is null
+              and mx.delete_time is null";
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and se.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and se.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        $sql.="
+
+             
+		),0)
+
+		)+ IFNULL(
+		(
+		SELECT
+		SUM(IFNULL(mx.money, 0))
+		FROM
+		init_yskp_mx mx
+		LEFT JOIN init_yskp yskp ON mx.yskp_id = yskp.id
+		WHERE
+		mx.customer_id = cus.id
+		and yskp.status!=1
+		and mx.delete_time is null
+		AND yskp.type = 0
+		and yskp.delete_time is null";
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and yskp.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and yskp.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        $sql.="
+		),
+		0
+		)+IFNULL(
+		(
+		SELECT
+		-SUM(IFNULL(mx.sum_shui_price, 0))
+		FROM
+		cg_th_mx mx
+		LEFT JOIN cg_th th ON mx.cg_th_id = th.id
+		WHERE
+		th.customer_id = cus.id
+		and mx.shui_price>0
+		and th.delete_time is null
+		and mx.delete_time is null
+		and th.status!=1";
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and th.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and th.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        $sql.="
+
+		),
+		0
+		)
+		) benqi_yingshou,
+		(
+		IFNULL(
+		(
+		SELECT
+		SUM(IFNULL(sp.money, 0)+IFNULL(sp.msmoney, 0))
+		FROM
+		inv_cgsp sp
+
+		WHERE
+		sp.gys_id = cus.id
+		and sp.status!=1
+		and sp.delete_time is null";
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and sp.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and sp.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        $sql.="
+
+		),
+		0
+		)
+		) benqi_yishou
+		FROM
+		custom cus
+		where
+    cus.delete_time is null
+		and cus.`iscustom`=1
+		) t1
+		)t2
+		where
+		1=1";
+        if (!empty($params['yuEweiLing'])) {
+            $sql .= ' and t2.benqi_yingshou > 0';
+        }
+        if (!empty($params['wufaShengE'])) {
+            $sql .= ' and t2.benqi_yingshou > 0';
+        }
+        if (!empty($param['customer_id'])) {
+            $sql .= ' and t2.gysid =:customer_id';
+            $sqlParams['customer_id'] = $param['customer_id'];
+        }
+        $sql.=" order by t2.create_time desc)";
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->paginate($pageLimit);
+        return returnSuc($data);
+    }
+    public function ysjxfpmx($customer_id,$pageLimit=10){
+        $params=request()->param();
+        $ywsjStart = '';
+        if (!empty($params['ywsjStart'])) {
+            $ywsjStart = $params['ywsjStart'];
+        }
+        $ywsjEnd = '';
+        if (!empty($params['ywsjEnd'])) {
+            $ywsjEnd = $params['ywsjEnd'];
+        }
+        $sqlParams = [];
+        $sql="(SELECT
+			 '' id,'' zbid,'' danhao,'' caigou_danhao,'' beizhu,null yw_time,'' piaoju,'' gys_id,tbcu.custom danwei,'' guige,'' danjia,'' pin_ming,'' `STATUS`,'' zhong_liang,'' jiashui_heji,'' shoupiao_jine,'' fapiao_taitou,'' signPerson,
+			 SUM(inv.sum_shui_price) - IFNULL(
+																	 (SELECT
+																					 SUM(sp.money) + IFNULL(SUM(sp.msmoney), 0)
+																		FROM
+																				 inv_cgsp sp
+																		WHERE sp.gys_id = inv.customer_id
+
+																			AND sp.delete_time is null
+																			AND sp.status != 1
+																			and sp.yw_time  <=?";
+                                        $sqlParams[] = $ywsjStart;
+                                        $sql.="
+
+																			 ),
+																			 0
+																			 ) + IFNULL(
+																			 (SELECT
+																			 - SUM(hk.money) money
+																			 FROM
+																			 capital_hk hk
+																			 WHERE hk.customer_id = inv.customer_id
+
+																			 AND hk.delete_time is null
+																			 AND hk.status != 1
+																			 AND hk.fangxiang = 2
+																			 AND hk.hk_type = 13
+
+																			 and hk.yw_time  <=?";
+                                        $sqlParams[] = $ywsjStart;
+                                        $sql.="
+																			 ),
+																			 0
+																			 ) yue
+																			 FROM
+																			 inv inv
+																			 left join custom tbcu on tbcu.id=inv.customer_id
+																			 WHERE inv.customer_id = ?";
+        $sqlParams[] = $customer_id;
+        $sql.="
+
+																			 AND inv.shui_price > 0
+																			 AND inv.fx_type = 2
+																			 AND inv.delete_time is null
+																			 and inv.yw_time <=?";
+        $sqlParams[] = $ywsjStart;
+        $sql.="
+union all
+																			 SELECT
+																			 t2.id,t2.zbid,t2.danhao,t2.caigou_danhao,t2.beizhu,t2.yw_time,t2.piaoju,t2.gys_id,t2.danwei,t2.guige,t2.danjia,t2.pin_ming,t2.`STATUS`,t2.zhong_liang,t2.jiashui_heji,t2.shoupiao_jine,t2.fapiao_taitou,t2.signPerson,'' yue
+																			 from (
+																			 SELECT
+																			 t1.id,t1.zbid,t1.danhao,t1.yw_time,t1.piaoju,t1.gys_id,t1.danwei,t1.caigou_danhao,t1.guige,t1.danjia,t1.pin_ming,t1.`STATUS`,t1.zhong_liang,t1.jiashui_heji,t1.shoupiao_jine,t1.fapiao_taitou,t1.beizhu,t1.signPerson
+																			 from (
+
+																			 SELECT
+																			 mx.id,
+																			 se.id zbid,
+																			 se.customer_id gys_id,
+																			 cus. custom danwei,
+																			 null danhao,
+																			 se.yw_time,
+																			 pjlx.`pjlx` piaoju,
+																			 se.system_number caigou_danhao,
+																			 gg.specification guige,
+																			 mx.price danjia,
+																			 pm.`name` pin_ming,
+																			 se. STATUS,
+																			 mx.zhongliang zhong_liang,
+																			 mx.sum_shui_price jiashui_heji,
+																			 null shoupiao_jine,
+																			 null fapiao_taitou,
+																			 mx.beizhu,'' signPerson
+																			 FROM
+																			 cg_purchase_mx mx
+																			 LEFT JOIN cg_purchase se ON mx.purchase_id = se.id
+																			 LEFT JOIN pjlx pjlx ON se.piaoju_id = pjlx.id
+																			 LEFT JOIN custom cus ON se.customer_id = cus.id
+																			 LEFT JOIN specification gg ON mx.guige_id = gg.id
+																			 LEFT JOIN productname pm ON gg.productname_id = pm.id
+																			 WHERE
+																			 se.delete_time is null
+
+																			 and mx.shui_price>0
+																			 and mx.sum_shui_price>0
+																			 and mx.delete_time is null
+
+
+																		union ALL
+																			 SELECT
+																			 cgsp.id,
+																			 cgsp.id zbid,
+																			 cgsp.gys_id,
+																			 cus. custom danwei,
+																			 cgsp.system_number danhao,
+																			 cgsp.yw_time,
+																			 pjlx.`pjlx` piaoju,
+																			 null caigou_danhao,
+																			 null guige,
+																			 null danjia,
+																			 null pin_ming,
+																			 cgsp. STATUS,
+																			 null zhong_liang,
+																			 null jiashui_heji,
+																			 ifnull(cgsp.money,0) shoupiao_jine,
+																			 cgsp.taitou fapiao_taitou,
+																			 cgsp.beizhu,'' signPerson
+																			 FROM
+																			 inv_cgsp cgsp
+																			 LEFT JOIN custom cus ON cgsp.gys_id = cus.id
+																			 LEFT JOIN pjlx pjlx ON cgsp.piaoju_id = pjlx.id
+																			 WHERE
+
+																			 cgsp.money!=0 and
+																			 cgsp.delete_time is null";
+
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and cgsp.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and cgsp.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        $sql.="
+
+		union ALL
+		SELECT
+		cgsp.id,
+		cgsp.id zbid,
+		cgsp.gys_id,
+		cus. custom danwei,
+		cgsp.system_number danhao,
+		cgsp.yw_time,
+		null piaoju,
+		null caigou_danhao,
+		pjlx.pjlx guige,
+		null danjia,
+		null pin_ming,
+		cgsp. STATUS,
+		null zhong_liang,
+		null jiashui_heji,
+		IFNULL(cgsp.msmoney,0) shoupiao_jine,
+		cgsp.taitou fapiao_taitou,
+		'收票优惠，红字冲减应收进项票' beizhu,'' signPerson
+		FROM
+		inv_cgsp cgsp
+		LEFT JOIN custom cus ON cgsp.gys_id = cus.id
+		LEFT JOIN pjlx pjlx ON cgsp.piaoju_id = pjlx.id
+		WHERE
+
+		cgsp.msmoney!=0 and
+		cgsp.delete_time is null";
+
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and cgsp.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and cgsp.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        $sql.="
+
+		union ALL
+		SELECT
+		mx.id,
+		th.id zbid,
+		th.customer_id gys_id,
+		cus. custom danwei,
+		null danhao,
+		th.yw_time,
+		pjlx.pjlx piaoju,
+		th.system_number caigou_danhao,
+		gg.specification guige,
+		mx.price danjia,
+		pm.name pin_ming,
+		th. STATUS,
+		-mx.zhongliang zhong_liang,
+		-mx.sum_shui_price jiashui_heji,
+		null shoupiao_jine,
+		null fapiao_taitou,
+		mx.beizhu,'' signPerson
+		FROM
+		cg_th_mx mx
+		LEFT JOIN cg_th th ON mx.cg_th_id = th.id
+		LEFT JOIN pjlx pjlx ON th.piaoju_id = pjlx.id
+		LEFT JOIN custom cus ON th.customer_id = cus.id
+		LEFT JOIN specification gg ON mx.guige_id = gg.id
+		LEFT JOIN productname pm ON gg.productname_id = pm.id
+		WHERE
+		th.delete_time is null
+
+		and mx.shui_price>0
+		and mx.sum_shui_price>0
+		and mx.delete_time is null";
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and th.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and th.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        $sql.="
+
+		union ALL
+		SELECT
+		mx.id,
+		yskp.id zbid,
+		mx.customer_id gys_id,
+		cus. custom danwei,
+		null danhao,
+		yskp.yw_time,
+		pjlx.pjlx piaoju,
+		yskp.system_number caigou_danhao,
+		null guige,
+		mx.price danjia,
+		null pin_ming,
+		yskp. STATUS,
+		mx.zhongliang zhong_liang,
+		mx.money jiashui_heji,
+		null shoupiao_jine,
+		null fapiao_taitou,
+		mx.beizhu,'' signPerson
+		FROM
+		init_yskp_mx mx
+		LEFT JOIN init_yskp yskp ON mx.yskp_id = yskp.id
+		LEFT JOIN custom cus ON mx.customer_id = cus.id
+		LEFT JOIN pjlx pjlx ON mx.piaoju_id = pjlx.id
+		WHERE
+		yskp.delete_time is null
+		and mx.delete_time is null
+		and yskp.type=0";
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and yskp.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and yskp.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        $sql.="
+		)t1
+		where
+		1=1";
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and t1.yw_time >=?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and t1.yw_time < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+
+
+        if (!empty($params['customer_id'])) {
+            $sql .= ' and  t1.gys_id= ?';
+            $sqlParams[] = $params['customer_id'];
+        }
+        if (!empty($params['status'])) {
+            $sql .= ' and  t1.status = ?';
+            $sqlParams[] = $params['status'];
+        }
+        if (!empty($params['piaoju'])) {
+            $sql .= ' and  t1.piaoju = ?';
+            $sqlParams[] = $params['piaoju'];
+        }
+
+        if (!empty($params['status'])) {
+            $sql .= ' and t1.status = ?';
+            $sqlParams[] = $params['status'];
+        }
+        if (!empty($params['status'])) {
+            $sql .= 'and
+			t1.beizhu like %'.$params['status'].'%';
+        }
+
+        $sql .= ' order by t1.yw_time )t2)';
+
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('yw_time')->paginate($pageLimit);
+        return returnSuc($data);
+    }
+
 }

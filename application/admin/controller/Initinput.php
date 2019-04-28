@@ -699,15 +699,15 @@ class Initinput extends Right
         Db::startTrans();
         try {
             $ysfp = InitYskp::get($id);
-            if (empty($ysfp)) {
+            if (empty($yskp)) {
                 throw new Exception("对象不存在");
             }
-            if ($ysfp["status"] == 1) {
+            if ($yskp["status"] == 1) {
                 throw new Exception("该单据已经作废");
             }
-            $ysfp->status = 1;
-            $ysfp->save();
-            $list = InitYskpMx::where("ysfp_id", $ysfp["id"])->select();
+            $yskp->status = 1;
+            $yskp->save();
+            $list = InitYskpMx::where("ysfp_id", $yskp["id"])->select();
 
             foreach ($list as $mx) {
                 (new \app\admin\model\Inv())->deleteInv($mx["id"], 1);
@@ -727,16 +727,19 @@ class Initinput extends Right
         }
         Db::startTrans();
         try {
-            $ysfp = InitYskp::get($id);
+            $yskp = InitYskp::get($id);
             if (empty($ysfp)) {
                 throw new Exception("对象不存在");
             }
             if ($ysfp["status"] == 1) {
                 throw new Exception("该单据已经作废");
             }
-            $ysfp->status = 1;
-            $ysfp->save();
-            $list = InitYskpMx::where("ysfp_id", $ysfp["id"])->select();
+            $yskp->status = 1;
+            $yskp->save();
+
+            $list = \app\admin\model\InitYkpMx::where("yskp_id", $yskp["id"])->select();
+            $list = InitYskpMx::where("yskp_id", $yskp["id"])->select();
+
 
             foreach ($list as $mx) {
                 (new \app\admin\model\Inv())->deleteInv($mx["id"], 4);

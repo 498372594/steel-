@@ -224,4 +224,565 @@ class Reportform extends Right
         $list = $list->paginate($pageLimit);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
+
+    /**出入库对照表
+     * @param int $pageLimit
+     * @return \think\response\Json
+     * @throws \think\exception\DbException
+     */
+    public function inandoutlist($pageLimit = 10){
+        $params=request()->param();
+        $ywsjStart = '';
+        if (!empty($params['ywsjStart'])) {
+            $ywsjStart = $params['ywsjStart'];
+        }
+        $ywsjEnd = '';
+        if (!empty($params['ywsjEnd'])) {
+            $ywsjEnd = $params['ywsjEnd'];
+        }
+        $sqlParams = [];
+        $sql="(
+            SELECT
+			 t.osId,
+			 t.id tzid,
+			 t.zbid,
+			 t.systemNumber,
+			 t.resourceNumber,
+			 t.crkType,
+			 t.crkTypeName,
+			 t.ywTime,
+			 t.customerName,
+			 t.cate,
+			 t.pinmingId,
+			 t.pinmingName,
+			 t.guigeId,
+			 t.guigeName,
+			 t.houdu,
+			 t.changdu,
+			 t.kuandu,
+			 t.caizhiId,
+			 t.caizhiName,
+			 t.chandiId,
+			 t.chandiName,
+			 t.jijiafangshiId,
+			 t.jijiafangshiName,
+			 t.rklingzhi,
+			 t.rkjianshu,
+			 t.rkcounts,
+			 t.rkzhongliang,
+			 t.rkLisuanZhongliang,
+			 t.rkGuobangZhongliang,
+			 t.lingzhi,
+			 t.jianshu,
+			 t.counts,
+			 t.zhongliang,
+			 t.lisuanZhongliang,
+			 t.guobangZhongliang,
+			 t.zhijian,
+			 t.pihao,
+			 t.storeId,
+			 t.storeName,
+			 t.zhidanren,
+			 t.isFlag,
+
+			 t.rkmizhong,
+			 t.mizhong,
+			 t.shuiprice,
+			 t.price,
+			 t.jianzhong,
+			 t.rkJianzhong,
+			 t.rkZhijian,
+			 t.rkPrice,
+			 t.rkShuiPrice
+
+FROM
+		 (SELECT
+						 (
+								 CASE
+									 WHEN rkmd.ruku_type = 1
+													 THEN
+										 (SELECT
+														 dbmx.`diaobo_id`
+											FROM
+													 kc_diaobo_mx dbmx
+											WHERE dbmx.`id` = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type = 2
+													 THEN
+										 (SELECT
+														 pdmx.`pandian_id`
+											FROM
+													 kc_pandian_mx pdmx
+											WHERE pdmx.`id` = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type = 3
+													 THEN
+										 (SELECT
+														 qtmx.kc_rk_qt_id
+											FROM
+													 kc_qtrk_mx qtmx
+											WHERE qtmx.id = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type =4
+													 THEN
+										 (SELECT
+														 cgmx.purchase_id
+											FROM
+													 cg_purchase_mx cgmx
+											WHERE cgmx.id = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type =7
+													 THEN
+										 (SELECT
+														 thmx.`xs_th_id`
+											FROM
+													 sales_return_details thmx
+											WHERE thmx.`id` = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type = 8
+													 THEN
+										 (SELECT
+														 kcmx.`kc_id`
+											FROM
+													 `init_kc_mx` kcmx
+											WHERE kcmx.`id` = spot.data_id
+											LIMIT 1)
+
+
+									 ELSE NULL
+										 END
+								 ) osId,
+						 rk.id id,
+						 spot.`id` zbid,
+						 (
+								 CASE
+									 WHEN rkmd.ruku_type = 1
+													 THEN
+										 (SELECT
+														 db.system_number
+											FROM
+													 kc_diaobo_mx dbmx
+														 LEFT JOIN kc_diaobo db
+															 ON db.id = dbmx.diaobo_id
+											WHERE dbmx.`id` = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type = 2
+													 THEN
+										 (SELECT
+														 pd.system_number
+											FROM
+													 kc_pandian_mx pdmx
+														 LEFT JOIN kc_pandian pd
+															 ON pd.id = pandian_id
+											WHERE pdmx.`id` = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type = 3
+													 THEN
+										 (SELECT
+														 qtrk.system_number
+											FROM
+													 kc_qtrk_mx qtmx
+														 LEFT JOIN kc_qtrk qtrk
+															 ON qtrk.id = qtmx.kc_rk_qt_id
+											WHERE qtmx.id = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type =4
+													 THEN
+										 (SELECT
+														 pu.system_number
+											FROM
+													 cg_purchase_mx cgmx
+														 LEFT JOIN cg_purchase pu
+															 ON pu.id = cgmx.purchase_id
+											WHERE cgmx.id = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type =7
+													 THEN
+										 (SELECT
+														 th.system_number
+											FROM
+													 sales_return_details thmx
+														 LEFT JOIN sales_return th
+															 ON th.id = thmx.xs_th_id
+											WHERE thmx.`id` = spot.data_id
+											LIMIT 1)
+									 WHEN rkmd.ruku_type =8
+													 THEN
+										 (SELECT
+														 kc.system_number
+											FROM
+													 `init_kc_mx` kcmx
+														 LEFT JOIN init_kc kc
+															 ON kc.id = kcmx.kc_id
+											WHERE kcmx.`id` = spot.data_id
+											LIMIT 1)
+
+									 ELSE NULL
+										 END
+								 ) systemNumber,
+						 spot.`resource_number` resourceNumber,
+						 rktype.`id` crkType,
+						 rktype.`name` crkTypeName,
+						 rk.`yw_time` ywTime,
+						 cu.`custom` customerName,
+						 cate.classname cate,
+						 pm.`id` pinmingId,
+						 pm.`name` pinmingName,
+						 gg.`id` guigeId,
+						 gg.`specification` guigeName,
+						 spot.`houdu` houdu,
+						 spot.`changdu` changdu,
+						 spot.`kuandu` kuandu,
+						 cz.`id` caizhiId,
+						 cz.`texturename` caizhiName,
+						 cd.`id` chandiId,
+						 cd.`originarea` chandiName,
+						 jjfs.`id` jijiafangshiId,
+						 jjfs.`jsfs` jijiafangshiName,
+						 rkmd.`lingzhi` rklingzhi,
+						 rkmd.`jianshu` rkjianshu,
+						 rkmd.`counts` rkcounts,
+						 rkmd.`zhongliang` rkzhongliang,
+						 spot.`old_lisuan_zhongliang` rkLisuanZhongliang,
+						 spot.`old_guobang_zhongliang` rkGuobangZhongliang,
+						 '' lingzhi,
+						 '' jianshu,
+						 '' counts,
+						 '' zhongliang,
+						 '' lisuanZhongliang,
+						 '' guobangZhongliang,
+						 rkmd.`zhijian` zhijian,
+						 rkmd.`pihao` pihao,
+						 store.`id` storeId,
+						 store.`storage` storeName,
+						 sys.`name` zhidanren,
+						 '1' isFlag,
+
+						 rkmd.mizhong rkmizhong,
+						 '' mizhong,
+						 '' shuiprice,
+						 '' price,
+						 '' jianzhong,
+						 rkmd.jianzhong rkJianzhong,
+						 rkmd.zhijian rkZhijian,
+						 rkmd.price rkPrice,
+						 rkmd.shuiprice rkShuiPrice
+
+			FROM
+					 kc_spot spot
+						 LEFT JOIN kc_rk_md rkmd
+							 ON spot.`rk_md_id` = rkmd.`id`
+						 LEFT JOIN kc_rk_type rktype
+							 ON rktype.`id` = rkmd.`ruku_type`
+						 LEFT JOIN kc_rk rk
+							 ON rk.`id` = rkmd.`kc_rk_id`
+						 LEFT JOIN custom cu
+							 ON cu.`id` = spot.`customer_id`
+						 LEFT JOIN specification gg
+							 ON gg.`id` = rkmd.`guige_id`
+						 LEFT JOIN  productname pm
+							 ON pm.`id` = gg.`productname_id`
+						 LEFT JOIN classname cate
+							 ON cate.`id` = pm.`classid`
+						 LEFT JOIN texture cz
+							 ON cz.`id` = rkmd.`caizhi_id`
+						 LEFT JOIN originarea cd
+							 ON cd.`id` = rkmd.`chandi_id`
+						 LEFT JOIN jsfs jjfs
+							 ON jjfs.`id` = rkmd.`jijiafangshi_id`
+						 LEFT JOIN storage store
+							 ON store.`id` = rkmd.`store_id`
+						 LEFT JOIN admin sys
+							 ON sys.`id` = rk.`create_operator_id`
+			WHERE rkmd.delete_time is null and rk.delete_time is null and rk.status!=1
+			UNION
+			ALL
+			SELECT
+						 (
+								 CASE
+									 WHEN ckmd.`chuku_type` = 1
+													 THEN
+										 (SELECT
+														 dbmx.`diaobo_id`
+											FROM
+													 kc_diaobo_mx dbmx
+											WHERE dbmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.chuku_type = 2
+													 THEN
+										 (SELECT
+														 pdmx.`pandian_id`
+											FROM
+													 kc_pandian_mx pdmx
+											WHERE pdmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.chuku_type =3
+													 THEN
+										 (SELECT
+														 qtmx.stock_other_out_id
+											FROM
+													 stock_other_out_details qtmx
+											WHERE qtmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.chuku_type = 4
+													 THEN
+										 (SELECT
+														 xsmx.order_id
+											FROM
+													 salesorder_details xsmx
+											WHERE xsmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.`chuku_type` =9
+													 THEN
+										 (SELECT
+														 tbspot.id
+											FROM
+													 kc_spot tbspot
+											WHERE tbspot.`id` = ckmd.`data_id`
+												AND tbspot.status = 2
+											LIMIT 1)
+									 WHEN ckmd.chuku_type = 10
+													 THEN
+										 (SELECT
+														 thmx.cg_th_id
+											FROM
+													 cg_th_mx thmx
+											WHERE thmx.id = ckmd.`data_id`
+											LIMIT 1)
+
+									 ELSE NULL
+										 END
+								 ) osId,
+						 ck.id,
+						 spot.`id` zbid,
+						 (
+								 CASE
+									 WHEN ckmd.`chuku_type` =1
+													 THEN
+										 (SELECT
+														 db.system_number
+											FROM
+													 kc_diaobo_mx dbmx
+														 LEFT JOIN kc_diaobo db
+															 ON db.id = dbmx.diaobo_id
+											WHERE dbmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.chuku_type =2
+													 THEN
+										 (SELECT
+														 pd.system_number
+											FROM
+													 kc_pandian_mx pdmx
+														 LEFT JOIN kc_pandian pd
+															 ON pd.id = pdmx.pandian_id
+											WHERE pdmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.chuku_type = 3
+													 THEN
+										 (SELECT
+														 qtck.system_number
+											FROM
+													 stock_other_out_details qtmx
+														 LEFT JOIN stock_other_out qtck
+															 ON qtck.id = qtmx.stock_other_out_id
+											WHERE qtmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.chuku_type = 4
+													 THEN
+										 (SELECT
+														 sale.system_no
+											FROM
+													 salesorder_details xsmx
+														 LEFT JOIN salesorder sale
+															 ON sale.id = xsmx.order_id
+											WHERE xsmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.`chuku_type` = 9
+													 THEN ''
+									 WHEN ckmd.chuku_type = 10
+													 THEN
+										 (SELECT
+														 th.system_number
+											FROM
+													 cg_th_mx thmx
+														 LEFT JOIN cg_th th
+															 ON th.id = thmx.cg_th_id
+											WHERE thmx.id = ckmd.`data_id`
+											LIMIT 1)
+
+
+
+									 ELSE NULL
+										 END
+								 ) systemNumber,
+						 spot.`resource_number` resourceNumber,
+						 cktype.id crkType,
+						 cktype.`name` crkTypeName,
+						 ck.`yw_time` ywTime,
+						 (
+								 CASE
+									 WHEN ckmd.`chuku_type` = 1
+													 THEN
+										 (SELECT
+														 cu.custom
+											FROM
+													 kc_diaobo_mx dbmx
+														 LEFT JOIN kc_diaobo db
+															 ON db.id = dbmx.diaobo_id
+														 LEFT JOIN custom cu
+															 ON dbmx.gf_customer_id = cu.id
+											WHERE dbmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.chuku_type = 2
+													 THEN ''
+									 WHEN ckmd.chuku_type =3
+													 THEN
+										 (SELECT
+														 cu.custom
+											FROM
+													 stock_other_out_details qtmx
+														 LEFT JOIN stock_other_out qtck
+															 ON qtck.id = qtmx.stock_other_out_id
+														 LEFT JOIN custom cu
+															 ON qtck.customer_id = cu.id
+											WHERE qtmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.chuku_type = 5
+													 THEN
+										 (SELECT
+														 cu.custom
+											FROM
+													 salesorder_details xsmx
+														 LEFT JOIN salesorder sale
+															 ON sale.id = xsmx.order_id
+														 LEFT JOIN custom cu
+															 ON sale.custom_id = cu.id
+											WHERE xsmx.id = ckmd.`data_id`
+											LIMIT 1)
+									 WHEN ckmd.`chuku_type` = 9
+													 THEN ''
+									 WHEN ckmd.chuku_type = 10
+													 THEN
+										 (SELECT
+														 cu.custom
+											FROM
+													 cg_th_mx thmx
+														 LEFT JOIN cg_th th
+															 ON th.id = thmx.cg_th_id
+														 LEFT JOIN custom cu
+															 ON th.customer_id = cu.id
+											WHERE thmx.id = ckmd.`data_id`
+											LIMIT 1)
+
+
+
+									 ELSE NULL
+										 END
+								 ) customerName,
+						 cate.classname cate,
+						 pm.`id` pinmingId,
+						 pm.`name` pinmingName,
+						 gg.`id` guigeId,
+						 gg.`specification` guigeName,
+						 spot.`houdu` houdu,
+						 spot.`changdu` changdu,
+						 spot.`kuandu` kuandu,
+						 cz.`id` caizhiId,
+						 cz.`texturename` caizhiName,
+						 cd.`id` chandiId,
+						 cd.`originarea` chandiName,
+						 jjfs.`id` jijiafangshiId,
+						 jjfs.`jsfs` jijiafangshiName,
+						 '' rklingzhi,
+						 '' rkjianshu,
+						 '' rkcounts,
+						 '' rkzhongliang,
+						 '' rkLisuanZhongliang,
+						 '' rkGuobangZhongliang,
+						 ckmd.`lingzhi` lingzhi,
+						 ckmd.`jianshu` jianshu,
+						 ckmd.`counts` counts,
+						 ckmd.`zhongliang` zhongliang,
+						 '' lisuanZhongliang,
+						 '' guobangZhongliang,
+						 ckmd.`zhijian` zhijian,
+						 ckmd.`pihao` pihao,
+						 store.`id` storeId,
+						 store.`storage` storeName,
+						 sys.`name` zhidanren,
+						 '2' isFlag,
+
+						 '' rkmizhong,
+						 ckmd.mizhong mizhong,
+						 ckmd.tax_rate shuiprice,
+						 ckmd.cb_price price,
+						 ckmd.jianzhong jianzhong,
+						 '' rkJianzhong,
+						 '' rkZhijian,
+						 '' rkPrice,
+						 '' rkShuiPrice
+			FROM
+					 stock_out_md ckmd
+						 LEFT JOIN kc_spot spot
+							 ON spot.`id` = ckmd.`kc_spot_id`
+						 LEFT JOIN kc_ck_type cktype
+							 ON cktype.`id` = ckmd.`chuku_type`
+						 LEFT JOIN stock_out ck
+							 ON ck.`id` = ckmd.`stock_out_id`
+						 LEFT JOIN specification gg
+							 ON gg.`id` = ckmd.`guige_id`
+						 LEFT JOIN  productname pm
+							 ON pm.`id` = gg.`productname_id`
+						 LEFT JOIN classname cate
+							 ON cate.`id` = pm.`classid`
+						 LEFT JOIN texture cz
+							 ON cz.`id` = ckmd.`caizhi`
+						 LEFT JOIN originarea cd
+							 ON cd.`id` = ckmd.`chandi`
+						 LEFT JOIN jsfs jjfs
+							 ON jjfs.`id` = ckmd.`jijiafangshi_id`
+						 LEFT JOIN storage store
+							 ON store.`id` = ckmd.`store_id`
+						 LEFT JOIN admin sys
+							 ON sys.`id` = ck.`create_operator_id`
+			WHERE ck.status!=1 and ck.delete_time is null and ckmd.delete_time is null
+		 ) t
+where 1=1 
+";
+        if (!empty($params['customer_id'])) {
+            $sql .= ' and t.customer_id= ?';
+            $sqlParams[] = $params['customer_id'];
+        }
+        if (!empty($params['ywsjStart'])) {
+            $sql .= ' and t.ywTime >= ?';
+            $sqlParams[] = $ywsjStart;
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $sql .= ' and t.ywTime < ?';
+            $sqlParams[] = $ywsjEnd;
+        }
+        if (!empty($params['status'])) {
+            $sql .= ' and t.status = ?';
+            $sqlParams[] = $params['status'];
+        }
+        if (!empty($params['djlx'])) {
+            $sql .= ' and t.danju_leixing like ?';
+            $sqlParams[] = '%' . $params['djlx'] . '%';
+        }
+        if (!empty($params['group_id'])) {
+            $sql .= ' and t.bu_men = ?';
+            $sqlParams[] = $params['group_id'];
+        }
+        if (!empty($params['yewuyuan'])) {
+            $sql .= ' and t.yewu_yuan like ?';
+            $sqlParams[] = '%' . $params['yewuyuan'] . '%';
+        }
+        if (!empty($params['system_no'])) {
+            $sql .= ' and t.bian_hao like ?';
+            $sqlParams[] = '%' . $params['system_no'] . '%';
+        }
+        $sql.=" order by t.zbid,t.ywTime)";
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('ywTime')->paginate($pageLimit);
+        return returnSuc($data);
+    }
 }
