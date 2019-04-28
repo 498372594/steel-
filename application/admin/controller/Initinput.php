@@ -9,6 +9,7 @@ use app\admin\model\{Bank,
     InitYsfk,
     InitYsfkMx,
     InitYskp,
+    InitYskpMx,
     Instoragelist,
     KcRk,
     KcSpot,
@@ -69,7 +70,7 @@ class Initinput extends Right
     public function initbank()
     {
         $params = request()->param();
-        $list = $list = InitBank::where('companyid', $this->getCompanyId());
+        $list = InitBank::where('companyid', $this->getCompanyId());
         $list = $this->getinitsearch($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
@@ -706,7 +707,7 @@ class Initinput extends Right
             }
             $ysfp->status = 1;
             $ysfp->save();
-            $list = InitYsfpMx::where("ysfp_id", $ysfp["id"])->select();
+            $list = InitYskpMx::where("ysfp_id", $ysfp["id"])->select();
 
             foreach ($list as $mx) {
                 (new \app\admin\model\Inv())->deleteInv($mx["id"], 1);
@@ -735,7 +736,7 @@ class Initinput extends Right
             }
             $ysfp->status = 1;
             $ysfp->save();
-            $list = InitYsfpMx::where("ysfp_id", $ysfp["id"])->select();
+            $list = InitYskpMx::where("ysfp_id", $ysfp["id"])->select();
 
             foreach ($list as $mx) {
                 (new \app\admin\model\Inv())->deleteInv($mx["id"], 4);
