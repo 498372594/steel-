@@ -664,7 +664,7 @@ class Initinput extends Right
             }
             $ysfp->status = 1;
             $ysfp->save();
-            $list = \app\admin\model\InitYsfpMx::where("ysfp_id", $ysfp["id"])->select();
+            $list = \app\admin\model\InitYspMx::where("ysfp_id", $ysfp["id"])->select();
 
             foreach ($list as $mx) {
                 (new \app\admin\model\Inv())->deleteInv($mx["id"], 4);
