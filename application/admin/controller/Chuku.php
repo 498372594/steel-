@@ -2,9 +2,22 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{Jsfs, KcSpot, KucunCktz, StockOut, StockOutDetail, StockOutMd, ViewSpecification};
+use app\admin\model\{Jsfs,
+    KcSpot,
+    KucunCktz,
+    SalesorderDetails,
+    StockOut,
+    StockOutDetail,
+    StockOutMd,
+    ViewSpecification};
 use Exception;
-use think\{Db, exception\DbException, Request, response\Json};
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    db\Query,
+    exception\DbException,
+    Request,
+    response\Json};
 
 class Chuku extends Right
 {
@@ -370,6 +383,12 @@ class Chuku extends Right
         }
     }
 
+    /**
+     * 发货情况查询表
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     */
     public function fahuo(Request $request, $pageLimit = 10)
     {
         if (!$request->isGet()) {
@@ -383,6 +402,50 @@ class Chuku extends Right
         } catch (Exception $e) {
             return returnFail($e->getMessage());
         }
+    }
+
+    /**
+     * 发货明细清单
+     * @param string $system_number
+     * @return Json
+     * @throws DbException
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     */
+    public function mingxi($system_number = '')
+    {
+        $salesDeatils = SalesorderDetails::hasWhere('salesorder', ['system_no' => $system_number])->with([
+            'salesorder' => ['custom'],
+            'specification',
+            'jsfs',
+            'caizhiData',
+            'chandiData'
+        ])->select();
+
+        $stockOutMd = StockOutMd::with([
+            'stockOutData',
+            'spot',
+            'specification',
+            'caizhiData',
+            'chandiData',
+            'jsfs',
+            'storage'
+        ])
+            ->where('chuku_type', 4)
+            ->where('data_id', 'in', function (Query $query) use ($system_number) {
+                $query->name('SalesorderDetails')
+                    ->alias('salemx')
+                    ->join('__SALESORDER__ sale', 'sale.id=salemx.order_id')
+                    ->where('sale.delete_time', null)
+                    ->where('sale.status', '<>', 2)
+                    ->where('sale.system_no', $system_number)
+                    ->where('salemx.delete_time', null)
+                    ->field('salemx.id');
+            })->select();
+        return returnSuc([
+            'salesDetails' => $salesDeatils,
+            'stockOut' => $stockOutMd
+        ]);
     }
 
 }

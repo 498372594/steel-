@@ -1,4 +1,5 @@
 <?php
+
 namespace app\admin\model;
 
 use traits\model\SoftDelete;
@@ -24,5 +25,23 @@ class SalesorderDetails extends Base
     {
         return $this->belongsTo('Storage', 'storage_id', 'id')->cache(true, 60)
             ->field('id,storage')->bind(['storage_name' => 'storage']);
+    }
+
+    public function salesorder()
+    {
+        return $this->belongsTo('Salesorder', 'order_id', 'id')
+            ->field('id,ywsj,system_no,custom_id');//->bind(['xs_sale_id' => 'id', 'yw_time' => 'ywsj', 'system_number' => 'system_no','custom_id'=>'custom_id']);
+    }
+
+    public function caizhiData()
+    {
+        return $this->belongsTo('Texture', 'caizhi', 'id')->cache(true, 60)
+            ->field('id,texturename')->bind('texturename');
+    }
+
+    public function chandiData()
+    {
+        return $this->belongsTo('Originarea', 'chandi', 'id')->cache(true, 60)
+            ->field('id,originarea')->bind(['originarea_name'=>'originarea']);
     }
 }

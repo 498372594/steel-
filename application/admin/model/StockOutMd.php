@@ -13,6 +13,24 @@ class StockOutMd extends Base
     use SoftDelete;
     protected $autoWriteTimestamp = true;
 
+    public static function findCountsByDataId($dataId)
+    {
+        return self::alias('md')
+            ->join('__STOCK_OUT__ ck', 'ck.id=md.stock_out_id')
+            ->where('md.data_id', $dataId)
+            ->where('ck.status', '<>', 2)
+            ->max('md.counts');
+    }
+
+    public static function findZhongliangByDataId($dataId)
+    {
+        return self::alias('md')
+            ->join('__STOCK_OUT__ ck', 'ck.id=md.stock_out_id')
+            ->where('md.data_id', $dataId)
+            ->where('ck.status', '<>', 2)
+            ->max('md.zhongliang');
+    }
+
     public function specification()
     {
         return $this->belongsTo('ViewSpecification', 'guige_id', 'id')->cache(true, 60)
@@ -41,6 +59,24 @@ class StockOutMd extends Base
     public function mainData()
     {
         return $this->belongsTo('StockOut', 'stock_out_id', 'id');
+    }
+
+    public function stockOutData()
+    {
+        return $this->belongsTo('StockOut', 'sstock_out_id', 'id')
+            ->field('id')->bind(['kc_ck_id' => 'id']);
+    }
+
+    public function caizhiData()
+    {
+        return $this->belongsTo('Texture', 'caizhi', 'id')->cache(true, 60)
+            ->field('id,texturename')->bind('texturename');
+    }
+
+    public function chandiData()
+    {
+        return $this->belongsTo('Originarea', 'chandi', 'id')->cache(true, 60)
+            ->field('id,originarea')->bind(['originarea_name' => 'originarea']);
     }
 
     /**
@@ -133,24 +169,5 @@ class StockOutMd extends Base
         $md->save();
 
         (new KcSpot())->adjustSpotById($spotId, false, $md['counts'], $md['zhongliang'], $md['jijiafangshi_id'], $shuie);
-    }
-
-    public static function findCountsByDataId($dataId)
-    {
-        return self::alias('md')
-            ->join('__STOCK_OUT__ ck', 'ck.id=md.stock_out_id')
-            ->where('md.data_id', $dataId)
-            ->where('ck.status', '<>', 2)
-            ->max('md.counts');
-    }
-
-    public static function findZhongliangByDataId($dataId)
-    {
-        return self::alias('md')
-            ->join('__STOCK_OUT__ ck','ck.id=md.stock_out_id')
-            ->where('md.data_id',$dataId)
-            ->where('ck.status','<>',2)
-            ->max('md.zhongliang');
-
     }
 }
