@@ -370,4 +370,19 @@ class Chuku extends Right
         }
     }
 
+    public function fahuo(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $params = $request->param();
+        try {
+            $model = new StockOut();
+            $data = $model->fahuoqingkuang($params, $pageLimit);
+            return returnSuc($data);
+        } catch (Exception $e) {
+            return returnFail($e->getMessage());
+        }
+    }
+
 }
