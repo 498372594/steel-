@@ -215,7 +215,7 @@ class Zhifa extends Right
 
                 $xsmx = (new \app\admin\model\Salesorder())->insertMx($sale, $mx['id'], 2, $mx['guige_id'], $mx['caizhi'],
                     $mx['chandi'], $mx['store_id'], $mx['jijiafangshi_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['lingzhi'],
-                    $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
+                    $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'], $mx['jianzhong'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
                     $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId);
 
                 (new StockOut())->insertCkMxMd($ck, $spot['id'], $xsmx['id'], 4, $ms['yw_time'], $sale['system_no'],
