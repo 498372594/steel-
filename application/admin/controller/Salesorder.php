@@ -323,7 +323,7 @@ class Salesorder extends Right
                             $xs['system_no'], $xs['custom_id'], $mx['wuzi_id'], $mx['caizhi'], $mx['chandi'], $mx['jsfs_id'],
                             $mx['storage_id'], $mx['houdu'] ?? 0, $mx['width'] ?? 0, $mx['length'] ?? 0, $mx['jzs'], $mx['lingzhi'] ?? 0, $mx['num'], $mx['count'] ?? 0,
                             $mx['weight'], $mx['price'], $mx['total_fee'], $mx['tax_rate'] ?? 0, $mx['price_and_tax'], $mx['tax'],
-                            null, null, $cbPrice, '', $this->getAccount(), $this->getCompanyId());
+                            null, $mx['jianzhong'], $cbPrice, '', $this->getAccount(), $this->getCompanyId());
                     } else {
                         (new KucunCktz())->insertChukuTz($mx['id'], 4, $mx['wuzi_id'], $mx['caizhi'], $mx['chandi'],
                             $mx['jsfs_id'], $mx['storage_id'], $mx['houdu'] ?? '', $mx['length'] ?? '', $mx['width'] ?? 0, $mx['count'] ?? 0, $mx['num'],

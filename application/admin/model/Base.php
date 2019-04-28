@@ -24,7 +24,7 @@ class Base extends Model
         $types = $this->getFieldsType();
         if (!isset($this->type[$name]) && isset($types[$name])) {
             if (strpos($types[$name], 'decimal') !== false) {
-                $value = floatval($value);
+                $value = number_format($value, 2, '.', '');
             }
         }
         return $value;

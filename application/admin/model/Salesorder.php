@@ -16,6 +16,26 @@ class Salesorder extends Base
     use SoftDelete;
     protected $autoWriteTimestamp = true;
 
+    /**
+     * @param $dataId
+     * @param $moshiType
+     * @return array|false|PDOStatement|string|Model
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws Exception
+     * @throws ModelNotFoundException
+     */
+    public static function zuofeiSale($dataId, $moshiType)
+    {
+        $xs = self::where('data_id', $dataId)->where('ywlx', $moshiType)->find();
+        if (empty($xs)) {
+            throw new Exception("对象不存在");
+        }
+        $xs->status = 2;
+        $xs->save();
+        return $xs;
+    }
+
     public function details()
     {
         return $this->hasMany('SalesorderDetails', 'order_id', 'id');
@@ -158,7 +178,7 @@ class Salesorder extends Base
      * @return SalesorderDetails
      */
     public function insertMx(Salesorder $sale, $dataId, $moshiType, $guigeId, $caizhiId, $chandId, $storeId, $jijiafangshiId,
-                             $houdu, $kuandu, $changdu, $lingzhi, $jianshu, $zhijian, $counts, $zhongliang, $price, $sumPrice,
+                             $houdu, $kuandu, $changdu, $lingzhi, $jianshu, $zhijian, $counts, $zhongliang, $jianzhong, $price, $sumPrice,
                              $shuiPrice, $sumShuiPrice, $pihao, $beizhu, $chehao, $shuie, $companyId)
     {
         $trumpet = SalesorderDetails::where('order_id', $sale['id'])->max('trumpet');
@@ -186,6 +206,7 @@ class Salesorder extends Base
         $mx->car_no = $chehao;
         $mx->total_fee = $sumPrice;
         $mx->tax_rate = $shuiPrice;
+        $mx->jianzhong = $jianzhong;
 
         $mx->price_and_tax = $sumShuiPrice;
         $mx->storage_id = $storeId;
@@ -195,6 +216,15 @@ class Salesorder extends Base
         return $mx;
     }
 
+    /**
+     * @param $dataId
+     * @param $moshiType
+     * @return array|false|PDOStatement|string|Model
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws Exception
+     * @throws ModelNotFoundException
+     */
     public function deleteSale($dataId, $moshiType)
     {
         $xs = self::where('data_id', $dataId)->where('ywlx', $moshiType)->find();
@@ -205,17 +235,6 @@ class Salesorder extends Base
             $query->where('order_id', $xs['id']);
         });
         $xs->delete();
-        return $xs;
-    }
-
-    public static function zuofeiSale($dataId, $moshiType)
-    {
-        $xs = self::where('data_id', $dataId)->where('ywlx', $moshiType)->find();
-        if (empty($xs)) {
-            throw new Exception("对象不存在");
-        }
-        $xs->status = 2;
-        $xs->save();
         return $xs;
     }
 }

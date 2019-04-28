@@ -167,4 +167,46 @@ class Inv extends Right
         $data = $model->getYkfpHuizong($request->param(), $pageLimit);
         return returnSuc($data);
     }
+
+    /**
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function detailsYk(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $params = $request->param();
+        if (empty($params['customer_id'])) {
+            return returnFail('请选择客户');
+        }
+
+        $model = new \app\admin\model\Inv();
+        $data = $model->getYkfpMx($params, $pageLimit);
+        $data = $data->toArray();
+        $tmp = $data['data'];
+        foreach ($tmp as $i => &$item) {
+            if ($i == 0) {
+                $yue = empty($item['yue']) ? 0 : floatval($item['yue']);
+                $yue = number_format($yue, 2, '.', '');
+                $item['yue'] = $yue;
+            } else {
+                $bckpje = empty($item['kaipiao_jine']) ? 0 : floatval($item['kaipiao_jine']);
+                $bcjshj = empty($item['jiashui_heji']) ? 0 : floatval($item['jiashui_heji']);
+                $syue = empty($tmp[$i - 1]['yue']) ? 0 : floatval($tmp[$i - 1]['yue']);
+                $yue = $syue + $bcjshj - $bckpje;
+                $yue = number_format($yue, 2, '.', '');
+                $item['yue'] = $yue;
+            }
+            $item['danjia'] = empty($item['danjia']) ? '' : number_format($item['danjia'], 2, '.', '');
+            $item['zhong_liang'] = empty($item['zhong_liang']) ? '' : number_format($item['zhong_liang'], 2, '.', '');
+            $item['jiashui_heji'] = empty($item['jiashui_heji']) ? '' : number_format($item['jiashui_heji'], 2, '.', '');
+            $item['kaipiao_jine'] = empty($item['kaipiao_jine']) ? '' : number_format($item['kaipiao_jine'], 2, '.', '');
+        }
+        $data['data'] = $tmp;
+        return returnSuc($data);
+    }
 }

@@ -5,16 +5,62 @@ namespace app\admin\model;
 
 
 use Exception;
+use think\Db;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
 use think\db\Query;
 use think\exception\DbException;
+use think\Paginator;
 use traits\model\SoftDelete;
 
 class StockOut extends Base
 {
     use SoftDelete;
     protected $autoWriteTimestamp = true;
+    protected $allowOperator = [
+        '>',
+        '<',
+        '>=',
+        '<=',
+        '=',
+        '!='
+    ];
+
+    /**
+     * @param $dataId
+     * @param $chukuType
+     * @throws DbException
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public static function cancelChuku($dataId, $chukuType)
+    {
+        if (empty($dataId)) {
+            throw new Exception("请传入dataId");
+        }
+        if ("1" != $chukuType && "2" != $chukuType && "3" != $chukuType && "4" != $chukuType && "9" != $chukuType && "10" != $chukuType && "11" != $chukuType && "12" != $chukuType && "14" != $chukuType && "16" != $chukuType) {
+            throw new Exception("请传入匹配的出库类型[chukuType]");
+        }
+
+        $ck = self::where('data_id', $dataId)->where('chuku_type', $chukuType)->find();
+        if (empty($ck)) {
+            throw new Exception("对象不存在");
+        }
+
+        $ck->status = 2;
+        $ck->save();
+        $ckmd = StockOutMd::where('stock_out_id', $ck['id'])->select();
+        foreach ($ckmd as $md) {
+            $spot = KcSpot::get($md['kc_spot_id']);
+            $rkMd = KcRkMd::get($spot['rk_md_id']);
+
+            if ($md['out_mode'] == 2 && ($rkMd['counts'] != $spot['counts'] || $rkMd['zhongliang'] != $spot['zhongliang'])) {
+                throw new Exception("已经有出库信息!");
+            }
+            (new KcSpot())->adjustSpotById($md['kc_spot_id'], true, $md['counts'], $md['zhongliang'], $md['jijiafangsshi_id'], $md['tax']);
+        }
+    }
 
     public function addData()
     {
@@ -165,42 +211,6 @@ class StockOut extends Base
     /**
      * @param $dataId
      * @param $chukuType
-     * @throws DbException
-     * @throws DataNotFoundException
-     * @throws ModelNotFoundException
-     * @throws Exception
-     */
-    public static function cancelChuku($dataId, $chukuType)
-    {
-        if (empty($dataId)) {
-            throw new Exception("请传入dataId");
-        }
-        if ("1" != $chukuType && "2" != $chukuType && "3" != $chukuType && "4" != $chukuType && "9" != $chukuType && "10" != $chukuType && "11" != $chukuType && "12" != $chukuType && "14" != $chukuType && "16" != $chukuType) {
-            throw new Exception("请传入匹配的出库类型[chukuType]");
-        }
-
-        $ck = self::where('data_id', $dataId)->where('chuku_type', $chukuType)->find();
-        if (empty($ck)) {
-            throw new Exception("对象不存在");
-        }
-
-        $ck->status = 2;
-        $ck->save();
-        $ckmd = StockOutMd::where('stock_out_id', $ck['id'])->select();
-        foreach ($ckmd as $md) {
-            $spot = KcSpot::get($md['kc_spot_id']);
-            $rkMd = KcRkMd::get($spot['rk_md_id']);
-
-            if ($md['out_mode'] == 2 && ($rkMd['counts'] != $spot['counts'] || $rkMd['zhongliang'] != $spot['zhongliang'])) {
-                throw new Exception("已经有出库信息!");
-            }
-            (new KcSpot())->adjustSpotById($md['kc_spot_id'], true, $md['counts'], $md['zhongliang'], $md['jijiafangsshi_id'], $md['tax']);
-        }
-    }
-
-    /**
-     * @param $dataId
-     * @param $chukuType
      * @throws DataNotFoundException
      * @throws DbException
      * @throws ModelNotFoundException
@@ -240,5 +250,269 @@ class StockOut extends Base
         });
 
         $ck->delete();
+    }
+
+    /**
+     * 发货情况表
+     * @param $params
+     * @param $pageLimit
+     * @return Paginator
+     * @throws DbException
+     * @throws Exception
+     */
+    public function fahuoqingkuang($params, $pageLimit)
+    {
+        $sqlParams = [];
+        $sql = '(SELECT t.id,
+       t.zbid,
+       t.ywTime,
+       systemNumber,
+       t.status,
+       t.piaojuId,
+       t.piaojuName,
+       t.customerId,
+       t.customerName,
+       t.cangkuId,
+       t.cangkuName,
+       t.pinmingId,
+       t.pinmingName,
+       t.guigeId,
+       t.guigeName,
+       t.sfguigeId,
+       t.sfguigeName,
+       t.groupId,
+       t.caozuoyuanId,
+       t.caozuoyuan,
+       t.zhidanrenId,
+       t.zhidanren,
+       t.houdu,
+       t.kuandu,
+       t.changdu,
+       t.jijiafangshiId,
+       t.jijiafangshiname,
+       t.pici,
+       t.lingzhi,
+       t.jianshu,
+       t.counts,
+       t.zhongliang,
+       t.sflingzhi,
+       t.sfjianshu,
+       t.sfcounts,
+       t.sfzhongliang,
+       t.isFlag
+    FROM
+       (SELECT xsmx.`id`                                     id,
+               sale.`id`                                     zbid,
+               sale.ywsj                                ywTime,
+               sale.system_no                          systemNumber,
+               sale.`status`                                 STATUS,
+               pjlx.`id`                                     piaojuId,
+               pjlx.pjlx                                   piaojuName,
+               cus.`id`                                      customerId,
+               cus.custom                                    customerName,
+               st.`id`                                       cangkuId,
+               st.storage                                     cangkuName,
+               guige.productname_id                                       pinmingId,
+               guige.productname                          pinmingName,
+               guige.id                                      guigeId,
+               guige.specification                                 guigeName,
+               sfguige.id                                    sfguigeId,
+               GROUP_CONCAT(sfguige.specification) sfguigeName,
+               sale.department                                    groupId,
+               oper.`id`                                     caozuoyuanId,
+               oper.name                             caozuoyuan,
+               sys.`id`                                      zhidanrenId,
+               sys.name                              zhidanren,
+               xsmx.`houdu`                                  houdu,
+               xsmx.width                                 kuandu,
+               xsmx.length                                changdu,
+               jjfs.`id`                                     jijiafangshiId,
+               jjfs.jsfs                                   jijiafangshiName,
+               xsmx.batch_no                                  pici,
+               xsmx.`lingzhi`                                lingzhi,
+               xsmx.num                                jianshu,
+               xsmx.`count`                                 counts,
+               xsmx.`weight`                             zhongliang,
+               SUM(ckmd.`lingzhi`)                           sflingzhi,
+               SUM(ckmd.`jianshu`)                           sfjianshu,
+               SUM(ckmd.`counts`)                            sfcounts,
+               SUM(ckmd.`zhongliang`)                        sfzhongliang,
+               \'1\'                                           isFlag
+            FROM
+               salesorder_details xsmx
+                   INNER JOIN salesorder sale ON sale.`id` = xsmx.order_id
+                   INNER JOIN stock_out_md ckmd ON ckmd.`data_id` = xsmx.`id`
+                   INNER JOIN stock_out ck ON ck.id = ckmd.stock_out_id
+                   LEFT JOIN view_specification guige ON guige.`id` = xsmx.`wuzi_id`
+                   LEFT JOIN view_specification sfguige ON sfguige.`id` = ckmd.`guige_id`
+                   LEFT JOIN jsfs jjfs ON xsmx.jsfs_id = jjfs.`id`
+                   LEFT JOIN pjlx ON pjlx.`id` = sale.pjlx
+                   LEFT JOIN custom cus ON cus.`id` = sale.`custom_id`
+                   LEFT JOIN storage st ON st.`id` = xsmx.storage_id
+                   LEFT JOIN admin sys ON sys.`id` = sale.add_id
+                   LEFT JOIN admin oper ON oper.`id` = sale.employer
+            where
+               xsmx.delete_time is null
+                   and sale.delete_time is null
+                   and ck.delete_time is null
+                   and ckmd.delete_time is null
+            GROUP BY
+               xsmx.`id`
+            UNION ALL
+            SELECT
+               qtmx.`id`                                     id,
+               ckqt.`id`                                     zbid,
+               ckqt.`yw_time`                                ywTime,
+               ckqt.`system_number`                          systemNumber,
+               ckqt.`status`                                 STATUS,
+               pjlx.`id`                                     piaojuId,
+               pjlx.pjlx                                   piaojuName,
+               cus.`id`                                      customerId,
+               cus.custom                                    customerName,
+               st.`id`                                       cangkuId,
+               st.storage                                     cangkuName,
+               guige.productname_id                                       pinmingId,
+               guige.productname                                     pinmingName,
+               guige.id                                      guigeId,
+               guige.specification                                 guigeName,
+               sfguige.id                                    sfguigeId,
+               GROUP_CONCAT(sfguige.specification) sfguigeName,
+               ckqt.department                                   groupId,
+               oper.`id`                                     caozuoyuanId,
+               oper.name                             caozuoyuan,
+               sys.`id`                                      zhidanrenId,
+               sys.name                              zhidanren,
+               qtmx.`houdu`                                  houdu,
+               qtmx.`kuandu`                                 kuandu,
+               qtmx.`changdu`                                changdu,
+               jjfs.`id`                                     jijiafangshiId,
+               jjfs.jsfs                                   jijiafangshiName,
+               qtmx.`pihao`                                  pici,
+               qtmx.`lingzhi`                                lingzhi,
+               qtmx.`jianshu`                                jianshu,
+               qtmx.`counts`                                 counts,
+               qtmx.`zhongliang`                             zhongliang,
+               SUM(ckmd.`lingzhi`)                           sflingzhi,
+               SUM(ckmd.`jianshu`)                           sfjianshu,
+               SUM(ckmd.`counts`)                            sfcounts,
+               SUM(ckmd.`zhongliang`)                        sfzhongliang,
+               \'2\'                                           isFlag
+            FROM
+               stock_other_out ckqt
+                   INNER JOIN stock_other_out_details qtmx                   ON ckqt.id = qtmx.stock_other_out_id
+                   INNER JOIN stock_out_md ckmd                   ON ckmd.`data_id` = qtmx.`id`
+                   INNER JOIN stock_out ck                   ON ck.id = ckmd.stock_out_id
+                   LEFT JOIN view_specification guige                   ON guige.`id` = qtmx.`guige_id`
+                   LEFT JOIN view_specification sfguige                   ON sfguige.`id` = ckmd.`guige_id`
+                   LEFT JOIN jsfs jjfs                   ON qtmx.`jijiafangshi_id` = jjfs.`id`
+                   LEFT JOIN  pjlx                   ON pjlx.`id` = ckqt.`piaoju_id`
+                   LEFT JOIN custom cus                   ON cus.`id` = ckqt.`customer_id`
+                   LEFT JOIN storage st                   ON st.`id` = qtmx.`store_id`
+                   LEFT JOIN admin sys                   ON sys.`id` = ckqt.`create_operator_id`
+                   LEFT JOIN admin oper                   ON oper.`id` = ckqt.`sale_operator_id`
+            where
+               ckqt.delete_time is null and qtmx.delete_time is null
+                   and ck.delete_time is null and ckmd.delete_time is null
+            GROUP BY
+               qtmx.`id`) t
+    where
+       1 = 1';
+        if (!empty($params['ywsjStart'])) {
+            $sql .= 'AND  t.ywTime  >=   ?';
+            $sqlParams[] = $params['ywsjStart'];
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $sql .= 'AND t.ywtime  <  ?';
+            $sqlParams[] = date('Y-m-d H:i:s', strtotime($params['ywsjEnd'] . ' +1 day'));
+        }
+        if (!empty($params['system_number'])) {
+            $sql .= 'AND t.systemNumber LIKE ?';
+            $sqlParams[] = '%' . $params['system_number'] . '%';
+        }
+        if (!empty($params['status'])) {
+            $sql .= ' AND t.status = ?';
+            $sqlParams[] = $params['status'];
+        }
+        if (!empty($params['piaoju_id'])) {
+            $sql .= ' AND t.piaojuId = ?';
+            $sqlParams[] = $params['piaoju_id'];
+        }
+        if (!empty($params['customer_id'])) {
+            $sql .= ' AND t.customerId = ?';
+            $sqlParams[] = $params['customer_id'];
+        }
+        if (!empty($params['store_id'])) {
+            $sql .= ' AND t.cangkuId = ?';
+            $sqlParams[] = $params['store_id'];
+        }
+        if (!empty($params['pinming_id'])) {
+            $sql .= 'AND t.pinmingId = ?';
+            $sqlParams[] = $params['pinming_id'];
+        }
+        if (!empty($params['guige_id'])) {
+            $sql .= ' AND t.guigeId = ?';
+            $sqlParams[] = $params['guige_id'];
+        }
+        if (!empty($params['department'])) {
+            $sql .= ' AND t.groupId = ?';
+            $sqlParams[] = $params['department'];
+        }
+        if (!empty($params['employer'])) {
+            $sql .= ' AND t.caozuoyuanId = ?';
+            $sqlParams[] = $params['employer'];
+        }
+        if (!empty($params['create_operator_id'])) {
+            $sql .= ' AND t.zhidanrenId = ?';
+            $sqlParams[] = $params['create_operator_id'];
+        }
+        if (!empty($params['bjcounts'])) {
+            if (!in_array($params['bjcounts'], $this->allowOperator)) {
+                throw new Exception('不是允许的操作符');
+            }
+            $sql .= ' AND  t.sfcounts ' . $params['bjcounts'] . ' t.counts';
+        }
+        if (!empty($params['bjzhongliang'])) {
+            if (!in_array($params['bjzhongliang'], $this->allowOperator)) {
+                throw new Exception('不是允许的操作符');
+            }
+            $sql .= ' AND t.sfzhongliang ' . $params['bjzhongliang'] . ' t.zhongliang';
+        }
+        if (!empty($params['bjguige'])) {
+            if (!in_array($params['bjguige'], $this->allowOperator)) {
+                throw new Exception('不是允许的操作符');
+            }
+            $sql .= ' AND t.id in (
+                select tt.id from (
+                SELECT
+                xsmx.`id`
+                FROM salesorder_details xsmx INNER JOIN stock_out_md ckmd ON xsmx.`id`=ckmd.`data_id`
+                WHERE ckmd.guige_id ' . $params['bjguige'] . ' xsmx.guige_id
+                UNION ALL
+                SELECT
+                qtmx.`id`
+                FROM kc_qtck_mx qtmx INNER JOIN kc_ck_md ckmd ON qtmx.`id`=ckmd.`data_id`
+                WHERE ckmd.guige_id ' . $params['bjguige'] . ' qtmx.guige_id ) tt
+                )';
+        }
+        if (!empty($params['bjchangdu'])) {
+            if (!in_array($params['bjchangdu'], $this->allowOperator)) {
+                throw new Exception('不是允许的操作符');
+            }
+            $sql .= ' AND t.id in (
+                select tt.id from (
+                SELECT
+                xsmx.`id`
+                FROM salesorder_details xsmx INNER JOIN stock_out_md ckmd ON xsmx.`id`=ckmd.`data_id`
+                WHERE ckmd.changdu ' . $params['bjchangdu'] . ' xsmx.changdu
+                UNION ALL
+                SELECT
+                qtmx.`id`
+                FROM kc_qtck_mx qtmx INNER JOIN kc_ck_md ckmd ON qtmx.`id`=ckmd.`data_id`
+                WHERE ckmd.changdu ' . $params['bjchangdu'] . ' qtmx.changdu ) tt
+                )';
+        }
+        $sql .= ' )';
+        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('ywTime', 'desc')->paginate($pageLimit);
+        return $data;
     }
 }
