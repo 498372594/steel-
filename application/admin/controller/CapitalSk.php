@@ -243,28 +243,28 @@ class CapitalSk extends Right
                     if ($obj['hx_money'] > ($qt['money'] - $qt['hxmoney'])) {
                         throw new Exception("核销金额不能大于未核销金额");
                     }
-                    $obj['create_time'] = $qt['create_time'];
+                    $obj['create_time'] = $qt->getData('create_time');
                     $obj['cache_systemnumber'] = $qt['system_number'];
                     $obj['cache_ywtime'] = $qt['yw_time'];
                     $obj['sk_id'] = $sk['id'];
                     $obj['hj_money'] = $qt['money'];
                     $obj['hj_zhongliang'] = $qt['zhongliang'];
                     $obj['customer_id'] = $qt['customer_id'];
-                    (new CapitalOtherModel())->addMoney($qt['id'], $skhx['hx_money'], $skhx['hx_zhongliang']);
+                    (new CapitalOtherModel())->addMoney($qt['id'], $obj['hx_money'], $obj['hx_zhongliang']);
                 } elseif ($obj['skhx_type'] == 2) {
                     $fy = CapitalFy::get($obj['data_id']);
 
                     if ($obj['hx_money'] > ($fy['money'] - $fy['hxmoney'])) {
                         throw new Exception("核销金额不能大于未核销金额");
                     }
-                    $obj['create_time'] = $fy['create_time'];
+                    $obj['create_time'] = $fy->getData('create_time');
                     $obj['cache_systemnumber'] = $fy['system_number'];
                     $obj['cache_ywtime'] = $fy['yw_time'];
                     $obj['sk_id'] = $sk['id'];
                     $obj['hj_money'] = $fy['money'];
                     $obj['hj_zhongliang'] = $fy['zhongliang'];
                     $obj['customer_id'] = $fy['customer_id'];
-                    (new CapitalFy())->addMoney($fy['id'], $skhx['hx_money'], $skhx['hx_zhongliang']);
+                    (new CapitalFy())->addMoney($fy['id'], $obj['hx_money'], $obj['hx_zhongliang']);
                 } else {
                     $hk = CapitalHkModel::get($obj['data_id']);
                     if (!empty($hk)) {
@@ -278,16 +278,16 @@ class CapitalSk extends Right
                     } else {
                         $hk = CapitalHkModel::where('data_id', $obj['data_id'])->find();
                     }
-                    $obj['create_time'] = $hk['create_time'];
+                    $obj['create_time'] = $hk->getData('create_time');
                     $obj['cache_systemnumber'] = $hk['system_number'];
                     $obj['cache_ywtime'] = $hk['yw_time'];
                     $obj['sk_id'] = $sk['id'];
                     $obj['hj_money'] = $hk['money'];
                     $obj['hj_zhongliang'] = $hk['zhongliang'];
                     $obj['customer_id'] = $hk['customer_id'];
-                    (new CapitalHkModel())->addMoney($hk['id'], $skhx['hx_money'], $skhx['hx_zhongliang']);
+                    (new CapitalHkModel())->addMoney($hk['id'], $obj['hx_money'], $obj['hx_zhongliang']);
                 }
-                $skhx->data($obj)->allowField(true)->save(0);
+                $skhx->data($obj)->allowField(true)->save();
 
             }
             Db::commit();
@@ -379,7 +379,8 @@ class CapitalSk extends Right
         }
     }
 
-    public function getYingshouList(){
+    public function getYingshouList()
+    {
 
     }
 

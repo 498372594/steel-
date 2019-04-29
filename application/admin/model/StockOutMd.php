@@ -5,6 +5,7 @@ namespace app\admin\model;
 
 
 use Exception;
+use think\Db;
 use think\exception\DbException;
 use traits\model\SoftDelete;
 
@@ -77,6 +78,123 @@ class StockOutMd extends Base
     {
         return $this->belongsTo('Originarea', 'chandi', 'id')->cache(true, 60)
             ->field('id,originarea')->bind(['originarea_name' => 'originarea']);
+    }
+
+    public function getListByMxId($params, $pageLimit, $companyId)
+    {
+        $sqlParams = [];
+        $sql = '(SELECT
+    ckmd.id ,
+    rkmx.cache_customer,
+    cu.custom customerName,
+    ck.yw_time fh_yw_time,
+    ck.chuku_type,
+    spot.resource_number,
+    gg.productname_id,
+    gg.productname pinming_name,
+    ckmd.guige_id,
+    gg.specification guige_name,
+    ckmd.houdu,
+    ckmd.kuandu,
+    ckmd.changdu,
+    ckmd.caizhi,
+    cz.texturename caizhi_name,
+    ckmd.chandi,
+    cd.originarea chandi_name,
+    ckmd.jijiafangshi_id,
+    jjfs.jsfs jijiafangshi_name,
+    ckmd.lingzhi,
+    ckmd.jianshu,
+    ckmd.counts,
+    ckmd.zhongliang,
+    ckmd.cb_price,
+    ckmd.cb_shuie,
+    ckmd.tax_rate,
+    ckmd.cb_sum_shuiprice,
+    ckmd.store_id,
+    store.storage storeName,
+    rkmd.huohao,
+    rkmd.pihao,
+    rk.ruku_type,
+    rk.yw_time rk_yw_time,
+    CASE jf.jj_type
+        WHEN 1 THEN
+            spot.lisuan_jianzhong
+        WHEN 2 THEN
+            spot.guobang_jianzhong
+        END jianzhong,
+    ck.sale_operator_id,
+    op.name sale_operator_name,
+    sa.create_time
+FROM
+    stock_out_md ckmd
+        LEFT JOIN salesorder_details samx ON samx.id=ckmd.data_id
+        LEFT JOIN salesorder sa ON samx.order_id=sa.id
+        LEFT JOIN stock_out ck ON ck.id = ckmd.stock_out_id
+        LEFT JOIN pjlx ON pjlx.id=sa.pjlx
+        LEFT JOIN admin czy ON czy.id=sa.employer
+        LEFT JOIN admin op ON op.id = ck.sale_operator_id
+        LEFT JOIN kc_spot spot ON spot.id = ckmd.kc_spot_id
+        LEFT JOIN view_specification gg ON gg.id = ckmd.guige_id
+        LEFT JOIN texture cz ON cz.id = ckmd.caizhi
+        LEFT JOIN originarea cd ON cd.id = ckmd.chandi
+        LEFT JOIN storage store ON store.id = ckmd.store_id
+        LEFT JOIN jsfs jjfs ON jjfs.id = ckmd.jijiafangshi_id
+        LEFT JOIN kc_rk_md rkmd ON rkmd.id = spot.rk_md_id
+        LEFT JOIN kc_rk rk ON rkmd.kc_rk_id = rk.id
+        LEFT JOIN kc_rk_mx rkmx ON rk.id = rkmx.kc_rk_id
+        LEFT JOIN custom cu ON cu.`id` = rkmx.cache_customer
+        LEFT JOIN jsfs jf ON rkmd.jijiafangshi_id = jf.id
+        LEFT JOIN jsfs jj ON jj.`id` = spot.`jijiafangshi_id`
+where
+    ckmd.companyid=' . $companyId;
+        if (!empty($params['mx_id'])) {
+            $sql .= 'AND ckmd.data_id = ?';
+            $sqlParams[] = $params['mx_id'];
+        }
+        if (!empty($params['ywsjStart'])) {
+            $sql .= 'and sa.ywsj >= ?';
+            $sqlParams[] = $params['ywsjStart'];
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $sql .= 'and sa.ywsj <= ?';
+            $sqlParams[] = date('Y-m-d H:i:s', strtotime($params['ywsjEnd']));
+        }
+        if (!empty($params['system_number'])) {
+            $sql .= 'and sa.system_no like ?';
+            $sqlParams[] = '%' . $params['system_number'] . '%';
+        }
+        if (!empty($params['status']) && $params['status'] != -1) {
+            $sql .= 'and sa.status = ?';
+            $sqlParams[] = $params['status'];
+        }
+        if (!empty($params['customer_id'])) {
+            $sql .= 'and sa.custom_id = ?';
+            $sqlParams[] = $params['customer_id'];
+        }
+        if (!empty($params['piaoju_id'])) {
+            $sql .= 'and sa.pjlx = ?';
+            $sqlParams[] = $params['piaoju_id'];
+        }
+        if (!empty($params['employer'])) {
+            $sql .= 'and sa.employer = ?';
+            $sqlParams[] = $params['employer'];
+        }
+        if (!empty($params['department'])) {
+            $sql .= 'and sa.department = ?';
+            $sqlParams[] = $params['department'];
+        }
+        if (!empty($params['create_operator_id'])) {
+            $sql .= 'and ck.sale_operator_id = ';
+            $sqlParams[] = $params['create_operator_id'];
+        }
+        if (!empty($params['beizhu'])) {
+            $sql .= 'and sa.remark like ?';
+            $sqlParams[] = '%' . $params['beizhu'] . '%';
+        }
+        $sql .= ' GROUP BY ckmd.id)';
+        $data = Db::table($sql)->alias('t')->order('create_time', 'desc')->paginate($pageLimit);
+        return $data;
     }
 
     /**
