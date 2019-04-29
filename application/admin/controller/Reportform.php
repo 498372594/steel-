@@ -749,9 +749,9 @@ FROM
 		 ) t
 where 1=1 
 ";
-        if (!empty($params['customer_id'])) {
-            $sql .= ' and t.customer_id= ?';
-            $sqlParams[] = $params['customer_id'];
+        if (!empty($params['system_number'])) {
+            $sql .= ' and t.systemNumber= ?';
+            $sqlParams[] = $params['system_number'];
         }
         if (!empty($params['ywsjStart'])) {
             $sql .= ' and t.ywTime >= ?';
@@ -761,25 +761,57 @@ where 1=1
             $sql .= ' and t.ywTime < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        if (!empty($params['status'])) {
-            $sql .= ' and t.status = ?';
-            $sqlParams[] = $params['status'];
+        if (!empty($params['houdu_start'])) {
+            $sql .= ' and t.houdu >= ?';
+            $sqlParams[] = $params['houdu_start'];
         }
-        if (!empty($params['djlx'])) {
-            $sql .= ' and t.danju_leixing like ?';
-            $sqlParams[] = '%' . $params['djlx'] . '%';
+        if (!empty($params['houdu_end'])) {
+            $sql .= ' and t.houdu < ?';
+            $sqlParams[] = $params['houdu_end'];
         }
-        if (!empty($params['group_id'])) {
-            $sql .= ' and t.bu_men = ?';
-            $sqlParams[] = $params['group_id'];
+        if (!empty($params['width_start'])) {
+            $sql .= ' and t.kuandu >= ?';
+            $sqlParams[] = $params['width_start'];
         }
-        if (!empty($params['yewuyuan'])) {
-            $sql .= ' and t.yewu_yuan like ?';
-            $sqlParams[] = '%' . $params['yewuyuan'] . '%';
+        if (!empty($params['width_end'])) {
+            $sql .= ' and t.kuandu < ?';
+            $sqlParams[] = $params['width_end'];
         }
-        if (!empty($params['system_no'])) {
-            $sql .= ' and t.bian_hao like ?';
-            $sqlParams[] = '%' . $params['system_no'] . '%';
+        if (!empty($params['length_start'])) {
+            $sql .= ' and t.changdu >= ?';
+            $sqlParams[] = $params['length_start'];
+        }
+        if (!empty($params['length_end'])) {
+            $sql .= ' and t.changdu < ?';
+            $sqlParams[] = $params['length_end'];
+        }
+        if (!empty($params['resource_number'])) {
+            $sql .= ' and t.resourceNumber = ?';
+            $sqlParams[] = $params['resource_number'];
+        }
+        if (!empty($params['pinming'])) {
+            $sql .= ' and t.pinmingName = ?';
+            $sqlParams[] = $params['pinming'];
+        }
+        if (!empty($params['guige'])) {
+            $sql .= ' and t.guigeName = ?';
+            $sqlParams[] = $params['guige'];
+        }
+        if (!empty($params['cate'])) {
+            $sql .= ' and t.cate = ?';
+            $sqlParams[] = $params['cate'];
+        }
+        if (!empty($params['store_id'])) {
+            $sql .= ' and t.storeId = ?';
+            $sqlParams[] = $params['store_id'];
+        }
+        if (!empty($params['caizhi_id'])) {
+            $sql .= ' and t.caizhiId = ?';
+            $sqlParams[] = $params['caizhi_id'];
+        }
+        if (!empty($params['pihao'])) {
+            $sql .= ' and t.pihao = ?';
+            $sqlParams[] = $params['pihao'];
         }
         $sql.=" order by t.zbid,t.ywTime)";
         $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('ywTime')->paginate($pageLimit);

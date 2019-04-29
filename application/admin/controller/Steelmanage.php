@@ -4,6 +4,7 @@ namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
 use app\admin\model\Classname;
+use app\admin\model\Custom;
 use app\admin\model\Productname;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
@@ -481,9 +482,24 @@ class Steelmanage extends Right
      */
     public function custom()
     {
-        $list = model("custom")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        $params = request()->param();
+        $list = Custom::where('companyid', $this->getCompanyId());
+        if(!empty($params["other"])&&$params["other"]==1){
+            $list=$list->where("other",$params["other"]);
+        }
+        if(!empty($params["name"])){
+            $list=$list->where("name","like",'%' .$params["name"].'%');
+        }
+        if(!empty($params["iscustom"])&&$params["iscustom"]==1){
+            $list=$list->where("iscustom",$params["iscustom"]);
+        }
+        if(!empty($params["issupplier"])&&$params["issupplier"]==1){
+            $list=$list->where("issupplier",$params["issupplier"]);
+        }
+        $list = $this->getsearchcondition($params, $list)->paginate(10);
+        return returnRes(true, '', $list);
     }
+
 
     public function invcgsp()
     {
@@ -849,7 +865,7 @@ class Steelmanage extends Right
         }
     }
 
-    /**
+    /**票据类型列表
      * @return Json
      * @throws DbException
      */
@@ -859,7 +875,7 @@ class Steelmanage extends Right
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
-    /**
+    /**票据类型添加
      * @return Json
      * @throws DataNotFoundException
      * @throws DbException
@@ -891,9 +907,4 @@ class Steelmanage extends Right
             return returnRes($data, '无相关数据', $data);
         }
     }
-//    public function ceshi(){
-//        $list['value']=model("classname")->where("companyid",$this->getCompanyId())->field("classname")->select();
-//        return json($list);
-//    }
-
 }
