@@ -12,6 +12,53 @@ class CapitalFy extends Base
     use SoftDelete;
     protected $autoWriteTimestamp = true;
 
+    /**
+     * @param $id
+     * @param $money
+     * @param $zhongliang
+     * @throws DbException
+     */
+    public static function jianMoney($id, $money, $zhongliang)
+    {
+        $money = empty($money) ? 0 : $money;
+        $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
+        $obj = self::get($id);
+        if ($money != 0) {
+            $obj['hxmoney'] -= $money;
+        }
+        if ($zhongliang != 0) {
+            $obj['hxzhongliang'] -= $zhongliang;
+        }
+        $obj->save();
+    }
+
+    /**
+     * 作废费用单
+     * @param $dataId
+     * @param $type
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public static function invalidByDataIdAndType($dataId, $type)
+    {
+        $list = CapitalFyhx::where('data_id', $dataId)->where('fyhx_type', $type)->select();
+        foreach ($list as $hx) {
+            $fy = self::get($hx['cap_fy_id']);
+            if ($fy['fymx_create_type'] == 1) {
+                if ($fy['hxmoney'] > 0 || $fy['hxzhongliang'] > 0) {
+                    throw new Exception("已经有结算信息!");
+                }
+
+                $fy->status = 2;
+                $fy->save();
+            } else {
+                throw new Exception("已做费用单,禁止删除!");
+            }
+        }
+    }
+
     public function szmcData()
     {
         return $this->belongsTo('Paymenttype', 'shouzhimingcheng_id', 'id')->cache(true, 60)
@@ -34,6 +81,12 @@ class CapitalFy extends Base
     {
         return $this->belongsTo('Custom', 'customer_id', 'id')->cache(true, 60)
             ->field('id,custom')->bind(['dfdw_name' => 'custom']);
+    }
+
+    public function saleOperator()
+    {
+        return $this->belongsTo('Admin', 'sale_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['sale_operator_name' => 'name']);
     }
 
     public function details()
@@ -106,6 +159,89 @@ class CapitalFy extends Base
     }
 
     /**
+     * @param CapitalFy $fy
+     * @throws Exception
+     */
+    public function deleteFyMx(CapitalFy $fy)
+    {
+        if (empty($fy)) {
+            throw new Exception('未找到费用单');
+        }
+        if ($fy->fymx_create_type == 1) {
+            if ($fy->hxmoney > 0 || $fy->hxzhongliang > 0) {
+                throw new Exception("已经有结算信息!");
+            }
+
+            CapitalFyhx::destroy(function (Query $query) use ($fy) {
+                $query->where('cap_fy_id', $fy->id);
+            });
+
+            $fy->delete();
+        } else {
+            throw new Exception("已做过费用单禁止删除原单");
+        }
+    }
+
+    /**
+     * @param $id
+     * @param $beizhu
+     * @param $customerId
+     * @param $fangxiang
+     * @param $piaojuId
+     * @param $groupId
+     * @param $saleOperatorId
+     * @param $danjia
+     * @param $money
+     * @param $sumPrice
+     * @param $shuiPrice
+     * @param $shuie
+     * @param $zhongliang
+     * @param $shouzhiFenleiId
+     * @param $shouzhimingchengId
+     * @param $beizhu2
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public function updateFyMx($id, $beizhu, $customerId, $fangxiang, $piaojuId, $groupId, $saleOperatorId, $danjia,
+                               $money, $sumPrice, $shuiPrice, $shuie, $zhongliang, $shouzhiFenleiId, $shouzhimingchengId, $beizhu2)
+    {
+        $fy = CapitalFy::get($id);
+        if ($fy->hxmoney > 0 || $fy->hxzhongliang > 0) {
+            throw new Exception("已经有结算信息!");
+        }
+        $fy->customerId = $customerId;
+        if (empty($beizhu2)) {
+            $fy->beizhu = $beizhu;
+        } else {
+            $fy->beizhu = $beizhu2;
+        }
+        $fy->fang_xiang = $fangxiang;
+        $fy->danjia = $danjia;
+        $fy->piaoju_id = $piaojuId;
+        $fy->tax = $shuie;
+        $fy->price_and_tax = $sumPrice;
+        $fy->tax_rate = $shuiPrice;
+        $fy->money = $money;
+        $fy->shouzhifeilei_id = $shouzhiFenleiId;
+        $fy->shouzhimingcheng_id = $shouzhimingchengId;
+        $fy->zhongliang = $zhongliang;
+        $fy->group_id = $groupId;
+        $fy->sale_operator_id = $saleOperatorId;
+        $fy->save();
+
+        $fyhx = CapitalFyhx::where('cap_fy_id', $fy['id'])->find();
+        $fyhx->customerId = $customerId;
+        $fyhx->hx_money = $money;
+        $fyhx->heji_zhongliang = $zhongliang;
+        $fyhx->save();
+        (new Inv())->updateInv($fy['id'], 7, $fy['fang_xiang'], $fy['customer_id'], $fy['yw_time'], null,
+            null, null, null, null, $fy['piaoju_id'], null, $fy['zhongliang'],
+            $fy['danjia'], $fy['price_and_tax'], $fy['money'], $fy['tax_rate']);
+    }
+
+    /**
      * @param $dataId
      * @param $ywType
      * @param $fangxiang
@@ -174,89 +310,6 @@ class CapitalFy extends Base
         (new Inv())->insertInv($fy['id'], 7, $fy['fang_xiang'], null, null, null, null, null,
             $fy['piaoju_id'], null, $fy['system_number'], $fy['customer_id'], $fy['yw_time'], $fy['danjia'], $fy['tax_rate'], $fy['price_and_tax'], $fy['money'],
             $fy['zhongliang'], $companyId);
-    }
-
-    /**
-     * @param $id
-     * @param $beizhu
-     * @param $customerId
-     * @param $fangxiang
-     * @param $piaojuId
-     * @param $groupId
-     * @param $saleOperatorId
-     * @param $danjia
-     * @param $money
-     * @param $sumPrice
-     * @param $shuiPrice
-     * @param $shuie
-     * @param $zhongliang
-     * @param $shouzhiFenleiId
-     * @param $shouzhimingchengId
-     * @param $beizhu2
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
-     * @throws Exception
-     */
-    public function updateFyMx($id, $beizhu, $customerId, $fangxiang, $piaojuId, $groupId, $saleOperatorId, $danjia,
-                               $money, $sumPrice, $shuiPrice, $shuie, $zhongliang, $shouzhiFenleiId, $shouzhimingchengId, $beizhu2)
-    {
-        $fy = CapitalFy::get($id);
-        if ($fy->hxmoney > 0 || $fy->hxzhongliang > 0) {
-            throw new Exception("已经有结算信息!");
-        }
-        $fy->customerId = $customerId;
-        if (empty($beizhu2)) {
-            $fy->beizhu = $beizhu;
-        } else {
-            $fy->beizhu = $beizhu2;
-        }
-        $fy->fang_xiang = $fangxiang;
-        $fy->danjia = $danjia;
-        $fy->piaoju_id = $piaojuId;
-        $fy->tax = $shuie;
-        $fy->price_and_tax = $sumPrice;
-        $fy->tax_rate = $shuiPrice;
-        $fy->money = $money;
-        $fy->shouzhifeilei_id = $shouzhiFenleiId;
-        $fy->shouzhimingcheng_id = $shouzhimingchengId;
-        $fy->zhongliang = $zhongliang;
-        $fy->group_id = $groupId;
-        $fy->sale_operator_id = $saleOperatorId;
-        $fy->save();
-
-        $fyhx = CapitalFyhx::where('cap_fy_id', $fy['id'])->find();
-        $fyhx->customerId = $customerId;
-        $fyhx->hx_money = $money;
-        $fyhx->heji_zhongliang = $zhongliang;
-        $fyhx->save();
-        (new Inv())->updateInv($fy['id'], 7, $fy['fang_xiang'], $fy['customer_id'], $fy['yw_time'], null,
-            null, null, null, null, $fy['piaoju_id'], null, $fy['zhongliang'],
-            $fy['danjia'], $fy['price_and_tax'], $fy['money'], $fy['tax_rate']);
-    }
-
-    /**
-     * @param CapitalFy $fy
-     * @throws Exception
-     */
-    public function deleteFyMx(CapitalFy $fy)
-    {
-        if (empty($fy)) {
-            throw new Exception('未找到费用单');
-        }
-        if ($fy->fymx_create_type == 1) {
-            if ($fy->hxmoney > 0 || $fy->hxzhongliang > 0) {
-                throw new Exception("已经有结算信息!");
-            }
-
-            CapitalFyhx::destroy(function (Query $query) use ($fy) {
-                $query->where('cap_fy_id', $fy->id);
-            });
-
-            $fy->delete();
-        } else {
-            throw new Exception("已做过费用单禁止删除原单");
-        }
     }
 
     /**
@@ -337,26 +390,6 @@ class CapitalFy extends Base
     }
 
     /**
-     * @param $id
-     * @param $money
-     * @param $zhongliang
-     * @throws DbException
-     */
-    public static function jianMoney($id, $money, $zhongliang)
-    {
-        $money = empty($money) ? 0 : $money;
-        $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
-        $obj = self::get($id);
-        if ($money != 0) {
-            $obj['hxmoney'] -= $money;
-        }
-        if ($zhongliang != 0) {
-            $obj['hxzhongliang'] -= $zhongliang;
-        }
-        $obj->save();
-    }
-
-    /**
      * @param $dataId
      * @param $type
      * @throws DataNotFoundException
@@ -381,33 +414,6 @@ class CapitalFy extends Base
             }
 
             $hx->delete();
-        }
-    }
-
-    /**
-     * 作废费用单
-     * @param $dataId
-     * @param $type
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
-     * @throws Exception
-     */
-    public static function invalidByDataIdAndType($dataId, $type)
-    {
-        $list = CapitalFyhx::where('data_id', $dataId)->where('fyhx_type', $type)->select();
-        foreach ($list as $hx) {
-            $fy = self::get($hx['cap_fy_id']);
-            if ($fy['fymx_create_type'] == 1) {
-                if ($fy['hxmoney'] > 0 || $fy['hxzhongliang'] > 0) {
-                    throw new Exception("已经有结算信息!");
-                }
-
-                $fy->status = 2;
-                $fy->save();
-            } else {
-                throw new Exception("已做费用单,禁止删除!");
-            }
         }
     }
 }

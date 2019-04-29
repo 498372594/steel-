@@ -23,7 +23,7 @@ class CapitalOtherYf extends Right
         $data = $request->post();
         Db::startTrans();
         try {
-            $validate = new \app\admin\validate\CapitalOther();
+            $validate = new \app\admin\validate\CapitalOtherYf();
             if (!$validate->check($data)) {
                 throw new Exception($validate->getError());
             }

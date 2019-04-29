@@ -3,7 +3,7 @@
 namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
-use app\admin\model\{CapitalFy, CgPurchase, Classname, KcRk, KcRkTz, KcSpot};
+use app\admin\model\{CapitalFy, CgPurchase, Classname, KcRk, KcRkTz, KcSpot, Paymentclass};
 use app\admin\validate\{CgPurchaseMx};
 use Exception;
 use think\{Db,
@@ -691,7 +691,10 @@ class Purchase extends Right
     public function getpaymentclass()
     {
         $type = request()->param("type");
-        $paymentclass = model("paymentclass")->field("id,name")->where("type", $type)->select();
+        $paymentclass = Paymentclass::field("id,name")
+            ->where('companyid',$this->getCompanyId())
+            ->where("type", $type)
+            ->select();
         return returnRes($paymentclass, "没有相关数据", $paymentclass);
     }
 

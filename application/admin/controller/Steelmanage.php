@@ -4,7 +4,10 @@ namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
 use app\admin\model\Classname;
+
 use app\admin\model\Custom;
+
+use app\admin\model\Paymenttype;
 use app\admin\model\Productname;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
@@ -240,21 +243,6 @@ class Steelmanage extends Right
     }
 
     /**
-     * @return Json
-     * @throws DbException
-     * @throws ModelNotFoundException
-     * @throws DataNotFoundException
-     */
-    public function getproduct()
-    {
-        $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
-        $menutree = new Tree($list);
-        $menulist = $menutree->leaf();
-        $digui = $this->productnamedigui($menulist);
-        return json($digui);
-    }
-
-    /**
      * @param $arr
      * @return mixed
      * @throws DbException
@@ -275,6 +263,21 @@ class Steelmanage extends Right
             }
         }
         return $arr;
+    }
+
+    /**
+     * @return Json
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws DataNotFoundException
+     */
+    public function getproduct()
+    {
+        $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
+        $menutree = new Tree($list);
+        $menulist = $menutree->leaf();
+        $digui = $this->productnamedigui($menulist);
+        return json($digui);
     }
 
     /**根据类名获取产品信息
@@ -822,7 +825,7 @@ class Steelmanage extends Right
     public function paymenttype()
     {
         $type = request()->param("type");
-        $list = model("paymenttype")->where(array("companyid" => $this->getCompanyId(), 'type' => $type))->paginate(10);
+        $list = Paymenttype::with('classData')->where(array("companyid" => $this->getCompanyId(), 'type' => $type))->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
 
@@ -836,9 +839,6 @@ class Steelmanage extends Right
     {
         if (request()->post()) {
             $data = request()->post();
-            $data['sort'] = request()->post("sort");
-            $data['add_name'] = $this->getAccount()['name'];
-            $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
                 if (!model("paymentclass")->where("name", $data['name'])->find()) {
                     $data1['name'] = $data['name'];
@@ -847,7 +847,7 @@ class Steelmanage extends Right
                     $data1['add_id'] = $this->getAccountId();
                     model("paymentclass")->allowField(true)->save($data1);
                 }
-                $data['sort'] = request()->post("sort");
+                $data['sort'] = request()->post("sort", 0);
                 $data['companyid'] = $this->getCompanyId();
                 $data['add_name'] = $this->getAccount()['name'];
                 $data['add_id'] = $this->getAccountId();

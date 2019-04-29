@@ -149,7 +149,9 @@ class Feiyong extends Signin
         $list = CapitalFy::with([
             'custom',
             'pjlxData',
+            'szflData',
             'szmcData',
+            'saleOperator'
         ])->where('companyid', $this->getCompanyId())
             ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {

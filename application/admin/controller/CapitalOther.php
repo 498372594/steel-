@@ -4,7 +4,6 @@
 namespace app\admin\controller;
 
 
-use app\admin\validate\CapitalOtherDetails;
 use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -110,72 +109,7 @@ class CapitalOther extends Right
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnRes(true, '', $data);
-        }
-    }
-
-    /**
-     * 添加其他费用单
-     * @param Request $request
-     * @return Json
-     * @throws \think\Exception
-     */
-    public function add(Request $request)
-    {
-        if (!$request->isPost()) {
-            return returnFail('请求方式错误');
-        }
-        $data = $request->post();
-        $companyid = $this->getCompanyId();
-        $count = \app\admin\model\CapitalOther::whereTime('create_time', 'today')
-                ->where('fangxiang', $data['fangxiang'])
-                ->where('companyid', $companyid)->count() + 1;
-
-        if ($data['fangxiang'] == 1) {
-            $systemNumber = 'QTYSK' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
-        } elseif ($data['fangxiang'] == 2) {
-            $systemNumber = 'QTYFK' . date('Ymd') . str_pad($count, 3, 0, STR_PAD_LEFT);
-        } else {
-            return returnFail('收付方向错误');
-        }
-
-        $data['companyid'] = $companyid;
-        $data['system_number'] = $systemNumber;
-        $data['create_operator_id'] = $this->getAccountId();
-        $validate = new \app\admin\validate\CapitalOther();
-        if (!$validate->check($data)) {
-            return returnFail($validate->getError());
-        }
-        Db::startTrans();
-        try {
-            $model = new \app\admin\model\CapitalOther();
-            $model->allowField(true)->data($data)->save();
-
-            $num = 1;
-            $detailsValidate = new CapitalOtherDetails();
-            $money = 0;
-            foreach ($data['details'] as $c => $v) {
-                $data['details'][$c]['companyid'] = $companyid;
-                $data['details'][$c]['cap_qt_id'] = $model->id;
-                if (!$detailsValidate->check($data['details'][$c])) {
-                    throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
-                }
-                $num++;
-                $money += $data['details'][$c]['money'];
-            }
-            (new \app\admin\model\CapitalOtherDetails())->allowField(true)->saveAll($data['details']);
-            $model->money = $money;
-            $model->save();
-
-            Db::commit();
-            return returnSuc();
-        } catch (Exception $e) {
-            Db::rollback();
-            return returnFail($e->getMessage());
-        }
+        return returnRes(true, '', $data);
     }
 
     /**
