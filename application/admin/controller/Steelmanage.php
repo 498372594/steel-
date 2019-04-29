@@ -491,7 +491,7 @@ class Steelmanage extends Right
             $list=$list->where("other",$params["other"]);
         }
         if(!empty($params["name"])){
-            $list=$list->where("name","like",'%' .$params["name"].'%');
+            $list=$list->where("custom","like",'%' .$params["name"].'%');
         }
         if(!empty($params["iscustom"])&&$params["iscustom"]==1){
             $list=$list->where("iscustom",$params["iscustom"]);
