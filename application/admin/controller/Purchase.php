@@ -36,9 +36,11 @@ class Purchase extends Right
             $updateList = [];
             $detailValidate = new CgPurchaseMx();
             $num = 1;
+//            dump($data['details']);die;
             foreach ($data['details'] as $item) {
                 if (!$detailValidate->check($item)) {
-                    return returnFail('请检查第' . $num . '行  ' . $data['details']);
+
+                    return returnFail('请检查第' . $num . '行  ' . $detailValidate->getError());
                 }
                 $item['caizhi'] = $this->getCaizhiId($item['caizhi_id']);
                 $item['chandi'] = $this->getChandiId($item['chandi_id']);
@@ -49,7 +51,9 @@ class Purchase extends Right
                 }
                 $num++;
             }
+
             $companyId = $this->getCompanyId();
+
             if (empty($data['id'])) {
                 $count = CgPurchase::whereTime('create_time', 'today')
                     ->where('companyid', $companyId)

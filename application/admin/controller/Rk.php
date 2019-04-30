@@ -2,7 +2,7 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{KcQtrk, KcQtrkMx, KcRkMd, KcRkMx, KcRkTz, KcSpot, ViewQingku};
+use app\admin\model\{KcQtrk, KcQtrkMx, KcRkMd, KcRkMx, KcRkTz, KcSpot, ViewKcrktz, ViewQingku};
 use app\admin\model\KcRk;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -72,7 +72,7 @@ class Rk extends Right
     {
         $params = request()->param();
 
-        $list = KcRkTz::with(['storage', 'pinmingData', 'caizhiData', 'chandiData'])->where('companyid', $this->getCompanyId());
+        $list = ViewKcrktz::with(['storage','customData','rukufangshiData'])->where('companyid', $this->getCompanyId());
         $list->where("jianshu", ">", 0)->where("lingzhi", ">", 0)->where("counts", ">", 0);
 
         if (!empty($params['ids'])) {
@@ -90,8 +90,8 @@ class Rk extends Right
         if (!empty($params['customer_id'])) {
             $list->where('customer_id', $params['customer_id']);
         }
-        if (!empty($params['pinming_id'])) {
-            $list->where('pinming_id', $params['pinming_id']);
+        if (!empty($params['pinming'])) {
+            $list->where('pinming', $params['pinming']);
         }
         if (!empty($params['system_number'])) {
             $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
@@ -99,8 +99,8 @@ class Rk extends Right
         if (!empty($params['cache_data_pnumber'])) {
             $list->where('cache_data_pnumber', 'like', '%' . $params['cache_data_pnumber'] . '%');
         }
-        if (!empty($params['guige_id'])) {
-            $list->where('guige_id', $params['guige_id']);
+        if (!empty($params['guige'])) {
+            $list->where('guige', $params['guige']);
         }
         if (!empty($params['cache_customer_id'])) {
             $list->where('cache_customer_id', $params['cache_customer_id']);
@@ -111,7 +111,7 @@ class Rk extends Right
         if (!empty($params['beizhu'])) {
             $list->where('remark', $params['remark']);
         }
-        if (!empty($params['zhongliang'])) {
+        if (!empty($params['zhongliang'])&&$params['zhongliang']) {
             $list->where("zhongliang", ">", 0);
         }
         $list = $list->paginate(10);
