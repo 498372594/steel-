@@ -78,11 +78,11 @@ class Rk extends Right
         if (!empty($params['ids'])) {
             $list->where("id", "in", $params['ids']);
         }
-        if (!empty($params['create_start'])) {
-            $list->where('cache_ywtime', '>=', $params['create_start']);
+        if (!empty($params['time_start'])) {
+            $list->where('cache_ywtime', '>=', $params['time_start']);
         }
-        if (!empty($params['create_end'])) {
-            $list->where('cache_ywtime', '<=', date('Y-m-d', strtotime($params['create_end'] . ' +1 day')));
+        if (!empty($params['time_end'])) {
+            $list->where('cache_ywtime', '<=', date('Y-m-d', strtotime($params['time_end'] . ' +1 day')));
         }
         if (!empty($params['store_id'])) {
             $list->where('store_id', $params['store_id']);
