@@ -3,12 +3,17 @@
 namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
+use app\admin\model\Bank;
 use app\admin\model\Classname;
-
 use app\admin\model\Custom;
-
+use app\admin\model\Jianzhishu;
+use app\admin\model\Jiesuanfangshi;
 use app\admin\model\Paymenttype;
+use app\admin\model\Pjlx;
 use app\admin\model\Productname;
+use app\admin\model\Storage;
+use app\admin\model\Texture;
+use app\admin\model\Unit;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
 use think\db\Query;
@@ -27,7 +32,7 @@ class Steelmanage extends Right
     public function classname()
     {
         $list = model("classname")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -84,27 +89,65 @@ class Steelmanage extends Right
                 $re = model("classname")->where("pid", 'in', $ids)->count();
                 if ($re > 0) {
                     return returnFail('该类存在子分类');
-                } else {
-                    Classname::destroy(function (Query $query) use ($ids) {
-                        $query->where('id', 'in', $ids);
-                    });
-//                    $result = model("$model")->where($where)->update(array("delete_time" => date("Y-m-d H:i:s")));
-                    return returnSuc();
-//                    return returnRes($result, '删除失败');
                 }
+                Classname::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
                 break;
             case 'productname':
                 Productname::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
-                return returnSuc();
+                break;
+            case 'texture':
+                Texture::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'jianzhishu':
+                Jianzhishu::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'unit':
+                Unit::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'custom':
+                Custom::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'storage':
+                Storage::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'bank':
+                Bank::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'jiesuanfangshi':
+                Jiesuanfangshi::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'pjlx':
+                Pjlx::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'paymenttype':
+                Paymenttype::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
                 break;
             default:
-                $result = model("$model")->where($where)->update(array("delete_time" => date("Y-m-d H:i:s")));
-                return returnRes($result, '删除失败');
-
+                return returnFail('参数错误');
         }
-
+        return returnSuc();
     }
 
     /**
@@ -129,7 +172,7 @@ class Steelmanage extends Right
             ->where($where)
             ->field("a.*,b.classname")
             ->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -312,7 +355,7 @@ class Steelmanage extends Right
     public function texture()
     {
         $list = model("texture")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -355,7 +398,7 @@ class Steelmanage extends Right
     public function jianzhishu()
     {
         $list = model("jianzhishu")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**添加件支数
@@ -399,7 +442,7 @@ class Steelmanage extends Right
     public function unit()
     {
         $list = model("unit")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -487,20 +530,20 @@ class Steelmanage extends Right
     {
         $params = request()->param();
         $list = Custom::where('companyid', $this->getCompanyId());
-        if(!empty($params["other"])&&$params["other"]==1){
-            $list=$list->where("other",$params["other"]);
+        if (!empty($params["other"]) && $params["other"] == 1) {
+            $list = $list->where("other", $params["other"]);
         }
-        if(!empty($params["name"])){
-            $list=$list->where("custom","like",'%' .$params["name"].'%');
+        if (!empty($params["name"])) {
+            $list = $list->where("custom", "like", '%' . $params["name"] . '%');
         }
-        if(!empty($params["iscustom"])&&$params["iscustom"]==1){
-            $list=$list->where("iscustom",$params["iscustom"]);
+        if (!empty($params["iscustom"]) && $params["iscustom"] == 1) {
+            $list = $list->where("iscustom", $params["iscustom"]);
         }
-        if(!empty($params["issupplier"])&&$params["issupplier"]==1){
-            $list=$list->where("issupplier",$params["issupplier"]);
+        if (!empty($params["issupplier"]) && $params["issupplier"] == 1) {
+            $list = $list->where("issupplier", $params["issupplier"]);
         }
         $list = $this->getsearchcondition($params, $list)->paginate(10);
-        return returnRes(true, '', $list);
+        return returnSuc($list);
     }
 
 
@@ -782,7 +825,7 @@ class Steelmanage extends Right
     public function jiesuanfangshi()
     {
         $list = model("jiesuanfangshi")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -865,17 +908,19 @@ class Steelmanage extends Right
         }
     }
 
-    /**票据类型列表
+    /**
+     * 票据类型列表
      * @return Json
      * @throws DbException
      */
     public function pjlx()
     {
         $list = model("pjlx")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
-    /**票据类型添加
+    /**
+     * 票据类型添加
      * @return Json
      * @throws DataNotFoundException
      * @throws DbException
