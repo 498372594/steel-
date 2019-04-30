@@ -448,7 +448,7 @@ class Chuku extends Right
         ]);
     }
 
-    public function chengben(Request $request, $pageLimit)
+    public function chengben(Request $request, $pageLimit = 10)
     {
         $params = $request->post();
         $md = (new StockOutMd())->getListByMxId($params, $pageLimit, $this->getCompanyId());
