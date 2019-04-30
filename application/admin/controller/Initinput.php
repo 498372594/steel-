@@ -166,7 +166,7 @@ class Initinput extends Right
             $count = \app\admin\model\Salesorder::whereTime('create_time', 'today')->count();
             $data = request()->post();
             $data["status"] = 0;
-            $data['create_operator_name'] = $this->getAccount()['name'];
+
             $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_number'] = 'XJYHYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
@@ -242,7 +242,147 @@ class Initinput extends Right
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
-
+//public function kcadd()
+//{
+//    if (!request()->isPost()) {
+//        return returnFail('请求方式错误');
+//    }
+//
+//    Db::startTrans();
+//    try {
+//        $data = request()->post();
+//
+//        $validate = new \app\admin\validate\InitKc();
+//        if (!$validate->check($data)) {
+//            throw new Exception($validate->getError());
+//        }
+//        $addMxList = [];
+//        $updateMxList = [];
+//        $ja = $data['details'];
+//        $companyId = $this->getCompanyId();
+//        if (!empty($ja)) {
+//            foreach ($ja as $object) {
+//                $object['companyid'] = $companyId;
+//                if (empty($object['id'])) {
+//                    $addMxList[] = $object;
+//                } else {
+//                    $updateMxList[] = $object;
+//                }
+//            }
+//        }
+//        if (!empty($ja)) {
+//            foreach ($ja as $object) {
+//                if (empty($object['zhongliang'])) {
+//                    throw new Exception("重量不能为空");
+//                }
+//
+//                if (empty($object['id'])) {
+//                    $addMdList[] = $object;
+//                } else {
+//                    $updateMdList[] = $object;
+//                }
+//            }
+//        }
+//        if (empty($data["id"])) {
+//
+//            $count = KcRk::whereTime('create_time', 'today')
+//                ->where('companyid', $companyId)
+//                ->count();
+//            $data['companyid'] = $companyId;
+//            $data['yw_time'] = date("Y-m-d H:s:i",time());
+//            $data['system_number'] = 'KCQCYE' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+//            $data['create_operator_id'] = $this->getAccountId();
+////            $data['ruku_fangshi'] = 2;
+//            $data['ruku_type'] = 8;
+//            $ck = new InitKc();
+//            $ck->allowField(true)->data($data)->save();
+//            $rk=new KcRk();
+//            $rk->insertRuku($ck["id"],8,$ck["yw_time"],$ck["group_id"],$data["system_number"],$data["sale_operator_id"],$this->getAccountId(),$companyId);
+//        } else {
+//            throw new Exception('入库单禁止修改');
+////                  rk = (TbKcRk)getDao() . selectByPrimaryKey(id);
+////            if (rk == null) {
+////                throw new Exception("对象不存在");
+////            }
+////             if (!rk . getUserId() . equals(rk . getUserId())) {
+////                 throw new Exception("对象不存在");
+////             }
+////             if ("1" . equals(rk . getStatus())) {
+////
+////                 throw new Exception("该单据已经作废");
+////             }
+////            if (rk . getDataId() != null) {
+////                throw new Exception("当前单据是只读单据,请到关联单据修改");
+////            }
+////            rk . setBeizhu(beizhu);
+////             rk . setCustomerId(gysId);
+////                rk . setGroupId(group);
+////              rk . setSaleOperatorId(saleOperator);
+////                 rk . setUpdateOperatorId(su . getId());
+////                rk . setYwTime(DateUtil . parseDate(ywTime, "yyyy-MM-dd HH:mm:ss"));
+////               getDao() . updateByPrimaryKeySelective(rk);
+//        }
+//        if (!empty($data['delete_mx_ids'])) {
+//            throw new Exception('入库单禁止修改');
+//        }
+////            for (TbKcRkMx_Ex mx : deleteList)
+////     {
+////         TbKcRkMx mx1 = (TbKcRkMx)this.mxDao.selectByPrimaryKey(mx.getId());
+////       mx1.setId(mx.getId());
+////       mx1.setIsDelete("1");
+////       this.mxDao.updateByPrimaryKeySelective(mx1);
+////
+////       Example e = new Example(TbKcRkMd.class);
+////       e.selectProperties(new String[] { "id", "counts", "zhongliang", "kcRkTzId" });
+////       e.createCriteria().andCondition("ruku_mx_id=", mx.getId());
+////       List<TbKcRkMd> mdList = this.mdDao.selectByExample(e);
+////       TbKcRkMd md1 = (TbKcRkMd)mdList.get(0);
+////       md1.setIsDelete("1");
+////       this.mdDao.updateByPrimaryKeySelective(md1);
+////
+////       this.spotDao.deleteSpotByRkMd(md1.getId());
+////
+////       this.rkTzDaoImpl.addTzById(md1.getKcRkTzId(), md1.getCounts(), md1.getZhongliang(), zt);
+////     }
+//        if (!empty($addMxList)) {
+//            $addNumberCount = empty($data['id']) ? 0 : KcRkMx::where('kc_rk_id', $rk['id'])->max('system_number');
+//            foreach ($addMxList as $mjo) {
+//                if (!empty($mjo["rktz_id"])) {
+//                    $tz = KcRkTz::get($mjo['rktz_id']);
+//                    if (!empty($tz)) {
+//                        $addNumberCount++;
+//                        $mjo['kc_rk_id'] = $rk['id'];
+//                        $mjo['kc_rk_tz_id'] = $tz['id'];
+//                        $mjo['ruku_fangshi'] = 2;
+//                        $mjo['cache_yw_time'] = $tz['cache_ywtime'];
+//                        $mjo['cache_data_pnumber'] = $tz['cache_data_pnumber'];
+//                        $mjo['cache_data_number'] = $tz['cache_data_number'];
+//                        $mjo['cache_customer'] = $tz['cache_customer_id'];
+//                        $mjo['data_id'] = $tz['data_id'];
+//                        $mjo['pinming_id'] = $tz['pinming_id'];
+//                        $mjo['guige_id'] = $tz['guige_id'];
+//                        $mjo['caizhi_id'] = $tz['caizhi_id'];
+//                        $mjo['chandi_id'] = $tz['chandi_id'];
+//                        $mjo['jijiafangshi_id'] = $tz['jijiafangshi_id'];
+//                        $mjo['store_id'] = $tz['store_id'];
+//                        $mjo['cache_create_operator'] = $tz['cache_create_operator'];
+//                        $mjo['changdu'] = $tz['changdu'];
+//                        $mjo['houdu'] = $tz['houdu'];
+//                        $mjo['kuandu'] = $tz['kuandu'];
+//                        $mjo['lingzhi'] = $tz['lingzhi'];
+//                        $mjo['jianshu'] = $tz['jianshu'];
+//                        $mjo['counts'] = $tz['counts'];
+//                        $mjo['zhongliang'] = $tz['zhongliang'];
+//
+//                    }
+//                }
+//            }
+//        }
+//    } catch (Exception $e) {
+//        Db::rollback();
+//        return returnFail($e->getMessage());
+//    }
+//}
     /**
      * 库存初始化录入
      * @param array $data
@@ -250,7 +390,7 @@ class Initinput extends Right
      * @return string|Json
      * @throws \Exception
      */
-    public function addkc($data = [], $return = false)
+    public function addkc($return = false)
     {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
@@ -310,7 +450,7 @@ class Initinput extends Right
                         'pihao' => $v['pihao'] ?? '',
                         'sumprice' => $v['sumprice'] ?? '',
                         'huohao' => $v['huohao'] ?? '',
-                        'customer_id' => $data['customer_id'],
+                        'customer_id' => null,
                         'mizhong' => $v['mizhong'] ?? '',
                         'jianzhong' => $v['jianzhong'] ?? '',
                         'lisuan_zhongliang' => $v["counts"] * $v["changdu"] * $v['mizhong'] / 1000,
