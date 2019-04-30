@@ -144,7 +144,7 @@ class Reportform extends Right
 		LEFT JOIN kc_rk_mx rkmx
 		ON rkmx.data_id = mx.id
 		left join kc_rk rk on rk.id=rkmx.kc_rk_id
-		WHERE  rk.status !=1
+		WHERE  rk.status !=1  and mx.companyid=".$this->getCompanyId()."
 		AND (
 		mx.zhongliang - IFNULL(rkmx.zhongliang, 0)
 		) != 0
@@ -494,7 +494,7 @@ FROM
 							 ON store.`id` = rkmd.`store_id`
 						 LEFT JOIN admin sys
 							 ON sys.`id` = rk.`create_operator_id`
-			WHERE rkmd.delete_time is null and rk.delete_time is null and rk.status!=1
+			WHERE rkmd.delete_time is null and rk.delete_time is null and rk.status!=1 and spot.companyid=".$this->getCompanyId()."
 			UNION
 			ALL
 			SELECT
@@ -745,7 +745,7 @@ FROM
 							 ON store.`id` = ckmd.`store_id`
 						 LEFT JOIN admin sys
 							 ON sys.`id` = ck.`create_operator_id`
-			WHERE ck.status!=1 and ck.delete_time is null and ckmd.delete_time is null
+			WHERE ck.status!=1 and ck.delete_time is null and ckmd.delete_time is null and ckmd.companyid=".$this->getCompanyId()."
 		 ) t
 where 1=1 
 ";

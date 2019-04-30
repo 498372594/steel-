@@ -137,12 +137,7 @@ class Ylsh extends Right
     {
         $params = request()->param();
         $list = $list = \app\admin\model\KcPandian::where('companyid', $this->getCompanyId());
-        if (!empty($params['system_number'])) {
-            $list->where("system_number",$params['system_number']);
-        }
-        if (!empty($params['beizhu'])) {
-            $list->where("beizhu",$params['beizhu']);
-        }
+     $list=$this->getsearchcondition($params,$list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }

@@ -3,6 +3,7 @@
 namespace app\admin\controller;
 
 use app\admin\library\traits\Backend;
+use app\admin\model\AvaWeight;
 use app\admin\model\BaseJiesuanqixian;
 use app\admin\model\BaseXinyongedu;
 use app\admin\model\SalesEdu;
@@ -159,5 +160,54 @@ class Riskcontrol extends Right
             ->where('companyid', $this->getCompanyId());
         $list = $this->getsearchcondition($params, $list)->paginate(10);
         return returnRes(true, '', $list);
+    }
+
+    /**当天可售重量总额度
+     * @return \think\response\Json
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function findValueFortoday(){
+        $sql="(SELECT
+		distinct round(we.`zhongliang`,3) zhongliang,companyid
+		FROM ava_weight we
+		WHERE 
+		date(we.nowtime) = curdate()) ";
+        $data = Db::table($sql)->alias("t")->where("t.companyid",$this->getCompanyId())->find();
+        return returnSuc($data);
+    }
+    public function addAva(){
+        $param=request()-post();
+        $param["nowtime"]=date("Y-m-d H:s:i",time());
+        try{
+            $sql="( SELECT 
+		(we.`zhongliang` - SUM(we.edu)) leftzhongliang,companyid
+		FROM ava_weight we
+		WHERE date(we.nowtime) = curdate()
+        and we.status!=1) ";
+            $leftzhongliang = Db::table($sql)->alias("t")->where("t.companyid",$this->getCompanyId())->value("leftzhongliang");
+            if(empty($leftzhongliang)){
+                $leftzhongliang=$param["zhongliang"];
+            }
+            if( $leftzhongliang<$param["edu"]){
+                throw new \Exception("今日可售额度为：".$param["zhongliang"].",还剩".$leftzhongliang.",小于设置额度，保存失败！");
+            }
+            $ava=new AvaWeight();
+            $ava->allowField(true)->data($param)->save();
+            return returnSuc(['id' => $cg['id']]);
+        }
+        catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
+    public function getava(){
+        $sql="(SELECT we.*
+		FROM ava_weight we
+		WHERE 
+		date(we.nowtime) = curdate())";
+        $data = Db::table($sql)->alias("t")->where("t.companyid",$this->getCompanyId())->select();
+        return returnSuc($data);
     }
 }
