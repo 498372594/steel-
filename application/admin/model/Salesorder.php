@@ -65,6 +65,12 @@ class Salesorder extends Base
             ->field('id,pjlx')->bind(['pjlx_name' => 'pjlx']);
     }
 
+    public function employerData()
+    {
+        return $this->belongsTo('Admin', 'employer', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['employer_name' => 'name']);
+    }
+
     /**
      * @param $dataId
      * @param $moshiType
@@ -154,6 +160,7 @@ class Salesorder extends Base
      * @param $dataId
      * @param $moshiType
      * @param $guigeId
+     * @param $pinmingId
      * @param $caizhiId
      * @param $chandId
      * @param $storeId
@@ -177,7 +184,7 @@ class Salesorder extends Base
      * @param $companyId
      * @return SalesorderDetails
      */
-    public function insertMx(Salesorder $sale, $dataId, $moshiType, $guigeId, $caizhiId, $chandId, $storeId, $jijiafangshiId,
+    public function insertMx(Salesorder $sale, $dataId, $moshiType, $guigeId, $pinmingId, $caizhiId, $chandId, $storeId, $jijiafangshiId,
                              $houdu, $kuandu, $changdu, $lingzhi, $jianshu, $zhijian, $counts, $zhongliang, $jianzhong, $price, $sumPrice,
                              $shuiPrice, $sumShuiPrice, $pihao, $beizhu, $chehao, $shuie, $companyId)
     {
@@ -189,6 +196,7 @@ class Salesorder extends Base
         $mx->moshi_type = $moshiType;
         $mx->order_id = $sale['id'];
         $mx->wuzi_id = $guigeId;
+        $mx->pinming_id = $pinmingId;
         $mx->caizhi = $caizhiId;
         $mx->chandi = $chandId;
         $mx->length = $changdu;

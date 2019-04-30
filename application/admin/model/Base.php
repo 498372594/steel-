@@ -10,6 +10,21 @@ class Base extends Model
     const MTXT = "Text";
     const MNUM = "Number";
     const MTIME = "Time";
+    public $rules = [
+
+    ];
+
+    public $msg = [
+
+    ];
+
+    public $scene = [
+
+    ];
+
+    public $map = [
+
+    ];
 
     /**
      * 获取对象原始数据 如果不存在指定字段返回false,并去除decimal后多余的0
@@ -23,30 +38,10 @@ class Base extends Model
         $value = parent::getAttr($name);
         $types = $this->getFieldsType();
         if (!isset($this->type[$name]) && isset($types[$name])) {
-            if (strpos($types[$name], 'decimal') !== false) {
+            if (strpos($types[$name], 'decimal') !== false && is_numeric($value)) {
                 $value = number_format($value, 2, '.', '');
             }
         }
         return $value;
     }
-
-    // 验证规则
-    public $rules = [
-
-    ];
-
-    // 验证错误信息
-    public $msg = [
-
-    ];
-
-    // 场景
-    public $scene = [
-
-    ];
-
-    // 表单-数据表字段映射
-    public $map = [
-
-    ];
 }

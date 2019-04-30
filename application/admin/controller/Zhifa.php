@@ -213,7 +213,7 @@ class Zhifa extends Right
                     $mx['cg_jianshu'], $mx['cg_counts'], $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'],
                     $mx['cg_sum_shui_price'], $mx['cg_tax'], $mx['mizhong'], $mx['jianzhong'], $this->getAccountId(), $companyId);
 
-                $xsmx = (new \app\admin\model\Salesorder())->insertMx($sale, $mx['id'], 2, $mx['guige_id'], $mx['caizhi'],
+                $xsmx = (new \app\admin\model\Salesorder())->insertMx($sale, $mx['id'], 2, $mx['guige_id'], $mx['pinming_id'], $mx['caizhi'],
                     $mx['chandi'], $mx['store_id'], $mx['jijiafangshi_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['lingzhi'],
                     $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'], $mx['jianzhong'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
                     $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId);

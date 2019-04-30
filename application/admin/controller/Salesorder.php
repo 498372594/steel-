@@ -2,7 +2,15 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{CapitalFy, Jsfs, KcSpot, KcYlSh, KucunCktz, SalesReturnDetails, StockOut, StockOutMd};
+use app\admin\model\{CapitalFy,
+    Jsfs,
+    KcSpot,
+    KcYlSh,
+    KucunCktz,
+    SalesReturnDetails,
+    StockOut,
+    StockOutMd,
+    ViewSpecification};
 use app\admin\validate\{SalesorderDetails};
 use Exception;
 use think\{Db,
@@ -183,7 +191,7 @@ class Salesorder extends Right
             $companyId = $this->getCompanyId();
             foreach ($data['details'] as $item) {
                 if (!$detailValidate->check($item)) {
-                    throw new Exception('请检查第' . $num . '行' . $data['details']);
+                    throw new Exception('请检查第' . $num . '行' . $detailValidate->getError());
                 }
                 $item['caizhi'] = $this->getCaizhiId($item['caizhi'] ?? '');
                 $item['chandi'] = $this->getChandiId($item['chandi'] ?? '');
@@ -286,6 +294,11 @@ class Salesorder extends Right
                 if (($jjfs != 2) && empty($mjo['count'])) {
                     throw new Exception("数量必须大于“0”！");
                 }
+                $guige = ViewSpecification::where('id', $mjo['wuzi_id'])->cache(true, 60)->find();
+                if (empty($guige)) {
+                    throw new Exception('物资不存在');
+                }
+                $mjo['pinming_id'] = $guige['productname_id'];
                 $mx = \app\admin\model\SalesorderDetails::where('id', $mjo['id'])->find();
                 $mx->allowField(true)->data($mjo)->isUpdate(true)->save();
                 if (1 == $xs['ckfs']) {
@@ -306,6 +319,11 @@ class Salesorder extends Right
                     if ($jjfs != 2 && empty($mjo['count'])) {
                         throw new Exception("数量必须大于“0”！");
                     }
+                    $guige = ViewSpecification::where('id', $mjo['wuzi_id'])->cache(true, 60)->find();
+                    if (empty($guige)) {
+                        throw new Exception('物资不存在');
+                    }
+                    $mjo['pinming_id'] = $guige['productname_id'];
                     $mjo['trumpet'] = $trumpet;
                     $mjo['order_id'] = $xs['id'];
                     $mx = new \app\admin\model\SalesorderDetails();
@@ -561,154 +579,8 @@ FROM (SELECT xsmx.weight AS xszhongliang,
     public function mxList(Request $request, $pageLimit = 10)
     {
         $params = $request->param();
-        $sqlParams = [];
-        $sql = '(SELECT mx.id,
-       mx.id              xsSaleMxId,
-       mx.order_id,
-       s.resource_number,
-       z.ywsj,
-       z.system_no,
-       z.status,
-       z.ywlx,
-       gg.productname_id,
-       gg.productname,
-       mx.wuzi_id,
-       gg.`specification` guige_name,
-       mx.houdu,
-       mx.width,
-       mx.length,
-       mx.caizhi,
-       cz.`texturename`   caizhi_name,
-       mx.chandi,
-       cd.`originarea`    chandi_name,
-       mx.jsfs_id,
-       jjfs.`jsfs`        jijiafangshi_name,
-       mx.lingzhi,
-       mx.num,
-       mx.jzs,
-       mx.count,
-       mx.weight,
-       mx.batch_no,
-       mx.storage_id,
-       ck.`storage`       store_name,
-       mx.price,
-       mx.total_fee,
-       mx.tax_rate,
-       mx.tax,
-       mx.price_and_tax,
-       mx.remark,
-       mx.car_no,
-       sale.name          zhiyuan,
-       gg.mizhong_name,
-       cu.`custom`        customerName,
-       pjlx.pjlx          piaoju_name
-FROM salesorder_details mx
-         LEFT JOIN kc_spot s ON s.id = mx.kc_spot_id
-         LEFT JOIN salesorder z ON z.id = mx.order_id
-         LEFT JOIN view_specification gg ON gg.id = mx.wuzi_id
-         LEFT JOIN texture cz ON cz.id = mx.caizhi
-         LEFT JOIN originarea cd ON cd.id = mx.chandi
-         LEFT JOIN storage ck ON ck.id = mx.storage_id
-         LEFT JOIN jsfs jjfs ON jjfs.id = mx.jsfs_id
-         LEFT JOIN custom cu ON cu.`id` = z.`custom_id`
-         LEFT JOIN admin sale ON sale.id = z.employer
-         left join pjlx on pjlx.id = z.pjlx
-    WHERE mx.delete_time is null
-         and z.delete_time is null';
-        if (!empty($params['ywlx'])) {
-            $sql .= ' and z.ywlx=:ywlx';
-            $sqlParams['ywlx'] = $params['ywlx'];
-        }
-        if (!empty($params['exclude_ywlx'])) {
-            $sql .= ' and z.ywlx!=:excludeYwlx';
-            $sqlParams['excludeYwlx'] = $params['exclude_ywlx'];
-        }
-        if (!empty($params['employer'])) {
-            $sql .= ' and sale.id=:employer';
-            $sqlParams['employer'] = $params['employer'];
-        }
-        if (!empty($params['department'])) {
-            $sql .= ' and z.department=:department';
-            $sqlParams['department'] = $params['department'];
-        }
-        if (!empty($params['ywsjStart'])) {
-            $sql .= ' and z.ywsj >= :ywsjStart';
-            $sqlParams['ywsjStart'] = $params['ywsjStart'];
-        }
-        if (!empty($params['ywsjEnd'])) {
-            $sql .= ' and z.ywsj <:ywsjEnd';
-            $sqlParams['ywsjEnd'] = date('Y-m-d H:i:s', strtotime($params['ywsjEnd'] . ' +1 day'));
-        }
-        if (!empty($params['kuanduStart'])) {
-            $sql .= ' and mx.width >= :kuanduStart';
-            $sqlParams['kuanduStart'] = $params['kuanduStart'];
-        }
-        if (!empty($params['kuanduEnd'])) {
-            $sql .= ' and mx.width <= :kuanduEnd';
-            $sqlParams['kuanduEnd'] = $params['kuanduEnd'];
-        }
-        if (!empty($params['store_id'])) {
-            $sql .= ' and ck.id=:storeId';
-            $sqlParams['storeId'] = $params['store_id'];
-        }
-        if (!empty($params['pinming'])) {
-            $sql .= ' and gg.productname_id = :pinming';
-            $sqlParams['pinming'] = $params['pinming'];
-        }
-        if (!empty($params['guige'])) {
-            $sql .= ' and gg.id = :guige';
-            $sqlParams['guige'] = $params['guige'];
-        }
-        if (!empty($params['houduStart'])) {
-            $sql .= ' and mx.houdu >= :houduStart';
-            $sqlParams['houduStart'] = $params['houduStart'];
-        }
-        if (!empty($params['houduEnd'])) {
-            $sql .= ' and mx.houdu <= :houduEnd';
-            $sqlParams['houduEnd'] = $params['houduEnd'];
-        }
-        if (!empty($params['changduStart'])) {
-            $sql .= ' and mx.length >=:changduStart';
-            $sqlParams['changduStart'] = $params['changduStart'];
-        }
-        if (!empty($params['changduEnd'])) {
-            $sql .= ' and mx.length <= :changduEnd';
-            $sqlParams['changduEnd'] = $params['changduEnd'];
-        }
-        if (!empty($params['jsfs'])) {
-            $sql .= ' and mx.jsfs=:jsfs';
-            $sqlParams['jsfs'] = $params['jsfs'];
-        }
-        if (!empty($params['caizhi'])) {
-            $sql .= ' and mx.caizhi=:caizhi';
-            $sqlParams['caizhi'] = $params['caizhi'];
-        }
-        if (!empty($params['chandi'])) {
-            $sql .= ' and mx.chandi=:chandi';
-            $sqlParams['chandi'] = $params['chandi'];
-        }
-        if (!empty($params['status'])) {
-            $sql .= ' and z.status=:status';
-            $sqlParams['status'] = $params['status'];
-        }
-        if (!empty($params['customer_id'])) {
-            $sql .= ' and cu.id=:customerId';
-            $sqlParams['customerId'] = $params['customer_id'];
-        }
-        if (!empty($params['piaoju'])) {
-            $sql .= ' and z.pjlx=:piaoju';
-            $sqlParams['piaoju'] = $params['piaoju'];
-        }
-        if (!empty($params['system_number'])) {
-            $sql .= ' and z.system_no like :systemNumber';
-            $sqlParams['systemNumber'] = '%' . $params['systemNumber'] . '%';
-        }
-        if (!empty($params['beizhu'])) {
-            $sql .= ' and mx.remark like :beizhu';
-            $sqlParams['beizhu'] = '%' . $params['beizhu'] . '%';
-        }
-        $sql .= ' )';
-        $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('ywsj', 'desc')->paginate($pageLimit);
+        $model = new \app\admin\model\SalesorderDetails();
+        $data = $model->getList($params, $pageLimit, $this->getCompanyId());
         return returnSuc($data);
     }
 

@@ -5,11 +5,7 @@ namespace app\admin\controller;
 
 
 use app\admin\model\ViewMoneySource;
-use think\{db\exception\DataNotFoundException,
-    db\exception\ModelNotFoundException,
-    exception\DbException,
-    Request,
-    response\Json};
+use think\{exception\DbException, Request, response\Json};
 
 class CapitalHk extends Right
 {
@@ -39,7 +35,8 @@ class CapitalHk extends Right
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = ViewMoneySource::where('companyid', $this->getCompanyId())
+        $list = ViewMoneySource::with('custom')
+            ->where('companyid', $this->getCompanyId())
             ->order('yw_time', 'desc')
             ->where('fangxiang', $fangxiang)
             ->where('status', '<>', 2);

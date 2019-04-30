@@ -210,7 +210,7 @@ class SalesTiaohuo extends Right
                     $mx['cg_sum_shui_price'], $mx['tax'], $mx['mizhong'], $mx['jianzhong'], $this->getAccountId(), $companyId);
 
 
-                $saleMx = (new \app\admin\model\Salesorder())->insertMx($xs, $mx['id'], 1, $mx['guige_id'], $mx['caizhi'],
+                $saleMx = (new \app\admin\model\Salesorder())->insertMx($xs, $mx['id'], 1, $mx['guige_id'], $mx['pinming_id'],$mx['caizhi'],
                     $mx['chandi'], $mx['store_id'], $mx['jijiafangshi_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['lingzhi'],
                     $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'],$mx['jianzhong'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
                     $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId);
