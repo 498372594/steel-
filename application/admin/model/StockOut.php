@@ -256,11 +256,12 @@ class StockOut extends Base
      * 发货情况表
      * @param $params
      * @param $pageLimit
+     * @param $companyId
      * @return Paginator
      * @throws DbException
      * @throws Exception
      */
-    public function fahuoqingkuang($params, $pageLimit)
+    public function fahuoqingkuang($params, $pageLimit, $companyId)
     {
         $sqlParams = [];
         $sql = '(SELECT t.id,
@@ -356,6 +357,7 @@ class StockOut extends Base
                    and sale.delete_time is null
                    and ck.delete_time is null
                    and ckmd.delete_time is null
+                   and xsmx.companyid=' . $companyId . '
             GROUP BY
                xsmx.`id`
             UNION ALL
@@ -411,8 +413,11 @@ class StockOut extends Base
                    LEFT JOIN admin sys                   ON sys.`id` = ckqt.`create_operator_id`
                    LEFT JOIN admin oper                   ON oper.`id` = ckqt.`sale_operator_id`
             where
-               ckqt.delete_time is null and qtmx.delete_time is null
-                   and ck.delete_time is null and ckmd.delete_time is null
+               ckqt.delete_time is null 
+               and qtmx.delete_time is null 
+               and ck.delete_time is null 
+               and ckmd.delete_time is null
+               and ckqt.companyid=' . $companyId . '
             GROUP BY
                qtmx.`id`) t
     where
@@ -486,12 +491,12 @@ class StockOut extends Base
                 SELECT
                 xsmx.`id`
                 FROM salesorder_details xsmx INNER JOIN stock_out_md ckmd ON xsmx.`id`=ckmd.`data_id`
-                WHERE ckmd.guige_id ' . $params['bjguige'] . ' xsmx.guige_id
+                WHERE ckmd.guige_id ' . $params['bjguige'] . ' xsmx.guige_id and xsmx.companyid=' . $companyId . '
                 UNION ALL
                 SELECT
                 qtmx.`id`
-                FROM kc_qtck_mx qtmx INNER JOIN kc_ck_md ckmd ON qtmx.`id`=ckmd.`data_id`
-                WHERE ckmd.guige_id ' . $params['bjguige'] . ' qtmx.guige_id ) tt
+                FROM stock_other_out_details qtmx INNER JOIN kc_ck_md ckmd ON qtmx.`id`=ckmd.`data_id`
+                WHERE ckmd.guige_id ' . $params['bjguige'] . ' qtmx.guige_id and qtmx.companyid=' . $companyId . ' ) tt
                 )';
         }
         if (!empty($params['bjchangdu'])) {
@@ -503,12 +508,12 @@ class StockOut extends Base
                 SELECT
                 xsmx.`id`
                 FROM salesorder_details xsmx INNER JOIN stock_out_md ckmd ON xsmx.`id`=ckmd.`data_id`
-                WHERE ckmd.changdu ' . $params['bjchangdu'] . ' xsmx.changdu
+                WHERE ckmd.changdu ' . $params['bjchangdu'] . ' xsmx.changdu and xsmx.companyid=' . $companyId . '
                 UNION ALL
                 SELECT
                 qtmx.`id`
-                FROM kc_qtck_mx qtmx INNER JOIN kc_ck_md ckmd ON qtmx.`id`=ckmd.`data_id`
-                WHERE ckmd.changdu ' . $params['bjchangdu'] . ' qtmx.changdu ) tt
+                FROM stock_other_out_details qtmx INNER JOIN kc_ck_md ckmd ON qtmx.`id`=ckmd.`data_id`
+                WHERE ckmd.changdu ' . $params['bjchangdu'] . ' qtmx.changdu and qtmx.companyid=' . $companyId . ') tt
                 )';
         }
         $sql .= ' )';

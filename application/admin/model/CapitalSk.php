@@ -33,10 +33,11 @@ class CapitalSk extends Base
     /**
      * @param $params
      * @param int $pageLimit
+     * @param $companyId
      * @return Paginator
      * @throws DbException
      */
-    public function getTongjiHuizongList($params, $pageLimit = 10)
+    public function getTongjiHuizongList($params, $pageLimit, $companyId)
     {
         $ywsjStart = '';
         if (!empty($params['ywsjStart'])) {
@@ -502,6 +503,7 @@ from (SELECT t1.id,
             FROM custom c
                 where c.delete_time is null
     and c.iscustom = 1
+    and c.companyid=' . $companyId . '
            ) t1
      ) t2
     where 1 = 1';
@@ -532,10 +534,11 @@ from (SELECT t1.id,
      * @param $customer_id
      * @param $params
      * @param int $pageLimit
+     * @param $companyId
      * @return Paginator
      * @throws DbException
      */
-    function getTongjiMxList($customer_id, $params, $pageLimit = 10)
+    function getTongjiMxList($customer_id, $params, $pageLimit, $companyId)
     {
         $ywsjStart = '';
         if (!empty($params['ywsjStart'])) {
@@ -608,7 +611,8 @@ from (SELECT t1.id,
        null          beizhu,
        \'\'            signPerson
 FROM custom basecu
-where basecu.id = ?';
+where basecu.companyid= ' . $companyId . ' 
+and basecu.id = ?';
         $sqlParams[] = $customer_id;
         $sql .= ' GROUP BY basecu.`id`
     union all
@@ -674,6 +678,7 @@ where basecu.id = ?';
                          LEFT JOIN admin op on sale.employer = op.id
                 where mx.delete_time is null
                   and sale.delete_time is null
+                  and sale.companyid=' . $companyId . '
                     union all
                     SELECT qt.id
                     , qt.status
@@ -697,6 +702,7 @@ where basecu.id = ?';
                     WHERE qt.fangxiang = 1
                   AND qt.`yw_type` = 16
                   AND qt.`money` > 0
+                  and qt.companyid=' . $companyId . '
                     union all
                     SELECT sk.id
                     , sk.`status`
@@ -716,6 +722,7 @@ where basecu.id = ?';
                     LEFT JOIN custom cus on sk.customer_id = cus.id
                     LEFT JOIN admin op on sk.sale_operator_id = op.id
                     where sk.delete_time is null
+                    and sk.companyid=' . $companyId . '
                     union ALL
                     SELECT th.id
                     , th.`status`
@@ -737,6 +744,7 @@ where basecu.id = ?';
                     LEFT JOIN admin op on th.sale_operator_id = op.id
                     WHERE mx.delete_time is null
                   and th.delete_time is null
+                  and th.companyid=' . $companyId . '
                     UNION all
                     SELECT fy.id
                     , fy.`status`
@@ -757,6 +765,7 @@ where basecu.id = ?';
                     LEFT JOIN admin op on fy.sale_operator_id = op.id
                     where fy.fang_xiang = 1
                   and fy.delete_time is null
+                  and fy.companyid=' . $companyId . '
                     union all
                     SELECT qt.id
                     , qt.`status`
@@ -780,6 +789,7 @@ where basecu.id = ?';
                   and mx.delete_time is null
                   and qt.delete_time is null
                   and qt.yw_type != 16
+                  and qt.companyid=' . $companyId . '
                ) t1
           GROUP BY t1.id
           union all
@@ -802,6 +812,7 @@ where basecu.id = ?';
                    LEFT JOIN admin op on sk.sale_operator_id = op.id
           where sk.delete_time is null
             and sk.msmoney != 0
+            and sk.companyid=' . $companyId . '
               UNION ALL
               SELECT ysfk.id
               , ysfk.`status`
@@ -824,6 +835,7 @@ where basecu.id = ?';
               WHERE ysfk.type = 0
             and mx.delete_time is null
             and ysfk.delete_time is null
+            and ysfk.companyid=' . $companyId . '
             and mx.customer_id = ?';
         $sqlParams[] = $customer_id;
         $sql .= ' GROUP BY mx.customer_id

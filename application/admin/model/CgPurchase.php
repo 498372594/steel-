@@ -153,7 +153,7 @@ class CgPurchase extends Base
         $fysz = empty($fysz) ? 0 : $fysz;
         $trumpet = 0;
         if (!empty($cg['id'])) {
-            $trumpet = CgPurchaseMx::where('purchasse_id', $cg['id'])->max('trumpet');
+            $trumpet = CgPurchaseMx::where('purchase_id', $cg['id'])->max('trumpet');
         }
 
         $mx = new CgPurchaseMx();

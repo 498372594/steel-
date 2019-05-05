@@ -86,10 +86,10 @@ class SalesTiaohuo extends Right
             'khpjData',
             'khjsfsData',
             'details' => ['specification', 'cgJsfsData', 'cgPjData', 'storage', 'jsfs', 'wldwData'],
-            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]]
+            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']]]
         ])
             ->where('companyid', $this->getCompanyId())
-            ->where('moshi_type', 2)
+            ->where('moshi_type', 1)
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -153,7 +153,7 @@ class SalesTiaohuo extends Right
                 $ms->allowField(true)->data($data)->save();
 
                 $xs = (new \app\admin\model\Salesorder())->insertSale($ms['id'], 1, $ms['yw_time'], $ms['customer_id'],
-                    $ms['piaoju_id'], $ms['jsfs'], $ms['remark'], $ms['department'], $ms['employer'], $ms['contact'], $ms['mobile'], $ms['chehao'], $this->getAccountId(), $companyId);
+                    $ms['piaoju_id'], $ms['jsfs'], $ms['remark'], $ms['department'], $ms['employer'], $ms['contact'], $ms['telephone'], $ms['chehao'], $this->getAccountId(), $companyId);
                 $ck = (new StockOut())->insertChuku($xs['id'], 4, $ms['yw_time'], $ms['department'], $ms['system_number'], $ms['employer'], $this->getAccountId(), $companyId);
 
             } else {
@@ -198,28 +198,28 @@ class SalesTiaohuo extends Right
                     $mx['caizhi'], $mx['chandi'], null, $mx['cg_jijiafangshi_id'], $mx['changdu'], $mx['houdu'],
                     $mx['kuandu'], $mx['cg_tax'], $mx['lingzhi'], $mx['jianshu'], $mx['zhijian'], $mx['counts'],
                     $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'], $mx['cg_sum_shui_price'],
-                    null, $mx['pihao'], $mx['huohao'], $mx['beizhu'], $mx['chehao'], $mx['mizhong'], $mx['jianzhong'], $companyId);
+                    null, $mx['pihao'], $mx['huohao'] ?? '', $mx['beizhu'], $mx['chehao'], $mx['mizhong'], $mx['jianzhong'], $companyId);
 
                 $rk = (new KcRk())->insertRuku($cg['id'], 4, $cg['system_number'], $xs['ywsj'], $ms['department'], $ms['employer'], $this->getAccountId(), $companyId);
                 $cgmxDataNumber = null;
                 $spot = (new KcRk())->insertRkMxMd($rk, $cgmx['id'], 4, $xs['ywsj'], $cg['system_number'],
                     null, $mx['cg_customer_id'], null, $mx['guige_id'], $mx['caizhi'], $mx['chandi'],
-                    $mx['cg_jijiafangshi_id'], $mx['store_id'], $mx['pihao'], $mx['huohao'], $mx['chehao'], $mx['beizhu'],
+                    $mx['cg_jijiafangshi_id'], $mx['store_id'], $mx['pihao'], $mx['huohao'] ?? '', $mx['chehao'], $mx['beizhu'],
                     $mx['cg_piaoju_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['lingzhi'],
                     $mx['jianshu'], $mx['counts'], $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'],
                     $mx['cg_sum_shui_price'], $mx['tax'], $mx['mizhong'], $mx['jianzhong'], $this->getAccountId(), $companyId);
 
 
-                $saleMx = (new \app\admin\model\Salesorder())->insertMx($xs, $mx['id'], 1, $mx['guige_id'], $mx['pinming_id'],$mx['caizhi'],
+                $saleMx = (new \app\admin\model\Salesorder())->insertMx($xs, $mx['id'], 1, $mx['guige_id'], $mx['pinming_id'], $mx['caizhi'],
                     $mx['chandi'], $mx['store_id'], $mx['jijiafangshi_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['lingzhi'],
-                    $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'],$mx['jianzhong'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
+                    $mx['jianshu'], $mx['zhijian'], $mx['counts'], $mx['zhongliang'], $mx['jianzhong'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'],
                     $mx['pihao'], $mx['beizhu'], $mx['chehao'], $mx['tax'], $companyId);
 
                 (new StockOut())->insertCkMxMd($ck, $spot['id'], $saleMx['id'], 4, $ms['yw_time'], $xs['system_no'],
                     $xs['custom_id'], $mx['guige_id'], $mx['caizhi'], $mx['chandi'], $mx['jijiafangshi_id'], $mx['store_id'],
                     $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['lingzhi'], $mx['jianshu'], $mx['counts'],
                     $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'], $mx['tax'], $mx['mizhong'],
-                    $mx['jianzhong'], $cbPrice, null, $this->getAccountId(), $companyId);
+                    $mx['jianzhong'], $cbPrice, '', $this->getAccountId(), $companyId);
 
                 (new \app\admin\model\Inv())->insertInv($saleMx['id'], 3, 1, $saleMx['length'], $saleMx['houdu'],
                     $saleMx['width'], $saleMx['wuzi_id'], $saleMx['jsfs_id'], $xs['pjlx'], null, $xs['system_no'] . '.' . $saleMx['trumpet'],
@@ -251,7 +251,7 @@ class SalesTiaohuo extends Right
                     if (!empty($mdList)) {
                         foreach ($mdList as $md) {
                             $md->cb_price = $md->price;
-                            $jjfs = Jsfs::where('id', $mx['jijiafangshi_id'])->cache(true, 60)->find();
+                            $jjfs = Jsfs::where('id', $mx['jsfs_id'])->cache(true, 60)->value('jj_type');
                             if ($jjfs == 1 || $jjfs == 2) {
                                 $md->cb_sum_shuiprice = $md->cb_price * $md->zhongliang;
                             } elseif ($jjfs == 3) {
@@ -278,7 +278,7 @@ class SalesTiaohuo extends Right
             return returnSuc(['id' => $ms['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage());
+            return returnFail($e->getMessage() . $e->getTraceAsString());
         }
     }
 

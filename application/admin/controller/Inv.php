@@ -164,7 +164,7 @@ class Inv extends Right
             return returnFail('请求方式错误');
         }
         $model = new \app\admin\model\Inv();
-        $data = $model->getYkfpHuizong($request->param(), $pageLimit);
+        $data = $model->getYkfpHuizong($request->param(), $pageLimit, $this->getCompanyId());
         return returnSuc($data);
     }
 
@@ -185,7 +185,7 @@ class Inv extends Right
         }
 
         $model = new \app\admin\model\Inv();
-        $data = $model->getYkfpMx($params, $pageLimit);
+        $data = $model->getYkfpMx($params, $pageLimit, $this->getCompanyId());
         $data = $data->toArray();
         $tmp = $data['data'];
         foreach ($tmp as $i => &$item) {

@@ -253,10 +253,11 @@ class Inv extends Base
     /**
      * @param $params
      * @param $pageLimit
+     * @param $companyId
      * @return Paginator
      * @throws DbException
      */
-    public function getYkfpHuizong($params, $pageLimit)
+    public function getYkfpHuizong($params, $pageLimit, $companyId)
     {
         $ywsjStart = '';
         $ywsjEnd = '';
@@ -443,6 +444,7 @@ class Inv extends Base
                     where
                        cus.delete_time is null
                            and cus.iscustom = 1
+                           and cus.companyid=' . $companyId . '
                )                                                                                       t1
        )     t2
     where
@@ -473,10 +475,11 @@ class Inv extends Base
     /**
      * @param $params
      * @param $pageLimit
+     * @param $companyId
      * @return Paginator
      * @throws DbException
      */
-    public function getYkfpMx($params, $pageLimit)
+    public function getYkfpMx($params, $pageLimit, $companyId)
     {
         $ywsjStart = '';
         $ywsjEnd = '';
@@ -524,7 +527,8 @@ class Inv extends Base
        inv
            left join custom tbcu on tbcu.id = inv.customer_id
     where
-       inv.customer_id = ?';
+       inv.companyid=' . $companyId . '
+       and inv.customer_id = ?';
         $sqlParams[] = $params['customer_id'];
         $sql .= ' and inv.fx_type = 1
            and inv.shui_price > 0
@@ -585,7 +589,8 @@ class Inv extends Base
                                    LEFT JOIN custom cus ON se.custom_id = cus.id
                                    LEFT JOIN view_specification gg ON mx.wuzi_id = gg.id
                             WHERE
-                               se.delete_time is null
+                               mx.companyid=' . $companyId . '
+                               and se.delete_time is null
                                    and mx.tax_rate > 0
                                    and mx.delete_time is null
                                    and mx.price_and_tax > 0';
@@ -617,6 +622,7 @@ class Inv extends Base
                                inv_xskp xskp LEFT JOIN pjlx ON xskp.piaoju_id = pjlx.id
                             where
                                xskp.money != 0
+                               and xskp.company_id=' . $companyId . '
                                    and xskp.delete_time is null';
         if (!empty($params['ywsjStart'])) {
             $sql .= ' and xskp.yw_time >= ?';
@@ -648,6 +654,7 @@ class Inv extends Base
                                    LEFT JOIN custom cus ON qt.customer_id = cus.id
                             WHERE
                                qt.delete_time is null
+                               and qtmx.companyid=' . $companyId . '
                                    and qtmx.delete_time is null
                                    and qtmx.money > 0
                                    and qt.yw_type = 16';
@@ -679,6 +686,7 @@ class Inv extends Base
                                inv_xskp xskp LEFT JOIN pjlx ON xskp.piaoju_id = pjlx.id
                             where
                                xskp.mkmoney != 0
+                               and xskp.company_id=' . $companyId . '
                                    and xskp.delete_time is null';
         if (!empty($params['ywsjStart'])) {
             $sql .= ' and xskp.yw_time >= ?';
@@ -712,6 +720,7 @@ class Inv extends Base
                                    LEFT JOIN view_specification gg ON mx.guige_id = gg.id
                             WHERE
                                th.delete_time is null
+                               and mx.companyid=' . $companyId . '
                                    and mx.shuiprice > 0
                                    and mx.delete_time is null';
         if (!empty($params['ywsjStart'])) {
@@ -745,6 +754,7 @@ class Inv extends Base
                                    LEFT JOIN pjlx ON mx.piaoju_id = pjlx.id
                             WHERE
                                yskp.delete_time is null
+                               and mx.companyid=' . $companyId . '
                                    and yskp.type = 1
                                    and mx.delete_time is null';
         if (!empty($params['ywsjStart'])) {

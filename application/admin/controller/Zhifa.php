@@ -98,9 +98,9 @@ class Zhifa extends Right
             'gfjsfsData',
             'khjsfsData',
             'details' => ['specification', 'jsfs', 'storage'],
-            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom']]]
+            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']]]
         ])->where('companyid', $this->getCompanyId())
-            ->where('moshi_type', 1)
+            ->where('moshi_type', 2)
             ->where('id', $id)
             ->find();
         if (empty($data)) {
@@ -222,7 +222,7 @@ class Zhifa extends Right
                     $sale['custom_id'], $mx['guige_id'], $mx['caizhi'], $mx['chandi'], $mx['jijiafangshi_id'], $mx['store_id'],
                     $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['lingzhi'], $mx['jianshu'], $mx['counts'],
                     $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['tax_rate'], $mx['tax_and_price'], $mx['tax'], $mx['mizhong'],
-                    $mx['jianzhong'], $cbPrice, null, $this->getAccountId(), $companyId);
+                    $mx['jianzhong'], $cbPrice, '', $this->getAccountId(), $companyId);
 
                 (new \app\admin\model\Inv())->insertInv($xsmx['id'], 3, 1, $xsmx['length'], $xsmx['houdu'],
                     $xsmx['width'], $xsmx['wuzi_id'], $xsmx['jsfs_id'], $sale['pjlx'], null, $sale['system_no'] . '.' . $xsmx['trumpet'],

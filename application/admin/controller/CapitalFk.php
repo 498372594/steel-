@@ -133,6 +133,7 @@ class CapitalFk extends Right
                     }
 
                     $number += $object['hx_money'];
+                    $object['companyid'] = $companyId;
                     if (empty($object['id'])) {
                         $addFyList[] = $object;
                     } else {
@@ -204,7 +205,7 @@ class CapitalFk extends Right
             }
 
             foreach ($addList as $mjo) {
-                $mjo['sk_id'] = $fk['id'];
+                $mjo['fk_id'] = $fk['id'];
                 $jsfs = new CapitalFkjsfs();
                 $jsfs->allowField(true)->data($mjo)->save();
                 (new Bank())->insertBank($jsfs['id'], 3, $jsfs['bank_id'], 2, $fk['yw_time'], $jsfs['money'], $fk['customer_id'], $fk['system_number'], $companyId);
@@ -248,7 +249,7 @@ class CapitalFk extends Right
                     $obj['create_time'] = $qt['create_time'];
                     $obj['cache_systemnumber'] = $qt['system_number'];
                     $obj['cache_ywtime'] = $qt['yw_time'];
-                    $obj['sk_id'] = $fk['id'];
+                    $obj['fk_id'] = $fk['id'];
                     $obj['hj_money'] = $qt['money'];
                     $obj['hj_zhongliang'] = $qt['zhongliang'];
                     $obj['customer_id'] = $qt['customer_id'];
@@ -262,7 +263,7 @@ class CapitalFk extends Right
                     $obj['create_time'] = $fy['create_time'];
                     $obj['cache_systemnumber'] = $fy['system_number'];
                     $obj['cache_ywtime'] = $fy['yw_time'];
-                    $obj['sk_id'] = $fk['id'];
+                    $obj['fk_id'] = $fk['id'];
                     $obj['hj_money'] = $fy['money'];
                     $obj['hj_zhongliang'] = $fy['zhongliang'];
                     $obj['customer_id'] = $fy['customer_id'];
@@ -283,7 +284,7 @@ class CapitalFk extends Right
                     $obj['create_time'] = $hk['create_time'];
                     $obj['cache_systemnumber'] = $hk['system_number'];
                     $obj['cache_ywtime'] = $hk['yw_time'];
-                    $obj['sk_id'] = $fk['id'];
+                    $obj['fk_id'] = $fk['id'];
                     $obj['hj_money'] = $hk['money'];
                     $obj['hj_zhongliang'] = $hk['zhongliang'];
                     $obj['customer_id'] = $hk['customer_id'];

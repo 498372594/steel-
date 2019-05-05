@@ -541,7 +541,8 @@ FROM (SELECT xsmx.weight AS xszhongliang,
                 WHERE custom.iscustom = 1
                      and custom.delete_time is null
                      AND tb_xs_sale.delete_time is null
-                     AND tb_xs_sale.`status` <> 2 ';
+                     AND tb_xs_sale.`status` <> 2 
+                     and tb_xs_sale.compayid=' . $this->getCompanyId();
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and tb_xs_sale.ywsj >=:ywsjStart';
             $sqlParams['ywsjStart'] = $param['ywsjStart'];
