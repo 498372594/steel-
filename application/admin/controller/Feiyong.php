@@ -202,7 +202,10 @@ class Feiyong extends Signin
             'custom',
             'pjlxData',
             'szmcData',
-            'details' => ['custom']
+            'details' => ['custom'],
+            'saleOperator',
+            'createOperator',
+            'updateOperator'
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
@@ -306,7 +309,7 @@ class Feiyong extends Signin
         $model = CapitalFy::with(['customForTongji', 'szflData', 'szmcData'])
             ->alias('fy')
             ->join('__CUSTOM__ c', 'c.id=fy.customer_id')
-            ->field('customer_id,sum(money) as jine,shouzhimingcheng_id,shouzhifenlei_id,moren_yewuyuan,suoshu_department')
+            ->field('customer_id,c.custom,sum(money) as jine,shouzhimingcheng_id,shouzhifenlei_id,moren_yewuyuan,suoshu_department')
             ->where('fy.status', '<>', 2);
         if (!empty($params['sales_operator_id'])) {
             $model->where('c.moren_yewuyuan', $params['sales_operator_id']);

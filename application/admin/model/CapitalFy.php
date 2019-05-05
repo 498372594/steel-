@@ -95,6 +95,18 @@ class CapitalFy extends Base
             ->field('id,name')->bind(['sale_operator_name' => 'name']);
     }
 
+    public function createOperator()
+    {
+        return $this->belongsTo('Admin', 'create_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator_name' => 'name']);
+    }
+
+    public function updateOperator()
+    {
+        return $this->belongsTo('Admin', 'update_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['update_operator_name' => 'name']);
+    }
+
     public function details()
     {
         return $this->hasMany('CapitalFyhx', 'cap_fy_id', 'id');
