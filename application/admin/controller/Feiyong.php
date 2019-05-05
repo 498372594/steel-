@@ -13,6 +13,7 @@ use think\{Db,
     db\exception\ModelNotFoundException,
     db\Query,
     exception\DbException,
+    Paginator,
     Request,
     response\Json};
 
@@ -201,7 +202,10 @@ class Feiyong extends Signin
             'custom',
             'pjlxData',
             'szmcData',
-            'details' => ['custom']
+            'details' => ['custom'],
+            'saleOperator',
+            'createOperator',
+            'updateOperator'
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
@@ -287,5 +291,102 @@ class Feiyong extends Signin
         }
         $list = $list->paginate($pageLimit);
         return returnRes(true, '', $list);
+    }
+
+    /**
+     * 费用统计表
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Paginator|Json
+     * @throws DbException
+     */
+    public function tongji(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $params = $request->param();
+        $model = CapitalFy::with(['customForTongji', 'szflData', 'szmcData'])
+            ->alias('fy')
+            ->join('__CUSTOM__ c', 'c.id=fy.customer_id')
+            ->field('customer_id,c.custom,sum(money) as jine,shouzhimingcheng_id,shouzhifenlei_id,moren_yewuyuan,suoshu_department')
+            ->where('fy.status', '<>', 2);
+        if (!empty($params['sales_operator_id'])) {
+            $model->where('c.moren_yewuyuan', $params['sales_operator_id']);
+        }
+        if (!empty($params['group_id'])) {
+            $model->where('c.suoshu_department', $params['group_id']);
+        }
+        if (!empty($params['ywsjStart'])) {
+            $model->where('yw_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $model->where('yw_time', '<', date('Y-m-d H:i:s', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        if (!empty($params['customer_id'])) {
+            $model->where('customer_id', $params['customer_id']);
+        }
+        if (!empty($params['szlb'])) {
+            $model->where('shouzhifenlei_id', $params['szlb']);
+        }
+        if (!empty($params['szmc'])) {
+            $model->where('shouzhimingcheng_id', $params['szmc']);
+        }
+        $data = $model->where('fy.companyid', $this->getCompanyId())
+            ->group('customer_id,shouzhimingcheng_id')
+            ->order('yw_time', 'desc')
+            ->paginate($pageLimit);
+        return returnSuc($data);
+    }
+
+    /**
+     * 费用明细表
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function mingxi(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $params = $request->param();
+        $model = CapitalFy::with(['customForTongji', 'szflData', 'szmcData'])
+            ->alias('fy')
+            ->join('__CAPITAL_FYHX__ hx', 'hx.cap_fy_id=fy.id')
+            ->join('__CUSTOM__ c', 'c.id=fy.customer_id')
+            ->fieldRaw('fy.id,ifnull(hx.fyhx_type,99) as fyType,hx.data_id,fy.status,fy.system_number,fy.yw_time,fy.customer_id,fy.money,shouzhimingcheng_id,shouzhifenlei_id,moren_yewuyuan,suoshu_department,fy.beizhu');
+        if (!empty($params['sales_operator_id'])) {
+            $model->where('c.moren_yewuyuan', $params['sales_operator_id']);
+        }
+        if (!empty($params['group_id'])) {
+            $model->where('c.suoshu_department', $params['group_id']);
+        }
+        if (!empty($params['status'])) {
+            $model->where('fy.status', $params['status']);
+        }
+        if (!empty($params['ywsjStart'])) {
+            $model->where('yw_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $model->where('yw_time', '<', date('Y-m-d H:i:s', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        if (!empty($params['customer_id'])) {
+            $model->where('fy.customer_id', $params['customer_id']);
+        }
+        if (!empty($params['szlb'])) {
+            $model->where('shouzhifenlei_id', $params['szlb']);
+        }
+        if (!empty($params['szmc'])) {
+            $model->where('shouzhimingcheng_id', $params['szmc']);
+        }
+        if (!empty($params['system_number'])) {
+            $model->where('fy.system_number', 'like', '%' . $params['system_number'] . '%');
+        }
+        $data = $model->where('fy.companyid', $this->getCompanyId())
+            ->order('yw_time', 'desc')
+            ->paginate($pageLimit);
+        return returnSuc($data);
     }
 }

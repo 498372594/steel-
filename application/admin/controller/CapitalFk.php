@@ -215,7 +215,7 @@ class CapitalFk extends Right
                 foreach ($hxList as $hx) {
                     if ($hx->fkhx_type == 1) {
                         CapitalOtherModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
-                    } else if ($hx->skhx_type == 2) {
+                    } else if ($hx->fkhx_type == 2) {
                         CapitalFy::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
                     } else {
                         CapitalHkModel::jianMoney($hx['data_id'], $hx['hx_money'], $hx['hx_zhongliang']);
@@ -240,7 +240,7 @@ class CapitalFk extends Right
 
             foreach ($addFyList as $obj) {
                 $fkhx = new CapitalFkhx();
-                if ($obj['skhx_type'] == 1) {
+                if ($obj['fkhx_type'] == 1) {
                     $qt = CapitalOtherModel::get($obj['data_id']);
                     if ($obj['hx_money'] > ($qt['money'] - $qt['hxmoney'])) {
                         throw new Exception("核销金额不能大于未核销金额");
@@ -252,8 +252,8 @@ class CapitalFk extends Right
                     $obj['hj_money'] = $qt['money'];
                     $obj['hj_zhongliang'] = $qt['zhongliang'];
                     $obj['customer_id'] = $qt['customer_id'];
-                    (new CapitalOtherModel())->addMoney($qt['id'], $fkhx['hx_money'], $fkhx['hx_zhongliang']);
-                } elseif ($obj['skhx_type'] == 2) {
+                    (new CapitalOtherModel())->addMoney($qt['id'], $obj['hx_money'], $obj['hx_zhongliang']);
+                } elseif ($obj['fkhx_type'] == 2) {
                     $fy = CapitalFy::get($obj['data_id']);
 
                     if ($obj['hx_money'] > ($fy['money'] - $fy['hxmoney'])) {
@@ -266,7 +266,7 @@ class CapitalFk extends Right
                     $obj['hj_money'] = $fy['money'];
                     $obj['hj_zhongliang'] = $fy['zhongliang'];
                     $obj['customer_id'] = $fy['customer_id'];
-                    (new CapitalFy())->addMoney($fy['id'], $fkhx['hx_money'], $fkhx['hx_zhongliang']);
+                    (new CapitalFy())->addMoney($fy['id'], $obj['hx_money'], $obj['hx_zhongliang']);
                 } else {
                     $hk = CapitalHkModel::get($obj['data_id']);
                     if (!empty($hk)) {
@@ -287,9 +287,9 @@ class CapitalFk extends Right
                     $obj['hj_money'] = $hk['money'];
                     $obj['hj_zhongliang'] = $hk['zhongliang'];
                     $obj['customer_id'] = $hk['customer_id'];
-                    (new CapitalHkModel())->addMoney($hk['id'], $fkhx['hx_money'], $fkhx['hx_zhongliang']);
+                    (new CapitalHkModel())->addMoney($hk['id'], $obj['hx_money'], $obj['hx_zhongliang']);
                 }
-                $fkhx->data($data)->allowField(true)->save(0);
+                $fkhx->data($obj)->allowField(true)->save(0);
             }
             Db::commit();
             return returnSuc(['id' => $fk['id']]);
