@@ -356,7 +356,7 @@ class Feiyong extends Signin
             ->alias('fy')
             ->join('__CAPITAL_FYHX__ hx', 'hx.cap_fy_id=fy.id')
             ->join('__CUSTOM__ c', 'c.id=fy.customer_id')
-            ->fieldRaw('fy.id,ifnull(hx.fyhx_type,99) as fyType,hx.data_id,fy.status,fy.system_number,fy.yw_time,fy.customer_id,fy.money,shouzhimingcheng_id,shouzhifenlei_id,moren_yewuyuan,suoshu_department,fy.beizhu');
+            ->fieldRaw('fy.id,ifnull(hx.fyhx_type,99) as fyType,hx.data_id,fy.status,fy.system_number,fy.yw_time,fy.customer_id,fy.money,shouzhimingcheng_id,shouzhifenlei_id,moren_yewuyuan,suoshu_department,fy.beizhu,c.custom');
         if (!empty($params['sales_operator_id'])) {
             $model->where('c.moren_yewuyuan', $params['sales_operator_id']);
         }

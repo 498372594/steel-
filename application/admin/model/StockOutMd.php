@@ -7,6 +7,7 @@ namespace app\admin\model;
 use Exception;
 use think\Db;
 use think\exception\DbException;
+use think\Paginator;
 use traits\model\SoftDelete;
 
 class StockOutMd extends Base
@@ -80,6 +81,13 @@ class StockOutMd extends Base
             ->field('id,originarea')->bind(['originarea_name' => 'originarea']);
     }
 
+    /**
+     * @param $params
+     * @param $pageLimit
+     * @param $companyId
+     * @return Paginator
+     * @throws DbException
+     */
     public function getListByMxId($params, $pageLimit, $companyId)
     {
         $sqlParams = [];
@@ -256,13 +264,13 @@ where
         $md->zhongliang = $zhongliang;
         $md->store_id = $storeId;
         $md->price = $spot['price'];
-        $md->shuiprice = $spot['shui_price'];
+        $md->tax_rate = $spot['shui_price'];
         $md->beizhu = $beizhu;
 
         if (empty($cbPrice)) {
             $cbPrice = $spot['price'];
         }
-        $md->cbPrice = $cbPrice;
+        $md->cb_price = $cbPrice;
         $jjfs = Jsfs::get($spot['jijiafangshi_id']);
         if ($jjfs['jj_type'] == 1 || $jjfs['jj_type'] == 2) {
             $md->sum_shui_price = $md->price * $md->zhongliang;

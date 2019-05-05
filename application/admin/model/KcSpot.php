@@ -14,6 +14,43 @@ class KcSpot extends Base
     protected $deleteTime = 'delete_time';
     protected $autoWriteTimestamp = 'datetime';
 
+    /**
+     * @param $mdid
+     * @throws DbException
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public static function deleteSpotByRkMd($mdid)
+    {
+        $ss = self::where('rk_md_id', $mdid)->find();
+        if (empty($ss)) {
+            throw new Exception("库存未找到");
+        }
+
+        self::ifCkMd($ss['id']);
+
+        $ss->delete();
+    }
+
+    /**
+     * @param $id
+     * @throws \think\Exception
+     * @throws Exception
+     */
+    private static function ifCkMd($id)
+    {
+        $c = StockOutMd::alias('md')
+            ->join('__STOCK_OUT__ ck', 'ck.id=md.stock_out_id')
+            ->where('md.kc_spot_id', $id)
+            ->where('ck.status', '<>', 2)
+            ->count();
+
+        if ($c > 0) {
+            throw new Exception("已有发货记录,操作终止");
+        }
+    }
+
     public function specification()
     {
         return $this->belongsTo('ViewSpecification', 'guige_id', 'id')->cache(true, 60)
@@ -250,14 +287,14 @@ class KcSpot extends Base
             }
             $s->guobang_zhongliang = $zhongliang;
             $s->guobang_jianzhong = $s->guobang_zhizhong * $zhijian;
-//            $s->guobang_price=$s->price() . divide(BigDecimal . valueOf(1L).add(shuilv . divide(BigDecimal . valueOf(100L))), 10, 4));
+            $s->guobang_price = round($s->price / (1 + $shuilv / 100), 4);
             $s->guobang_shui_price = $s->price;
             $s->old_guobang_zhongliang = $zhongliang;
         } else {
             $s->guobang_zhizhong = $s->lisuan_zhizhong;
             $s->guobang_zhongliang = $s->lisuan_zhongliang;
             $s->guobang_jianzhong = $s->lisuan_jianzhong;
-//            $s->guobang_price=$s->price() . divide(BigDecimal . valueOf(1L).add(shuilv . divide(BigDecimal . valueOf(100L))), 10, 4));
+            $s->guobang_price = round($s->price / (1 + $shuilv / 100), 4);
             $s->guobang_price = $s->lisuan_price;
             $s->guobang_shui_price = $s->lisuan_shui_price;
             $s->old_guobang_zhongliang = $s->lisuan_zhongliang;
@@ -392,43 +429,5 @@ class KcSpot extends Base
         $spot->save();
 
         return $spot;
-    }
-
-
-    /**
-     * @param $mdid
-     * @throws DbException
-     * @throws DataNotFoundException
-     * @throws ModelNotFoundException
-     * @throws Exception
-     */
-    public static function deleteSpotByRkMd($mdid)
-    {
-        $ss = self::where('rk_md_id', $mdid)->find();
-        if (empty($ss)) {
-            throw new Exception("库存未找到");
-        }
-
-        self::ifCkMd($ss['id']);
-
-        $ss->delete();
-    }
-
-    /**
-     * @param $id
-     * @throws \think\Exception
-     * @throws Exception
-     */
-    private static function ifCkMd($id)
-    {
-        $c = StockOutMd::alias('md')
-            ->join('__STOCK_OUT__ ck', 'ck.id=md.stock_out_id')
-            ->where('md.kc_spot_id', $id)
-            ->where('ck.status', '<>', 2)
-            ->count();
-
-        if ($c > 0) {
-            throw new Exception("已有发货记录,操作终止");
-        }
     }
 }

@@ -23,7 +23,7 @@ class Capital extends Right
             return returnFail('请求方式错误');
         }
         $model = new \app\admin\model\CapitalSk();
-        $data = $model->getTongjiHuizongList($request->param(), $pageLimit);
+        $data = $model->getTongjiHuizongList($request->param(), $pageLimit, $this->getCompanyId());
         return returnSuc($data);
     }
 
@@ -44,7 +44,7 @@ class Capital extends Right
             return returnFail('请选择供应商');
         }
         $model = new \app\admin\model\CapitalSk();
-        $data = $model->getTongjiMxList($params['customer_id'], $params, $pageLimit);
+        $data = $model->getTongjiMxList($params['customer_id'], $params, $pageLimit, $this->getCompanyId());
         return returnSuc($data);
     }
 }

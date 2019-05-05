@@ -397,7 +397,7 @@ class Chuku extends Right
         $params = $request->param();
         try {
             $model = new StockOut();
-            $data = $model->fahuoqingkuang($params, $pageLimit);
+            $data = $model->fahuoqingkuang($params, $pageLimit, $this->getCompanyId());
             return returnSuc($data);
         } catch (Exception $e) {
             return returnFail($e->getMessage());

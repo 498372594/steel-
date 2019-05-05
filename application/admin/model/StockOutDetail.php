@@ -108,6 +108,8 @@ class StockOutDetail extends Base
             $mx->mizhong = $gg['mizhong_name'] ?? '';
         } else {
             $mx->mizhong = $mizhong;
+            $gg = ViewSpecification::where('id', $guigeId)->cache(true, 60)->find();
+            $mx->pinming_id = $gg['productname_id'] ?? '';
         }
 
         if (empty($jianzhong)) {
