@@ -262,7 +262,7 @@ class Initinput extends Right
 //        $companyId = $this->getCompanyId();
 //        if (!empty($ja)) {
 //            foreach ($ja as $object) {
-//                $object['companyid'] = $companyId;
+//                $object['companyid'] = $companyId;addkc
 //                if (empty($object['id'])) {
 //                    $addMxList[] = $object;
 //                } else {
