@@ -36,9 +36,11 @@ class Purchase extends Right
             $updateList = [];
             $detailValidate = new CgPurchaseMx();
             $num = 1;
+//            dump($data['details']);die;
             foreach ($data['details'] as $item) {
                 if (!$detailValidate->check($item)) {
-                    return returnFail('请检查第' . $num . '行  ' . $data['details']);
+
+                    return returnFail('请检查第' . $num . '行  ' . $detailValidate->getError());
                 }
                 $item['caizhi'] = $this->getCaizhiId($item['caizhi_id']);
                 $item['chandi'] = $this->getChandiId($item['chandi_id']);
@@ -49,7 +51,9 @@ class Purchase extends Right
                 }
                 $num++;
             }
+
             $companyId = $this->getCompanyId();
+
             if (empty($data['id'])) {
                 $count = CgPurchase::whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
@@ -166,7 +170,6 @@ class Purchase extends Right
                     $mx->allowField(true)->data($mjo)->save();
 
                     if ($data["ruku_fangshi"] == 1) {
-
                         (new KcRk())->insertRkMxMd($newRk, $mx["purchase_id"], 4, $data["yw_time"], $data["system_number"], null, $data["customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
                             , $mx["jijiafangshi_id"], $mx["store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], $data["piaoju_id"], $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
                             $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $mx["sumprice"], $mx["shui_price"], $mx["sum_shui_price"], $mx["shuie"], $mx["mizhong"], $mx["jianzhong"], $this->getAccountId(), $this->getCompanyId());
@@ -185,8 +188,10 @@ class Purchase extends Right
             if (empty($data['delete_other_ids'])) {
                 $data['delete_other_ids'] = null;
             }
+if(!empty($data['other'])){
+    (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
 
-            (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+}
 
             Db::commit();
             return returnSuc(['id' => $cg['id']]);

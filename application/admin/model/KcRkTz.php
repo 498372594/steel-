@@ -17,7 +17,7 @@ class KcRkTz extends Base
     public function specification()
     {
         return $this->belongsTo('ViewSpecification', 'guige_id', 'id')->cache(true, 60)
-            ->field('id,specification,mizhong_name,productname');
+            ->field('id,specification')->bind(['guige' => 'specification']);
     }
 
     public function jsfs()
@@ -48,6 +48,16 @@ class KcRkTz extends Base
     {
         return $this->belongsTo('Originarea', 'chandi_id', 'id')->cache(true, 60)
             ->field('id,originarea')->bind(['chandi' => 'originarea']);
+    }
+    public function customData()
+    {
+        return $this->belongsTo('custom', 'cache_customer_id', 'id')->cache(true, 60)
+            ->field('id,custom')->bind(['customer_name' => 'custom']);
+    }
+    public function rukufangshiData()
+    {
+        return $this->belongsTo('kc_rk_type', 'ruku_type', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['rukufangshi' => 'name']);
     }
 
     /**
