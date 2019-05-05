@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "87ac395130a13b91da293f78ee0f2f39",
+    "content-hash": "68d3f82dc043568d7ffa8fa25c3b38ce",
     "packages": [
         {
             "name": "qt/qframe-auth",
@@ -267,7 +267,9 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7.0.0"
+        "php": ">=7.0.0",
+        "ext-json": "*",
+        "ext-pdo": "*"
     },
     "platform-dev": []
 }

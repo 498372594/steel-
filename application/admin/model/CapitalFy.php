@@ -83,6 +83,12 @@ class CapitalFy extends Base
             ->field('id,custom')->bind(['dfdw_name' => 'custom']);
     }
 
+    public function customForTongji()
+    {
+        return $this->belongsTo('Admin', 'moren_yewuyuan', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['yewuyuan' => 'name']);
+    }
+
     public function saleOperator()
     {
         return $this->belongsTo('Admin', 'sale_operator_id', 'id')->cache(true, 60)
