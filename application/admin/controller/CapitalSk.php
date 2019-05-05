@@ -335,7 +335,7 @@ class CapitalSk extends Right
      */
     public function cancel(Request $request, $id = 0)
     {
-        if (!$request->isPost()) {
+        if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
         Db::startTrans();

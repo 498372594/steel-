@@ -163,14 +163,15 @@ class Zhifa extends Right
                 $data['moshi_type'] = 2;
                 $data['companyid'] = $companyId;
                 $data['system_number'] = 'CGZFD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-                $ms = (new SalesMoshi())->allowField(true)->data($data)->save();
+                $ms = new SalesMoshi();
+                $ms->allowField(true)->data($data)->save();
 
                 $cg = (new CgPurchase())->insertCaigou($ms['id'], 2, $ms['yw_time'], $ms['cg_customer_id'],
                     $ms['cg_jiesuan_id'], 1, $ms['cg_piaoju_id'], $ms['remark'], $ms['department'], $ms['employer'], $this->getAccountId(), $companyId);
                 $rk = (new KcRk())->insertRuku($cg['id'], 4, $cg['system_number'], $ms['yw_time'], $ms['department'], $ms['employer'], $this->getAccountId(), $companyId);
 
                 $sale = (new \app\admin\model\Salesorder())->insertSale($ms['id'], "2", $ms['yw_time'], $ms['customer_id'],
-                    $ms['piaoju_id'], $ms['jsfs'], $ms['remark'], $ms['department'], $ms['employer'], $ms['contact'], $ms['mobile'], $ms['chehao'], $this->getAccountId(), $companyId);
+                    $ms['piaoju_id'], $ms['jsfs'], $ms['remark'], $ms['department'], $ms['employer'], $ms['contact'], $ms['telephone'], $ms['chehao'], $this->getAccountId(), $companyId);
                 $ck = (new StockOut())->insertChuku($sale['id'], 4, $ms['yw_time'], $ms['department'], $ms['system_number'], $ms['employer'], $this->getAccountId(), $companyId);
             } else {
                 throw new Exception('采购直发单禁止修改');
@@ -202,13 +203,13 @@ class Zhifa extends Right
                     }
                 }
                 $cgmx = (new CgPurchase())->insertMx($cg, $mx['id'], 2, $mx['guige_id'], $mx['store_id'],
-                    $mx['caizhi'], $mx['chandi'], null, $mx['cg_jijiafangshi_id'], $mx['changdu'], $mx['houdu'],
+                    $mx['caizhi'], $mx['chandi'], null, $mx['jijiafangshi_id'], $mx['changdu'], $mx['houdu'],
                     $mx['kuandu'], $mx['cg_tax'], $mx['cg_lingzhi'], $mx['cg_jianshu'], $mx['zhijian'], $mx['cg_counts'],
                     $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'], $mx['cg_sum_shui_price'],
-                    null, $mx['pihao'], $mx['huohao'], $mx['beizhu'], $mx['chehao'], $mx['mizhong'], $mx['jianzhong'], $companyId);
+                    null, $mx['pihao'], $mx['huohao'] ?? '', $mx['beizhu'], $mx['chehao'], $mx['mizhong'], $mx['jianzhong'], $companyId);
                 $spot = (new KcRk())->insertRkMxMd($rk, $cgmx['id'], 4, $ms['yw_time'], $cg['system_number'],
                     null, $cg['customer_id'], null, $mx['guige_id'], $mx['caizhi'], $mx['chandi'],
-                    $mx['jijiafangshi_id'], $mx['store_id'], $mx['pihao'], $mx['huohao'], $mx['chehao'], $mx['beizhu'],
+                    $mx['jijiafangshi_id'], $mx['store_id'], $mx['pihao'], $mx['huohao'] ?? '', $mx['chehao'], $mx['beizhu'],
                     $ms['cg_piaoju_id'], $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['cg_lingzhi'],
                     $mx['cg_jianshu'], $mx['cg_counts'], $mx['cg_zhongliang'], $mx['cg_price'], $mx['cg_sumprice'], $mx['cg_tax_rate'],
                     $mx['cg_sum_shui_price'], $mx['cg_tax'], $mx['mizhong'], $mx['jianzhong'], $this->getAccountId(), $companyId);
@@ -236,7 +237,7 @@ class Zhifa extends Right
 
             (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'] ?? [], $sale['id'], $sale['ywsj'], 1, $ms['department'], $ms['employer'], null, $this->getAccountId(), $companyId);
 
-            $mxList = SalesorderDetails::where('xs_sale_id', $sale['id'])->select();
+            $mxList = SalesorderDetails::where('order_id', $sale['id'])->select();
             if (!empty($mxList)) {
                 foreach ($mxList as $mx) {
 
@@ -277,7 +278,7 @@ class Zhifa extends Right
             return returnSuc(['id' => $ms['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage());
+            return returnFail($e->getMessage() . $e->getTraceAsString());
         }
     }
 

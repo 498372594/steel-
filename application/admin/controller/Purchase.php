@@ -188,10 +188,10 @@ class Purchase extends Right
             if (empty($data['delete_other_ids'])) {
                 $data['delete_other_ids'] = null;
             }
-if(!empty($data['other'])){
-    (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+            if (!empty($data['other'])) {
+                (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
 
-}
+            }
 
             Db::commit();
             return returnSuc(['id' => $cg['id']]);
@@ -559,21 +559,6 @@ if(!empty($data['other'])){
     }
 
     /**
-     * 获取大类列表
-     * @return Json
-     * @throws DataNotFoundException
-     * @throws ModelNotFoundException
-     * @throws DbException
-     */
-    public function getclassnamelist()
-    {
-        $list = Classname::field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
-        $list = new Tree($list);
-        $list = $list->leaf();
-        return returnRes($list, '没有数据，请添加后重试', $list);
-    }
-
-    /**
      * 采购单列表
      * @param int $pageLimit
      * @return Json
@@ -662,6 +647,21 @@ if(!empty($data['other'])){
     }
 
     /**
+     * 获取大类列表
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
+     */
+    public function getclassnamelist()
+    {
+        $list = Classname::field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
+        $list = new Tree($list);
+        $list = $list->leaf();
+        return returnRes($list, '没有数据，请添加后重试', $list);
+    }
+
+    /**
      * @param int $id
      * @return Json
      * @throws DataNotFoundException
@@ -697,9 +697,11 @@ if(!empty($data['other'])){
     {
         $type = request()->param("type");
         $paymentclass = Paymentclass::field("id,name")
-            ->where('companyid',$this->getCompanyId())
-            ->where("type", $type)
-            ->select();
+            ->where('companyid', $this->getCompanyId());
+        if (!empty($type)) {
+            $paymentclass->where("type", $type);
+        }
+        $paymentclass = $paymentclass->select();
         return returnRes($paymentclass, "没有相关数据", $paymentclass);
     }
 
@@ -845,9 +847,10 @@ if(!empty($data['other'])){
      * @return Json
      * @throws DbException
      */
-    public function cgyfzk($pageLimit=10){
+    public function cgyfzk($pageLimit = 10)
+    {
         $ywsjStart = '';
-        $param=request()->param();
+        $param = request()->param();
         if (!empty($param['ywsjStart'])) {
             $ywsjStart = $param['ywsjStart'];
         }
@@ -856,7 +859,7 @@ if(!empty($data['other'])){
             $ywsjEnd = date('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
         }
         $sqlParams = [];
-        $sql="(select t2.id             gysid,
+        $sql = "(select t2.id             gysid,
        t2.daima,
        t2.wanglai,
        t2.yewu_yuan,
@@ -915,7 +918,7 @@ from (SELECT t1.id,
                             WHERE mx.delete_time is null
                               AND se.delete_time is null
                               AND se.customer_id = c.id
-                              and se.companyid=".$this->getCompanyId()."
+                              and se.companyid=" . $this->getCompanyId() . "
                               and se.status != 1";
 
         if (!empty($param['ywsjStart'])) {
@@ -933,7 +936,7 @@ from (SELECT t1.id,
                                                                         WHERE fy.fang_xiang = 2
                                                                           AND fy.delete_time is null
                                                                           and fy.status != 1
-                                                                          and fy.companyid=".$this->getCompanyId()."
+                                                                          and fy.companyid=" . $this->getCompanyId() . "
                                                                           AND fy.customer_id = c.id";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and fy.yw_time >= ?';
@@ -943,14 +946,14 @@ from (SELECT t1.id,
             $sql .= ' and fy.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="), 0) + IFNULL(
+        $sql .= "), 0) + IFNULL(
                               (SELECT ifnull(SUM(IFNULL(mx.money, 0)), 0)
                                FROM init_ysfk_mx mx
                                       LEFT JOIN init_ysfk ysfk ON mx.ysfk_id = ysfk.id
                                WHERE ysfk.type = 1
                                  AND ysfk.delete_time is null
                                  and mx.delete_time is null
-                                 and mx.companyid=".$this->getCompanyId()."
+                                 and mx.companyid=" . $this->getCompanyId() . "
                                  AND mx.customer_id = c.id
                                  and ysfk.status != 1";
         if (!empty($param['ywsjStart'])) {
@@ -961,13 +964,13 @@ from (SELECT t1.id,
             $sql .= ' and ysfk.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="), 0) + IFNULL((SELECT -ifnull(SUM(IFNULL(mx.sum_shui_price, 0)), 0)
+        $sql .= "), 0) + IFNULL((SELECT -ifnull(SUM(IFNULL(mx.sum_shui_price, 0)), 0)
                                       FROM cg_th_mx mx
                                              LEFT JOIN cg_th th ON mx.cg_th_id = th.id
                                       WHERE th.customer_id = c.id
                                         and th.delete_time is null
                                         and th.status != 1
-                                        and mx.companyid=".$this->getCompanyId()."
+                                        and mx.companyid=" . $this->getCompanyId() . "
                                         and mx.delete_time is null";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and th.yw_time >=?';
@@ -977,14 +980,14 @@ from (SELECT t1.id,
             $sql .= ' and th.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="),0) + (SELECT ifnull( sum(ifnull(mx.money, 0)), 0)
+        $sql .= "),0) + (SELECT ifnull( sum(ifnull(mx.money, 0)), 0)
                              from capital_other_details mx
                                     LEFT JOIN capital_other qt on mx.cap_qt_id = qt.id
                              where qt.customer_id = c.id
                                and qt.fangxiang = 2
                                and qt.status != 1
                                and mx.delete_time is null
-                               and mx.companyid=".$this->getCompanyId()."
+                               and mx.companyid=" . $this->getCompanyId() . "
                                and qt.delete_time is null";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and qt.yw_time >=?';
@@ -995,13 +998,13 @@ from (SELECT t1.id,
             $sqlParams[] = $ywsjEnd;
         }
 
-        $sql.=")) yingfu_yue, ( SELECT ifnull(SUM(
+        $sql .= ")) yingfu_yue, ( SELECT ifnull(SUM(
                                     ifnull(fk.money, 0) + IFNULL(fk.mfmoney, 0)
                                       ), 0)
                     FROM capital_fk fk
                     WHERE fk.delete_time is null
                       AND fk.status != 1
-                       and fk.companyid=".$this->getCompanyId()."
+                       and fk.companyid=" . $this->getCompanyId() . "
                       AND fk.customer_id = c.id";
 
         if (!empty($param['ywsjStart'])) {
@@ -1012,7 +1015,7 @@ from (SELECT t1.id,
             $sql .= ' and fk.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.=")  shifu_jine,";
+        $sql .= ")  shifu_jine,";
         if (!empty($param['ywsjStart'])) {
             $sql .= " (
                    (
@@ -1024,7 +1027,7 @@ from (SELECT t1.id,
                    LEFT JOIN cg_purchase pur ON mx.purchase_id = pur.id
                    WHERE
                    mx.delete_time is null
-                   and mx.companyid=".$this->getCompanyId()."
+                   and mx.companyid=" . $this->getCompanyId() . "
                    AND pur.delete_time is null
                    AND pur.customer_id = c.id
                    and pur.status!=1
@@ -1045,7 +1048,7 @@ from (SELECT t1.id,
                    AND fy.customer_id = c.id
                    and fy.yw_time <?";
             $sqlParams[] = $ywsjStart;
-            $sql .="
+            $sql .= "
                    ),
                    0
                    ) + IFNULL(
@@ -1059,12 +1062,12 @@ from (SELECT t1.id,
                    ysfk.type = 1
                    AND ysfk.delete_time is null
                    and mx.delete_time is null
-                   and mx.companyid=".$this->getCompanyId()."
+                   and mx.companyid=" . $this->getCompanyId() . "
                    AND mx.customer_id = c.id
                    and ysfk.status!=1
                    and ysfk.yw_time <?";
             $sqlParams[] = $ywsjStart;
-            $sql .="
+            $sql .= "
                    ),
                    0
                    )
@@ -1078,12 +1081,12 @@ from (SELECT t1.id,
                    WHERE
                    th.customer_id = c.id
                    and th.delete_time is null
-                    and th.companyid=".$this->getCompanyId()."
+                    and th.companyid=" . $this->getCompanyId() . "
                    and th.status!=1
                   
                    AND th.yw_time  <?";
             $sqlParams[] = $ywsjStart;
-            $sql .="
+            $sql .= "
                    ),
                    0
                    ) -
@@ -1098,12 +1101,12 @@ from (SELECT t1.id,
                    capital_fk fk
                    WHERE
                    fk.delete_time is null
-                   and fk.companyid=".$this->getCompanyId()."
+                   and fk.companyid=" . $this->getCompanyId() . "
                    AND fk.status!=1
                    AND fk.customer_id = c.id
                    and fk.yw_time <?";
             $sqlParams[] = $ywsjStart;
-            $sql .="
+            $sql .= "
                    )
                    ,0)+
                    (SELECT
@@ -1117,22 +1120,22 @@ from (SELECT t1.id,
                    AND qt.fangxiang = 2
                    AND (qt.`status` = 0
                    OR qt.`status` = 2)
-                   and mx.companyid=".$this->getCompanyId()."
+                   and mx.companyid=" . $this->getCompanyId() . "
                    AND mx.delete_time is null
                    AND qt.delete_time is null
                    AND qt.yw_time <?";
             $sqlParams[] = $ywsjStart;
-            $sql .="
+            $sql .= "
                    )) qichu_yue,";
-        }else{
-            $sql.=" 0 qichu_yue,";
+        } else {
+            $sql .= " 0 qichu_yue,";
         }
-        $sql.=" (ifnull((SELECT SUM(IFNULL(salemx.price_and_tax, 0))
+        $sql .= " (ifnull((SELECT SUM(IFNULL(salemx.price_and_tax, 0))
                           FROM salesorder_details salemx
                                  LEFT JOIN salesorder sale on salemx.order_id = sale.id
                           WHERE sale.delete_time is null
                             and salemx.delete_time is null
-                             and salemx.companyid=".$this->getCompanyId()."
+                             and salemx.companyid=" . $this->getCompanyId() . "
                             and sale.status != 1
                             and sale.custom_id = c.id";
         if (!empty($param['ywsjStart'])) {
@@ -1143,11 +1146,11 @@ from (SELECT t1.id,
             $sql .= ' and sale.ywsj < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="), 0) +IFNULL(
+        $sql .= "), 0) +IFNULL(
                          (SELECT SUM(IFNULL(fy.money, 0))
                           FROM capital_fy fy
                           WHERE fy.fang_xiang = 1
-                          and fy.companyid=".$this->getCompanyId()."
+                          and fy.companyid=" . $this->getCompanyId() . "
                             AND fy.delete_time is null
                             and fy.status != 1
                             and fy.customer_id = c.id";
@@ -1159,13 +1162,13 @@ from (SELECT t1.id,
             $sql .= ' and fy.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="),0) + IFNULL(
+        $sql .= "),0) + IFNULL(
                          (SELECT SUM(IFNULL(mx.money, 0))
                           FROM init_ysfk_mx mx
                                  LEFT JOIN init_ysfk ysfk ON mx.ysfk_id = ysfk.id
                           WHERE ysfk.type = 0
                             AND ysfk.delete_time is null
-                             and mx.companyid=".$this->getCompanyId()."
+                             and mx.companyid=" . $this->getCompanyId() . "
                             and mx.delete_time is null
                             AND mx.customer_id = c.id
                             and ysfk.status != 1";
@@ -1178,7 +1181,7 @@ from (SELECT t1.id,
             $sqlParams[] = $ywsjEnd;
         }
 
-         $sql.="),0 ) + IFNULL(
+        $sql .= "),0 ) + IFNULL(
                                  (SELECT -SUM(
                                             IFNULL(mx.sum_shui_price, 0)
                                      )
@@ -1186,7 +1189,7 @@ from (SELECT t1.id,
                                          LEFT JOIN sales_return th ON mx.xs_th_id = th.id
                                   WHERE th.customer_id = c.id
                                     AND th.delete_time is null
-                                     and mx.companyid=".$this->getCompanyId()."
+                                     and mx.companyid=" . $this->getCompanyId() . "
                                     and mx.delete_time is null
                                     AND th.status != 1";
         if (!empty($param['ywsjStart'])) {
@@ -1198,11 +1201,11 @@ from (SELECT t1.id,
             $sqlParams[] = $ywsjEnd;
         }
 
-        $sql.="),0) + ifnull((SELECT sum(ifnull(qt.money, 0))
+        $sql .= "),0) + ifnull((SELECT sum(ifnull(qt.money, 0))
                                        FROM capital_other qt
                                        WHERE qt.customer_id = c.id
                                          and qt.fangxiang = 1
-                                          and qt.companyid=".$this->getCompanyId()."
+                                          and qt.companyid=" . $this->getCompanyId() . "
                                          and qt.delete_time is null
                                          and qt.status != 1";
         if (!empty($param['ywsjStart'])) {
@@ -1213,12 +1216,12 @@ from (SELECT t1.id,
             $sql .= ' and qt.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="), 0))ys, ( IFNULL(
+        $sql .= "), 0))ys, ( IFNULL(
                          (SELECT SUM(sk.money + IFNULL(sk.msmoney, 0))
                           FROM capital_sk sk
                           WHERE sk.customer_id = c.id
                             and sk.status != 1
-                            and sk.companyid=".$this->getCompanyId()."
+                            and sk.companyid=" . $this->getCompanyId() . "
                             and sk.delete_time is null";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and sk.yw_time >=?';
@@ -1228,14 +1231,14 @@ from (SELECT t1.id,
             $sql .= ' and sk.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="), 0))yf , 0  gcChPrice,
+        $sql .= "), 0))yf , 0  gcChPrice,
                    (ifnull(
                          (SELECT SUM(IFNULL(mx.price_and_tax, 0))
                           FROM salesorder_details mx
                                  LEFT JOIN salesorder sale ON mx.order_id = sale.id
                           WHERE mx.delete_time is null
                             and sale.status != 1
-                             and mx.companyid=".$this->getCompanyId()."
+                             and mx.companyid=" . $this->getCompanyId() . "
                             AND sale.delete_time is null
                             AND sale.custom_id = c.id";
         if (!empty($param['ywsjStart'])) {
@@ -1246,12 +1249,12 @@ from (SELECT t1.id,
             $sql .= ' and sale.ywsj < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="), 0)+ IFNULL((SELECT SUM(IFNULL(fy.money, 0))
+        $sql .= "), 0)+ IFNULL((SELECT SUM(IFNULL(fy.money, 0))
                               FROM capital_fy fy
                               WHERE fy.fang_xiang = 1
                                 AND fy.delete_time is null
                                 and fy.status != 1
-                                and fy.companyid=".$this->getCompanyId()."
+                                and fy.companyid=" . $this->getCompanyId() . "
                                 AND fy.customer_id = c.id";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and fy.yw_time >=?';
@@ -1261,7 +1264,7 @@ from (SELECT t1.id,
             $sql .= ' and fy.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="),0) + IFNULL((SELECT SUM(IFNULL(mx.money, 0))
+        $sql .= "),0) + IFNULL((SELECT SUM(IFNULL(mx.money, 0))
                                   FROM init_ysfk_mx mx
                                          LEFT JOIN init_ysfk ysfk ON mx.ysfk_id = ysfk.id
                                   WHERE ysfk.type = 0
@@ -1269,7 +1272,7 @@ from (SELECT t1.id,
                                     AND mx.delete_time is null
                                     AND mx.customer_id = c.id
                                     and ysfk.status != 1
-                                     and mx.companyid=".$this->getCompanyId()."
+                                     and mx.companyid=" . $this->getCompanyId() . "
                                     and ysfk.delete_time is null";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and ysfk.yw_time >=?';
@@ -1279,13 +1282,13 @@ from (SELECT t1.id,
             $sql .= ' and ysfk.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="),0) + IFNULL((SELECT -SUM(IFNULL(mx.sum_shui_price, 0))
+        $sql .= "),0) + IFNULL((SELECT -SUM(IFNULL(mx.sum_shui_price, 0))
                                   FROM sales_return_details mx
                                          LEFT JOIN sales_return th ON mx.xs_th_id = th.id
                                   WHERE th.customer_id = c.id
                                     and th.delete_time is null
                                     and th.status != 1
-                                     and mx.companyid=".$this->getCompanyId()."
+                                     and mx.companyid=" . $this->getCompanyId() . "
                                     and mx.delete_time is null";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and th.yw_time >=?';
@@ -1295,7 +1298,7 @@ from (SELECT t1.id,
             $sql .= ' and th.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
                                ),
                                  0
                            ) + (SELECT ifnull(sum(ifnull(mx.money, 0)), 0)
@@ -1305,7 +1308,7 @@ from (SELECT t1.id,
                                 where qt.customer_id = c.id
                                   and qt.fangxiang = 1
                                   and qt.status != 1
-                                   and mx.companyid=".$this->getCompanyId()."
+                                   and mx.companyid=" . $this->getCompanyId() . "
                                   and qt.delete_time is null
                                   and qt.yw_type != 16";
 
@@ -1317,14 +1320,14 @@ from (SELECT t1.id,
             $sql .= ' and qt.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.=")+ (SELECT ifnull(sum(ifnull(mx.money, 0)), 0)
+        $sql .= ")+ (SELECT ifnull(sum(ifnull(mx.money, 0)), 0)
 
                             from capital_other_details mx
                                    LEFT JOIN capital_other qt on mx.cap_qt_id = qt.id
                             where qt.customer_id = c.id
                               and qt.fangxiang = 1
                               and qt.status != 1
-                               and mx.companyid=".$this->getCompanyId()."
+                               and mx.companyid=" . $this->getCompanyId() . "
                               and qt.delete_time is null
                               and qt.yw_type = 16";
         if (!empty($param['ywsjStart'])) {
@@ -1335,14 +1338,14 @@ from (SELECT t1.id,
             $sql .= ' and qt.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.=")) yingshou_yue,
+        $sql .= ")) yingshou_yue,
                    (SELECT ifnull(SUM(
                                     ifnull(sk.money, 0) + IFNULL(sk.msmoney, 0)
                                       ), 0)
                     FROM capital_sk sk
                     WHERE sk.delete_time is null
                       AND sk.status != 1
-                       and sk.companyid=".$this->getCompanyId()."
+                       and sk.companyid=" . $this->getCompanyId() . "
                       AND sk.customer_id = c.id";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and sk.yw_time >=?';
@@ -1352,9 +1355,9 @@ from (SELECT t1.id,
             $sql .= ' and sk.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.=") shishou_jine,";
+        $sql .= ") shishou_jine,";
         if (!empty($param['ywsjStart'])) {
-            $sql .=" (
+            $sql .= " (
                    (
                    SELECT
                    ifnull(sum(mx.price_and_tax),0)
@@ -1366,7 +1369,7 @@ from (SELECT t1.id,
                    AND sale.delete_time is null
                    and sale.status!=1
                    AND sale.custom_id = c.id
-                    and mx.companyid=".$this->getCompanyId()."
+                    and mx.companyid=" . $this->getCompanyId() . "
                    and sale.ywsj<?";
             $sqlParams[] = $ywsjStart;
             $sql .= "
@@ -1381,7 +1384,7 @@ from (SELECT t1.id,
                    AND fy.delete_time is null
                    and fy.status!=1
                    AND fy.customer_id = c.id
-                   and fy.companyid=".$this->getCompanyId()."
+                   and fy.companyid=" . $this->getCompanyId() . "
                    and fy.yw_time<?";
             $sqlParams[] = $ywsjStart;
             $sql .= "
@@ -1397,7 +1400,7 @@ from (SELECT t1.id,
                    WHERE
                    ysfk.type = 0
                    and ysfk.delete_time is null
-                    and mx.companyid=".$this->getCompanyId()."
+                    and mx.companyid=" . $this->getCompanyId() . "
                    AND mx.delete_time is null
                    AND mx.customer_id = c.id
                    and ysfk.status!=1
@@ -1416,7 +1419,7 @@ from (SELECT t1.id,
                    LEFT JOIN sales_return th ON mx.xs_th_id = th.id
                    WHERE
                    th.customer_id = c.id
-                    and mx.companyid=".$this->getCompanyId()."
+                    and mx.companyid=" . $this->getCompanyId() . "
                    and th.delete_time is null
                    and mx.delete_time is null
                    and th.status!=1
@@ -1438,7 +1441,7 @@ from (SELECT t1.id,
                    capital_sk sk
                    WHERE
                    sk.delete_time is null
-                    and sk.companyid=".$this->getCompanyId()."
+                    and sk.companyid=" . $this->getCompanyId() . "
                    AND sk.status!=1
                    AND sk.customer_id = c.id
                  
@@ -1450,42 +1453,42 @@ from (SELECT t1.id,
                    ,0)
                    ) qichu_yue1,";
 
-        }else{
-            $sql.="  0 qichu_yue1,";
+        } else {
+            $sql .= "  0 qichu_yue1,";
         }
-              $sql.="
+        $sql .= "
                    (SELECT IFNULL(SUM(IFNULL(sk.money, 0)), 0)  -
                            (SELECT IFNULL(SUM(IFNULL(hk.yfkhxmoney, 0)), 0)
                             FROM capital_hk hk where
                                hk.status != 1
-                                and hk.companyid=".$this->getCompanyId()."
+                                and hk.companyid=" . $this->getCompanyId() . "
                                AND hk.customer_id = c.id) -
                            (SELECT -IFNULL(SUM(IFNULL(sk1.money, 0)), 0)
                             FROM capital_sk sk1
                             WHERE sk1.delete_time is null
                               AND sk1.status = 0
                               AND sk1.sk_type = 4
-                              and sk1.companyid=".$this->getCompanyId()."
+                              and sk1.companyid=" . $this->getCompanyId() . "
                               AND c.id = sk1.customer_id)
                     FROM capital_sk sk
                     WHERE sk.`customer_id` = c.id
                       AND sk.sk_type = 2
                       AND sk.delete_time is null
-                      and sk.companyid=".$this->getCompanyId()."
+                      and sk.companyid=" . $this->getCompanyId() . "
                       AND sk.status = 0)       yushoukuanyue,
                    (SELECT IFNULL(SUM(IFNULL(fk.money, 0)), 0) -
                            (SELECT IFNULL(SUM(IFNULL(hk.yfkhxmoney, 0)), 0)
                             FROM capital_hk hk
                             WHERE hk.delete_time is null
                               AND hk.status != 1
-                               and hk.companyid=".$this->getCompanyId()."
+                               and hk.companyid=" . $this->getCompanyId() . "
                               AND hk.customer_id = c.id)  -
                            (SELECT -IFNULL(SUM(IFNULL(fk1.money, 0)), 0)
                             FROM capital_fk fk1
                             WHERE fk1.delete_time is null
                               AND fk1.status != 1
                               AND fk1.fk_type = 4
-                               and fk1.companyid=".$this->getCompanyId()."
+                               and fk1.companyid=" . $this->getCompanyId() . "
                               AND fk1.customer_id = c.id)
                     FROM capital_fk fk
                     WHERE fk.customer_id = c.id
@@ -1495,7 +1498,7 @@ from (SELECT t1.id,
 
             FROM custom c
             where c.delete_time is null
-             and c.companyid=".$this->getCompanyId()."
+             and c.companyid=" . $this->getCompanyId() . "
               and c.issupplier = 1) t1)t2
 where 1 = 1";
         if (!empty($param['yuEweiLing'])) {
@@ -1510,7 +1513,7 @@ where 1 = 1";
             $sql .= ' and t2.wanglai like concat(:danwei)';
             $sqlParams['danwei'] = $param['danwei'];
         }
-        $sql.=" order by t2.create_time desc)";
+        $sql .= " order by t2.create_time desc)";
 
         $data = Db::table($sql)->alias('t')->bind($sqlParams)->paginate($pageLimit);
         return returnSuc($data);
@@ -1521,11 +1524,12 @@ where 1 = 1";
      * @return Json
      * @throws DbException
      */
-    public function getYfzkTongjiMxList($pageLimit = 10){
+    public function getYfzkTongjiMxList($pageLimit = 10)
+    {
         if (!empty($params['customer_id'])) {
             $customer_id = $params['customer_id'];
         }
-        $params=request()->param();
+        $params = request()->param();
         $ywsjStart = '';
         if (!empty($params['ywsjStart'])) {
             $ywsjStart = $params['ywsjStart'];
@@ -1535,7 +1539,7 @@ where 1 = 1";
             $ywsjEnd = $params['ywsjEnd'];
         }
         $sqlParams = [];
-        $sql="(SELECT
+        $sql = "(SELECT
     NULL id,
        '' STATUS,
        NULL yw_time,
@@ -1554,15 +1558,15 @@ where 1 = 1";
                      ON mx.purchase_id = pur.id
             WHERE mx.delete_time is null
               AND pur.delete_time is null
-              and mx.companyid=".$this->getCompanyId()."
+              and mx.companyid=" . $this->getCompanyId() . "
               AND pur.status != 1
              ";
         if (!empty($param['customer_id'])) {
-            $sql .=" AND pur.customer_id = ?";
+            $sql .= " AND pur.customer_id = ?";
             $sqlParams[] = $customer_id;
         }
         if (!empty($param['yw_time'])) {
-            $sql .="  AND pur.yw_time <=?";
+            $sql .= "  AND pur.yw_time <=?";
             $sqlParams[] = $ywsjStart;
         }
 
@@ -1576,14 +1580,14 @@ where 1 = 1";
                        WHERE fy.fang_xiang = 2
                          AND fy.delete_time is null
                          AND fy.status != 1
-                         and fy.companyid=".$this->getCompanyId()."
+                         and fy.companyid=" . $this->getCompanyId() . "
                          ";
         if (!empty($param['customer_id'])) {
-            $sql .=" AND fy.customer_id = ?";
+            $sql .= " AND fy.customer_id = ?";
             $sqlParams[] = $customer_id;
         }
         if (!empty($param['yw_time'])) {
-            $sql .="  AND fy.yw_time <=?";
+            $sql .= "  AND fy.yw_time <=?";
             $sqlParams[] = $ywsjStart;
         }
         $sql .= "
@@ -1597,18 +1601,18 @@ where 1 = 1";
                                            ON mx.ysfk_id = ysfk.id
                                   WHERE ysfk.type = 1
                                     AND ysfk.delete_time is null
-                                    and mx.companyid=".$this->getCompanyId()."
+                                    and mx.companyid=" . $this->getCompanyId() . "
                                     and mx.delete_time is null
                          
                                     AND ysfk.status != 1
 
                                     ";
         if (!empty($param['customer_id'])) {
-            $sql .=" AND ysfk.customer_id = ?";
+            $sql .= " AND ysfk.customer_id = ?";
             $sqlParams[] = $customer_id;
         }
         if (!empty($param['yw_time'])) {
-            $sql .="  AND ysfk.yw_time <=?";
+            $sql .= "  AND ysfk.yw_time <=?";
             $sqlParams[] = $ywsjStart;
         }
         $sql .= "
@@ -1623,19 +1627,19 @@ where 1 = 1";
                                           ON mx.cg_th_id = th.id
                                  WHERE th.delete_time is null
                                    and mx.delete_time is null
-                                    and mx.companyid=".$this->getCompanyId()."
+                                    and mx.companyid=" . $this->getCompanyId() . "
                                    AND th.status != 1
                                
                                                ";
-                    if (!empty($param['customer_id'])) {
-                        $sql .=" AND th.customer_id = ?";
-                        $sqlParams[] = $customer_id;
-                    }
-                    if (!empty($param['yw_time'])) {
-                        $sql .="  AND th.yw_time <=?";
-                        $sqlParams[] = $ywsjStart;
-                    }
-                    $sql .= "
+        if (!empty($param['customer_id'])) {
+            $sql .= " AND th.customer_id = ?";
+            $sqlParams[] = $customer_id;
+        }
+        if (!empty($param['yw_time'])) {
+            $sql .= "  AND th.yw_time <=?";
+            $sqlParams[] = $ywsjStart;
+        }
+        $sql .= "
                                     ),
                                     0) - IFNULL(
                                            (SELECT
@@ -1643,15 +1647,15 @@ where 1 = 1";
                                             FROM
                                                  capital_fk fk
                                             WHERE fk.delete_time is null
-                                             and fk.companyid=".$this->getCompanyId()."
+                                             and fk.companyid=" . $this->getCompanyId() . "
                                               AND fk.status != 1
                                               ";
         if (!empty($param['customer_id'])) {
-            $sql .=" AND fk.customer_id = ?";
+            $sql .= " AND fk.customer_id = ?";
             $sqlParams[] = $customer_id;
         }
         if (!empty($param['yw_time'])) {
-            $sql .="  AND fk.yw_time <=?";
+            $sql .= "  AND fk.yw_time <=?";
             $sqlParams[] = $ywsjStart;
         }
         $sql .= "
@@ -1663,10 +1667,10 @@ where 1 = 1";
                                 where basecu.iscustom=1
                                ";
         if (!empty($param['customer_id'])) {
-            $sql .=" AND basecu.id=?";
+            $sql .= " AND basecu.id=?";
             $sqlParams[] = $customer_id;
         }
-                                $sql .= "
+        $sql .= "
                                        
                                                       GROUP BY basecu.`id`
                                                       union all
@@ -1715,7 +1719,7 @@ from
                                                       LEFT JOIN admin op on se.sale_operate_id =op.id
                                                       where
                                                       mx.delete_time is null
-                                                       and mx.companyid=".$this->getCompanyId()."
+                                                       and mx.companyid=" . $this->getCompanyId() . "
                                                       and cus.iscustom=1
 
 
@@ -1742,7 +1746,7 @@ from
                                                       LEFT JOIN admin op on fk.sale_operator_id =op.id
                                                       where
                                                       fk.delete_time is null 
-                                                      and fk.companyid=".$this->getCompanyId()."
+                                                      and fk.companyid=" . $this->getCompanyId() . "
 
                                                       and fk.money != 0
                                                       and cus.iscustom=1
@@ -1768,7 +1772,7 @@ from
                                                       where
                                                       fy.fang_xiang=2
                                                       and fy.delete_time is null
-                                                      and fy.companyid=".$this->getCompanyId()."
+                                                      and fy.companyid=" . $this->getCompanyId() . "
 
                                                       and cus.iscustom=1
 
@@ -1796,7 +1800,7 @@ from
                                                       mx.delete_time is null
                                                       and th.delete_time is null
                                                       and cus.iscustom=1
-                                                      and th.companyid=".$this->getCompanyId()."
+                                                      and th.companyid=" . $this->getCompanyId() . "
 
                                                       union all
                                                       SELECT
@@ -1821,7 +1825,7 @@ from
                                                       where
                                                       qt.fangxiang=2
                                                       and cus.iscustom=1
-                                                        and mx.companyid=".$this->getCompanyId()."
+                                                        and mx.companyid=" . $this->getCompanyId() . "
                                                       and mx.delete_time is null
                                                       and qt.delete_time is null
                                                       group by qt.id
@@ -1847,7 +1851,7 @@ from
                                                       LEFT JOIN admin op on fk.sale_operator_id =op.id
                                                       where
                                                       fk.delete_time is null
-                                                      and fk.companyid=".$this->getCompanyId()."
+                                                      and fk.companyid=" . $this->getCompanyId() . "
 
                                                       and ifnull(fk.mfmoney,0)>0
                                                       and cus.iscustom=1
@@ -1873,7 +1877,7 @@ from
                                                       WHERE
                                                       ysfk.type=\"1\"
                                                       and ysfk.delete_time is null
-                                                      and ysfk.companyid=".$this->getCompanyId()."
+                                                      and ysfk.companyid=" . $this->getCompanyId() . "
 
                                                       and ysfk.delete_time is null
                                                       and cus.iscustom=1
@@ -1916,9 +1920,11 @@ from
         $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('yw_time')->paginate($pageLimit);
         return returnSuc($data);
     }
-    public function  ysjxfp($pageLimit=10){
+
+    public function ysjxfp($pageLimit = 10)
+    {
         $ywsjStart = '';
-        $param=request()->param();
+        $param = request()->param();
         if (!empty($param['ywsjStart'])) {
             $ywsjStart = $param['ywsjStart'];
         }
@@ -1927,7 +1933,7 @@ from
             $ywsjEnd = date('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
         }
         $sqlParams = [];
-        $sql="(select
+        $sql = "(select
        t2.id gysid,
        t2.daima,
        t2.gongying_shang,
@@ -1974,14 +1980,14 @@ from (
               WHERE
               se.customer_id = cus.id
               and se.status!=1
-               and mx.companyid=".$this->getCompanyId()."
+               and mx.companyid=" . $this->getCompanyId() . "
               and se.delete_time is null
               and mx.delete_time is null
               and mx.shui_price > 0
 
               AND se.yw_time <?";
-        $sqlParams[] = $ywsjStart;
-        $sql .= "
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
               ),0)
 
               )+ IFNULL(
@@ -1996,11 +2002,11 @@ from (
               AND yskp.type = 0
               and yskp.delete_time is null
               and yskp.status!=1
-              and mx.companyid=".$this->getCompanyId()."
+              and mx.companyid=" . $this->getCompanyId() . "
               and mx.delete_time is null
               AND yskp.yw_time  <?";
-        $sqlParams[] = $ywsjStart;
-        $sql .= "
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
 
               ),
               0)
@@ -2015,12 +2021,12 @@ from (
               th.customer_id = cus.id
               and mx.shui_price>0
               and th.delete_time is null
-              and mx.companyid=".$this->getCompanyId()."
+              and mx.companyid=" . $this->getCompanyId() . "
               and th.status!=1
               and mx.delete_time is null
               AND th.yw_time  <?";
-        $sqlParams[] = $ywsjStart;
-        $sql .= "
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
 
               ),
               0
@@ -2034,21 +2040,21 @@ from (
               sp.gys_id = cus.id
               and sp.status!=1
               and sp.delete_time is null
-              and sp.companyid=".$this->getCompanyId()."
+              and sp.companyid=" . $this->getCompanyId() . "
 
               AND sp.yw_time  <?";
-        $sqlParams[] = $ywsjStart;
-        $sql .= "
+            $sqlParams[] = $ywsjStart;
+            $sql .= "
               ),
               0
               )
               ) qichu_yingshou,";
 
-        }else{
+        } else {
 
-        $sql.="  0 qichu_yingshou,";
+            $sql .= "  0 qichu_yingshou,";
         }
-        $sql.="
+        $sql .= "
         
               (
               (
@@ -2066,7 +2072,7 @@ from (
               se.customer_id = cus.id
               and mx.shui_price > 0
               and se.status!=1
-              and mx.companyid=".$this->getCompanyId()."
+              and mx.companyid=" . $this->getCompanyId() . "
               and se.delete_time is null
               and mx.delete_time is null";
         if (!empty($param['ywsjStart'])) {
@@ -2077,7 +2083,7 @@ from (
             $sql .= ' and se.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
 
              
 		),0)
@@ -2092,7 +2098,7 @@ from (
 		WHERE
 		mx.customer_id = cus.id
 		and yskp.status!=1
-		and mx.companyid=".$this->getCompanyId()."
+		and mx.companyid=" . $this->getCompanyId() . "
 		and mx.delete_time is null
 		AND yskp.type = 0
 		and yskp.delete_time is null";
@@ -2104,7 +2110,7 @@ from (
             $sql .= ' and yskp.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
 		),
 		0
 		)+IFNULL(
@@ -2117,7 +2123,7 @@ from (
 		WHERE
 		th.customer_id = cus.id
 		and mx.shui_price>0
-		and mx.companyid=".$this->getCompanyId()."
+		and mx.companyid=" . $this->getCompanyId() . "
 		and th.delete_time is null
 		and mx.delete_time is null
 		and th.status!=1";
@@ -2129,7 +2135,7 @@ from (
             $sql .= ' and th.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
 
 		),
 		0
@@ -2146,7 +2152,7 @@ from (
 		WHERE
 		sp.gys_id = cus.id
 		and sp.status!=1
-		and sp.companyid=".$this->getCompanyId()."
+		and sp.companyid=" . $this->getCompanyId() . "
 		and sp.delete_time is null";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and sp.yw_time >=?';
@@ -2156,7 +2162,7 @@ from (
             $sql .= ' and sp.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
 
 		),
 		0
@@ -2166,7 +2172,7 @@ from (
 		custom cus
 		where
     cus.delete_time is null
-    and cus.companyid=".$this->getCompanyId()."
+    and cus.companyid=" . $this->getCompanyId() . "
 		and cus.`iscustom`=1
 		) t1
 		)t2
@@ -2182,12 +2188,14 @@ from (
             $sql .= ' and t2.gysid =:customer_id';
             $sqlParams['customer_id'] = $param['customer_id'];
         }
-        $sql.=" order by t2.create_time desc)";
+        $sql .= " order by t2.create_time desc)";
         $data = Db::table($sql)->alias('t')->bind($sqlParams)->paginate($pageLimit);
         return returnSuc($data);
     }
-    public function ysjxfpmx($customer_id,$pageLimit=10){
-        $params=request()->param();
+
+    public function ysjxfpmx($customer_id, $pageLimit = 10)
+    {
+        $params = request()->param();
         $ywsjStart = '';
         if (!empty($params['ywsjStart'])) {
             $ywsjStart = $params['ywsjStart'];
@@ -2197,7 +2205,7 @@ from (
             $ywsjEnd = $params['ywsjEnd'];
         }
         $sqlParams = [];
-        $sql="(SELECT
+        $sql = "(SELECT
 			 '' id,'' zbid,'' danhao,'' caigou_danhao,'' beizhu,null yw_time,'' piaoju,'' gys_id,tbcu.custom danwei,'' guige,'' danjia,'' pin_ming,'' `STATUS`,'' zhong_liang,'' jiashui_heji,'' shoupiao_jine,'' fapiao_taitou,'' signPerson,
 			 SUM(inv.sum_shui_price) - IFNULL(
 																	 (SELECT
@@ -2205,13 +2213,13 @@ from (
 																		FROM
 																				 inv_cgsp sp
 																		WHERE sp.gys_id = inv.customer_id
-																		 and sp.companyid=".$this->getCompanyId()."
+																		 and sp.companyid=" . $this->getCompanyId() . "
 
 																			AND sp.delete_time is null
 																			AND sp.status != 1
 																			and sp.yw_time  <=?";
-                                        $sqlParams[] = $ywsjStart;
-                                        $sql.="
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
 
 																			 ),
 																			 0
@@ -2221,7 +2229,7 @@ from (
 																			 FROM
 																			 capital_hk hk
 																			 WHERE hk.customer_id = inv.customer_id
-																			 and hk.companyid=".$this->getCompanyId()."
+																			 and hk.companyid=" . $this->getCompanyId() . "
 
 																			 AND hk.delete_time is null
 																			 AND hk.status != 1
@@ -2229,8 +2237,8 @@ from (
 																			 AND hk.hk_type = 13
 
 																			 and hk.yw_time  <=?";
-                                        $sqlParams[] = $ywsjStart;
-                                        $sql.="
+        $sqlParams[] = $ywsjStart;
+        $sql .= "
 																			 ),
 																			 0
 																			 ) yue
@@ -2239,15 +2247,15 @@ from (
 																			 left join custom tbcu on tbcu.id=inv.customer_id
 																			 WHERE inv.customer_id = ?";
         $sqlParams[] = $customer_id;
-        $sql.="
+        $sql .= "
 
 																			 AND inv.shui_price > 0
-																			 and inv.companyid=".$this->getCompanyId()."
+																			 and inv.companyid=" . $this->getCompanyId() . "
 																			 AND inv.fx_type = 2
 																			 AND inv.delete_time is null
 																			 and inv.yw_time <=?";
         $sqlParams[] = $ywsjStart;
-        $sql.="
+        $sql .= "
 union all
 																			 SELECT
 																			 t2.id,t2.zbid,t2.danhao,t2.caigou_danhao,t2.beizhu,t2.yw_time,t2.piaoju,t2.gys_id,t2.danwei,t2.guige,t2.danjia,t2.pin_ming,t2.`STATUS`,t2.zhong_liang,t2.jiashui_heji,t2.shoupiao_jine,t2.fapiao_taitou,t2.signPerson,'' yue
@@ -2283,7 +2291,7 @@ union all
 																			 LEFT JOIN productname pm ON gg.productname_id = pm.id
 																			 WHERE
 																			 se.delete_time is null
-																			 and mx.companyid=".$this->getCompanyId()."
+																			 and mx.companyid=" . $this->getCompanyId() . "
 
 																			 and mx.shui_price>0
 																			 and mx.sum_shui_price>0
@@ -2315,7 +2323,7 @@ union all
 																			 LEFT JOIN pjlx pjlx ON cgsp.piaoju_id = pjlx.id
 																			 WHERE
 
-																			 cgsp.money!=0 and cgsp.companyid=".$this->getCompanyId()."  and
+																			 cgsp.money!=0 and cgsp.companyid=" . $this->getCompanyId() . "  and
 																			 cgsp.delete_time is null";
 
 
@@ -2327,7 +2335,7 @@ union all
             $sql .= ' and cgsp.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
 
 		union ALL
 		SELECT
@@ -2354,7 +2362,7 @@ union all
 		LEFT JOIN pjlx pjlx ON cgsp.piaoju_id = pjlx.id
 		WHERE
 
-		cgsp.msmoney!=0  and cgsp.companyid=".$this->getCompanyId()." and
+		cgsp.msmoney!=0  and cgsp.companyid=" . $this->getCompanyId() . " and
 		cgsp.delete_time is null";
 
         if (!empty($param['ywsjStart'])) {
@@ -2365,7 +2373,7 @@ union all
             $sql .= ' and cgsp.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
 
 		union ALL
 		SELECT
@@ -2395,7 +2403,7 @@ union all
 		LEFT JOIN productname pm ON gg.productname_id = pm.id
 		WHERE
 		th.delete_time is null
-        and mx.companyid=".$this->getCompanyId()."
+        and mx.companyid=" . $this->getCompanyId() . "
 		and mx.shui_price>0
 		and mx.sum_shui_price>0
 		and mx.delete_time is null";
@@ -2407,7 +2415,7 @@ union all
             $sql .= ' and th.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
 
 		union ALL
 		SELECT
@@ -2436,7 +2444,7 @@ union all
 		WHERE
 		yskp.delete_time is null
 		and mx.delete_time is null
-		and mx.companyid=".$this->getCompanyId()."
+		and mx.companyid=" . $this->getCompanyId() . "
 		and yskp.type=0";
         if (!empty($param['ywsjStart'])) {
             $sql .= ' and yskp.yw_time >=?';
@@ -2446,7 +2454,7 @@ union all
             $sql .= ' and yskp.yw_time < ?';
             $sqlParams[] = $ywsjEnd;
         }
-        $sql.="
+        $sql .= "
 		)t1
 		where
 		1=1";
@@ -2479,7 +2487,7 @@ union all
         }
         if (!empty($params['status'])) {
             $sql .= 'and
-			t1.beizhu like %'.$params['status'].'%';
+			t1.beizhu like %' . $params['status'] . '%';
         }
 
         $sql .= ' order by t1.yw_time )t2)';
