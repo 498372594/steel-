@@ -276,7 +276,8 @@ class Rk extends Right
             if (empty($data)) {
                 $data = $request->post();
             }
-            if ($data["id"]) {
+
+            if (empty($data["id"])) {
                 throw new Exception('入库单禁止修改');
             }
             $data['create_operator'] = $this->getAccount()['name'];
