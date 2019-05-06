@@ -296,7 +296,7 @@ class CapitalFk extends Right
             return returnSuc(['id' => $fk['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage());
+            return returnFail($e->getMessage().$e->getTraceAsString().$e->getLine());
         }
     }
 
