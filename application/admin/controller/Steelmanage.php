@@ -8,11 +8,14 @@ use app\admin\model\Classname;
 use app\admin\model\Custom;
 use app\admin\model\Jianzhishu;
 use app\admin\model\Jiesuanfangshi;
+use app\admin\model\Jsfs;
 use app\admin\model\Paymenttype;
 use app\admin\model\Pjlx;
 use app\admin\model\Productname;
+use app\admin\model\Specification;
 use app\admin\model\Storage;
 use app\admin\model\Texture;
+use app\admin\model\Transportation;
 use app\admin\model\Unit;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
@@ -141,6 +144,21 @@ class Steelmanage extends Right
                 break;
             case 'paymenttype':
                 Paymenttype::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'jsfs':
+                Jsfs::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'specification':
+                Specification::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'transportation':
+                Transportation::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
                 break;
@@ -524,7 +542,6 @@ class Steelmanage extends Right
 
     /**
      * @return Json
-     * @throws DbException
      */
     public function custom()
     {
@@ -546,11 +563,14 @@ class Steelmanage extends Right
         return returnSuc($list);
     }
 
-
+    /**
+     * @return Json
+     * @throws DbException
+     */
     public function invcgsp()
     {
         $params = request()->param();
-        $list = \app\admin\model\Custom::where('companyid', $this->getCompanyId());
+        $list = Custom::where('companyid', $this->getCompanyId());
         //业务时间
         if (!empty($params['name'])) {
             $list->where('custom|zjm|', '%' . $params['name'] . '%');
