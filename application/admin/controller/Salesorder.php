@@ -543,6 +543,24 @@ class Salesorder extends Right
     }
 
     /**
+     * 货物销量排行榜
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function hwSalesList(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $param = $request->param();
+        $model = new \app\admin\model\Salesorder();
+        $data = $model->hwSalesList($param, $pageLimit, $this->getCompanyId());
+        return returnSuc($data);
+    }
+
+    /**
      * 销售明细表
      * @param Request $request
      * @param int $pageLimit

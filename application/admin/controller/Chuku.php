@@ -362,7 +362,7 @@ class Chuku extends Right
             if (!empty($ck['data_id'])) {
                 throw new Exception("当前单据是只读单据,请到关联单据作废");
             }
-            if ($ck['status'] == 1) {
+            if ($ck['status'] == 2) {
                 throw new Exception("该单据已经作废");
             }
 
