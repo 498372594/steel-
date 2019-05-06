@@ -153,8 +153,8 @@ SUM(ifnull(ckmd.cb_shuie, 0))    chengBenShuiPrice';
         if (!empty($params['shuiType']) && $params['shuiType'] == 1) {
             $sql .= ' sale.ywsj,
  sale.custom_id                   fyKuId,
- SUM(IFNULL(case fy.fang_xiang when 2 then fy.price_and_tax else (0-fy.price_and_tax), 0)) xiaoShouFySumPrice,
- SUM(IFNULL(case fy.fang_xiang when 2 then fy.tax else (0-fy.tax), 0))           xiaoShouFyShuiPrice';
+ SUM(IFNULL(case fy.fang_xiang when 2 then fy.price_and_tax else (0-fy.price_and_tax) end, 0)) xiaoShouFySumPrice,
+ SUM(IFNULL(case fy.fang_xiang when 2 then fy.tax else (0-fy.tax) end, 0))           xiaoShouFyShuiPrice';
         } else {
             $sql .= ' sale.ywsj,
 sale.custom_id                   fyKuId,

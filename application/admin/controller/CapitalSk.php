@@ -10,7 +10,8 @@ use app\admin\model\{Bank,
     CapitalOther as CapitalOtherModel,
     CapitalSk as CapitalSkModel,
     CapitalSkhx,
-    CapitalSkjsfs};
+    CapitalSkjsfs,
+    Custom};
 use app\admin\validate\{CapitalSk as CapitalSkValidate, CapitalSkJsfs as CapitalSkJsfsValidate};
 use Exception;
 use think\{Db,
@@ -57,6 +58,9 @@ class CapitalSk extends Right
         }
         if (!empty($params['beizhu'])) {
             $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
+        }
+        if (!empty($params['hide_no_ms'])) {
+            $list->where('msmoney', '>', 0);
         }
         $list = $list->paginate($pageLimit);
         return returnSuc($list);
@@ -377,6 +381,37 @@ class CapitalSk extends Right
             Db::rollback();
             return returnFail($e->getMessage());
         }
+    }
+
+    /**
+     * 客户少打钱列表
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function getLessMoneyHuizong(Request $request, $pageLimit = 10)
+    {
+        $params = $request->param();
+        $model = CapitalSkModel::fieldRaw('sum(msmoney) as msmoney,customer_id')
+            ->where('companyid', $this->getCompanyId())
+            ->where('status', '<>', 2);
+        if (!empty($params['ywsjStart'])) {
+            $model->where('yw_time', '>=', $params['ywsjStart']);
+        }
+        if (!empty($params['ywsjEnd'])) {
+            $model->where('yw_time', '<', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+        }
+        if (!empty($params['customer_id'])) {
+            $model->where('customer_id', $params['customer_id']);
+        }
+        $subSql = $model->group('customer_id')->buildSql(true);
+        $data = Custom::alias('c')
+            ->fieldRaw('ifnull(sk.msmoney,0) as msmoney,c.id,c.custom,c.zjm,c.short_name')
+            ->join($subSql . ' sk', 'sk.customer_id=c.id', 'LEFT')
+            ->where('iscustom', 1)
+            ->paginate($pageLimit);
+        return returnSuc($data);
     }
 
 }

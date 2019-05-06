@@ -163,7 +163,8 @@ class Steelmanage extends Right
                 });
                 break;
             default:
-               model($model)->where('id', 'in', $ids)->update(array("delete_time"=>date("Y-m-d H:s:i".time())));
+                //默认写法风险太高，理论上可以删除任何数据
+               return returnFail('参数错误');
         }
         return returnSuc();
     }
