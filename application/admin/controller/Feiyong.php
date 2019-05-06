@@ -17,7 +17,7 @@ use think\{Db,
     Request,
     response\Json};
 
-class Feiyong extends Signin
+class Feiyong extends Right
 {
     /**
      * 添加费用单
@@ -98,7 +98,6 @@ class Feiyong extends Signin
             foreach ($updateFyList as $obj) {
                 $hx = CapitalFyhx::get($obj['id']);
                 $hx->allowField(true)->isUpdate(true)->save($obj);
-
             }
 
             foreach ($addFyList as $obj) {

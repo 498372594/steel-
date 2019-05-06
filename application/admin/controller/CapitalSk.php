@@ -126,7 +126,7 @@ class CapitalSk extends Right
                     }
 
                     $number += $object['hx_money'];
-                    if (empty($data['id'])) {
+                    if (empty($object['id'])) {
                         $addFyList[] = $object;
                     } else {
                         $updateFyList[] = $object;
@@ -335,7 +335,7 @@ class CapitalSk extends Right
      */
     public function cancel(Request $request, $id = 0)
     {
-        if (!$request->isPost()) {
+        if (!$request->isGet()) {
             return returnFail('请求方式错误');
         }
         Db::startTrans();
@@ -377,11 +377,6 @@ class CapitalSk extends Right
             Db::rollback();
             return returnFail($e->getMessage());
         }
-    }
-
-    public function getYingshouList()
-    {
-
     }
 
 }

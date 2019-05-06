@@ -278,7 +278,7 @@ class SalesTiaohuo extends Right
             return returnSuc(['id' => $ms['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage() . $e->getTraceAsString());
+            return returnFail($e->getMessage());
         }
     }
 

@@ -4,8 +4,10 @@
 namespace app\admin\controller;
 
 
+use app\admin\model\Custom;
 use app\admin\model\ViewZijinCount;
 use think\exception\DbException;
+use think\Request;
 use think\response\Json;
 
 class Customer extends Right
@@ -68,5 +70,23 @@ class Customer extends Right
             ->where('shui_price', '>', 0)
             ->value('ifnull(sum(sum_shui_price),0)-' . $subSql);
         return returnSuc(['fee' => $value]);
+    }
+
+    /**
+     * 客户利润统计表
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function lirun(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $params = $request->param();
+        $model = new Custom();
+        $data = $model->lirun($params, $pageLimit, $this->getCompanyId());
+        return returnSuc($data);
     }
 }
