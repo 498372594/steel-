@@ -32,7 +32,8 @@ class Rk extends Right
         if (!empty($params['ywsjEnd'])) {
             $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
-        if (!empty($instorageorderparams['status'])) {
+        if (isset($params['status'])&&$params['status']!="") {
+
             $list->where('status', $params['status']);
         }
         if (!empty($params['system_number'])) {
@@ -277,9 +278,10 @@ class Rk extends Right
                 $data = $request->post();
             }
 
-            if (empty($data["id"])) {
-                throw new Exception('入库单禁止修改');
+            if (!empty($data["id"])) {
+                return returnFail("入库单禁止修改");
             }
+
             $data['create_operator'] = $this->getAccount()['name'];
             $data['create_operate_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
@@ -304,7 +306,7 @@ class Rk extends Right
                 $num = 1;
                 $count1 = KcSpot::whereTime('create_time', 'today')->count();
                 foreach ($data['details'] as $c => $v) {
-                    $dat['details'][$c]['id'] = $v['id'];
+                    $dat['details'][$c]['id'] = $v['id']?? '';
                     $dat['details'][$c]['counts'] = $v['old_counts'] - $v["counts"];//剩下的总件数
                     $dat['details'][$c]['jianshu'] = intval(floor($dat['details'][$c]['counts'] / $v["zhijian"]));
                     $dat['details'][$c]['lingzhi'] = $dat['details'][$c]['counts'] % $v["zhijian"];
@@ -328,7 +330,6 @@ class Rk extends Right
 //                        }
                     $num++;
                 }
-
                 //修改通知记录数量
                 model("KcRkTz")->saveAll($dat['details']);
 

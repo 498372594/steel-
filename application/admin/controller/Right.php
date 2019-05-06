@@ -188,7 +188,8 @@ class Right extends Signin
         if (!empty($params['piaoju_id'])) {
             $list->where('piaoju_id', $params['piaoju_id']);
         }
-        if (!empty($params['status'])) {
+        if (isset($params['status'])&&$params['status']!="") {
+
             $list->where('status', $params['status']);
         }
         //批号
