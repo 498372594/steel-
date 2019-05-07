@@ -102,7 +102,7 @@ class SalesorderDetails extends Base
             }
             if (!empty($params['province']) || !empty($params['city'])) {
                 $query->where('custom_id', 'in', function (Query $query2) use ($params) {
-                    $model = $query2->name('custom');
+                    $model = $query2->name('custom')->field('id');
                     if (!empty($params['province'])) {
                         $model->where('province', $params['province']);
                     }
