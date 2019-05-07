@@ -480,4 +480,59 @@ FROM (SELECT xsmx.weight AS xszhongliang,
         $sql .= ' GROUP BY tb_mingxi.city)';
         return Db::table($sql)->alias('t')->bind($sqlParams)->order('th_zhongliang', 'asc')->paginate($pageLimit);
     }
+
+    /**
+     * @param $param
+     * @param $pageLimit
+     * @param $companyId
+     * @return Paginator
+     * @throws DbException
+     */
+    public function zxkSalesList($param, $pageLimit, $companyId)
+    {
+        $sqlParams = [];
+        $sql = '(SELECT tb_mingxi.guige_id,
+        tb_mingxi.guige,
+        tb_mingxi.pinming,
+       SUM(IFNULL(tb_mingxi.xszhongliang, 0)) - SUM(IFNULL(thmx.zhongliang, 0))      AS th_zhongliang,
+       COUNT(tb_mingxi.xs_saleId)                                                    AS th_cishu,
+       SUM(IFNULL(tb_mingxi.price_and_tax, 0)) - SUM(IFNULL(thmx.sum_shui_price, 0)) AS th_sum_shui_price
+FROM (SELECT xsmx.wuzi_id as guige_id,
+             xsmx.weight AS xszhongliang,
+             tb_xs_sale.id xs_saleId,
+             gg.specification guige,
+             gg.productname pinming,
+             xsmx.id,
+             xsmx.price_and_tax
+        FROM salesorder tb_xs_sale
+           INNER JOIN salesorder_details xsmx ON tb_xs_sale.id = xsmx.order_id
+           inner join view_specification gg on gg.id = xsmx.wuzi_id
+        WHERE tb_xs_sale.delete_time is null
+           and (tb_xs_sale.ywlx = 1 or tb_xs_sale.ywlx = 2)
+           AND tb_xs_sale.`status` <> 2 
+           and tb_xs_sale.companyid=' . $companyId;
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and tb_xs_sale.ywsj >=:ywsjStart';
+            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and tb_xs_sale.ywsj < :ywsjEnd';
+            $sqlParams['ywsjEnd'] = date('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+        }
+        $sql .= '
+     ) AS tb_mingxi
+         LEFT JOIN sales_return_details thmx ON tb_mingxi.xs_saleId = thmx.xs_sale_mx_id
+         left join
+     (SELECT mx.xs_sale_mx_id, mx.zhongliang, mx.sum_shui_price
+      FROM sales_return_details mx
+               INNER JOIN sales_return th ON th.id = mx.xs_th_id WHERE th.delete_time is null AND th.status <> 2) thmx2
+     on thmx2.xs_sale_mx_id = tb_mingxi.id
+    WHERE 1 = 1 ';
+        if (!empty($param['guige_id'])) {
+            $sql .= ' and tb_mingxi.guige_id=:guige_id';
+            $sqlParams['guige_id'] = $param['guige_id'];
+        }
+        $sql .= ' GROUP BY tb_mingxi.guige_id)';
+        return Db::table($sql)->alias('t')->bind($sqlParams)->order('th_zhongliang', 'asc')->paginate($pageLimit);
+    }
 }
