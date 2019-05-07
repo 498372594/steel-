@@ -9,6 +9,7 @@ use app\admin\model\Custom;
 use app\admin\model\Jianzhishu;
 use app\admin\model\Jiesuanfangshi;
 use app\admin\model\Jsfs;
+use app\admin\model\Originarea;
 use app\admin\model\Paymenttype;
 use app\admin\model\Pjlx;
 use app\admin\model\Productname;
@@ -162,9 +163,14 @@ class Steelmanage extends Right
                     $query->where('id', 'in', $ids);
                 });
                 break;
+            case 'originarea':
+                Originarea::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
             default:
                 //默认写法风险太高，理论上可以删除任何数据
-               return returnFail('参数错误');
+                return returnFail('参数错误');
         }
         return returnSuc();
     }
@@ -410,6 +416,7 @@ class Steelmanage extends Right
             return returnRes($data, '无相关数据', $data);
         }
     }
+
     /**
      * @return Json
      * @throws DbException
@@ -945,16 +952,16 @@ class Steelmanage extends Right
     {
         if (request()->post()) {
             $data = request()->post();
-            $info=model("paymentclass")->where("name", $data['class'])->find();
+            $info = model("paymentclass")->where("name", $data['class'])->find();
             if (empty($info)) {
                 $data1['name'] = $data['class'];
                 $data1['companyid'] = $this->getCompanyId();
                 $data1['add_name'] = $this->getAccount()['name'];
                 $data1['add_id'] = $this->getAccountId();
                 model("paymentclass")->allowField(true)->save($data1);
-                $data['classid']=model("paymentclass")->getLastInsID();
-            }else{
-                $data['classid']=$info["id"];
+                $data['classid'] = model("paymentclass")->getLastInsID();
+            } else {
+                $data['classid'] = $info["id"];
             }
             if (empty(request()->post("id"))) {
                 $data['sort'] = request()->post("sort", 0);

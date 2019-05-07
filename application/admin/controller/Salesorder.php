@@ -561,6 +561,42 @@ class Salesorder extends Right
     }
 
     /**
+     * 区域销售排行榜
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function areaSalesList(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $param = $request->param();
+        $model = new \app\admin\model\Salesorder();
+        $data = $model->areaSalesList($param, $pageLimit, $this->getCompanyId());
+        return returnSuc($data);
+    }
+
+    /**
+     * 直销库销量排行榜
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function zxkSalesList(Request $request, $pageLimit = 10)
+    {
+        if (!$request->isGet()) {
+            return returnFail('请求方式错误');
+        }
+        $param = $request->param();
+        $model = new \app\admin\model\Salesorder();
+        $data = $model->zxkSalesList($param, $pageLimit, $this->getCompanyId());
+        return returnSuc($data);
+    }
+
+    /**
      * 销售明细表
      * @param Request $request
      * @param int $pageLimit

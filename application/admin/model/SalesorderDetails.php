@@ -100,6 +100,18 @@ class SalesorderDetails extends Base
             } else {
                 $query->where('status', '<>', 2);
             }
+            if (!empty($params['province']) || !empty($params['city'])) {
+                $query->where('custom_id', 'in', function (Query $query2) use ($params) {
+                    $model = $query2->name('custom')->field('id');
+                    if (!empty($params['province'])) {
+                        $model->where('province', $params['province']);
+                    }
+                    if (!empty($params['city'])) {
+                        $model->where('city', $params['city']);
+                    }
+                    return $model;
+                });
+            }
         })->with([
             'specification',
             'jsfs',
@@ -107,7 +119,7 @@ class SalesorderDetails extends Base
             'caizhiData',
             'chandiData',
             'spot',
-            'salesorder' => ['custom', 'pjlxData', 'employerData','jsfsData']
+            'salesorder' => ['custom', 'pjlxData', 'employerData', 'jsfsData']
         ]);
         if (!empty($params['kuanduStart'])) {
             $data->where('width', '>=', $params['kuanduStart']);
