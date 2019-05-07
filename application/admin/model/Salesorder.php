@@ -416,4 +416,68 @@ FROM (SELECT xsmx.wuzi_id as guige_id,
         $sql .= ' GROUP BY tb_mingxi.guige_id)';
         return Db::table($sql)->alias('t')->bind($sqlParams)->order('th_zhongliang', 'asc')->paginate($pageLimit);
     }
+
+    /**
+     * 区域销售排行榜
+     * @param $param
+     * @param $pageLimit
+     * @param $companyId
+     * @return Paginator
+     * @throws DbException
+     */
+    public function areaSalesList($param, $pageLimit, $companyId)
+    {
+        $sqlParams = [];
+        $sql = '(SELECT tb_mingxi.province,
+       tb_mingxi.city,
+       t_province.name as province_name,
+       t_city.name as city_name,
+       SUM(IFNULL(tb_mingxi.xszhongliang, 0)) - SUM(IFNULL(thmx.zhongliang, 0))      AS th_zhongliang,
+       COUNT(tb_mingxi.xs_saleId)                                                    AS th_cishu,
+       SUM(IFNULL(tb_mingxi.price_and_tax, 0)) - SUM(IFNULL(thmx.sum_shui_price, 0)) AS th_sum_shui_price
+FROM (SELECT xsmx.weight AS xszhongliang,
+             xs.xs_saleId,
+             xsmx.id,
+             xs.province,
+             xs.city,
+             xsmx.price_and_tax
+      FROM (SELECT custom.province, custom.city,tb_xs_sale.id AS xs_saleId
+            FROM custom
+                     LEFT JOIN salesorder tb_xs_sale ON custom.id = tb_xs_sale.custom_id
+                WHERE custom.iscustom = 1
+                     and custom.delete_time is null
+                     AND tb_xs_sale.delete_time is null
+                     AND tb_xs_sale.`status` <> 2 
+                     and tb_xs_sale.companyid=' . $companyId;
+        if (!empty($param['ywsjStart'])) {
+            $sql .= ' and tb_xs_sale.ywsj >=:ywsjStart';
+            $sqlParams['ywsjStart'] = $param['ywsjStart'];
+        }
+        if (!empty($param['ywsjEnd'])) {
+            $sql .= ' and tb_xs_sale.ywsj < :ywsjEnd';
+            $sqlParams['ywsjEnd'] = date('Y-m-d H:i:s', strtotime($param['ywsjEnd'] . ' +1 day'));
+        }
+        $sql .= ') AS xs
+               INNER JOIN salesorder_details xsmx ON xs.xs_saleId = xsmx.order_id
+     ) AS tb_mingxi
+         LEFT JOIN sales_return_details thmx ON tb_mingxi.xs_saleId = thmx.xs_sale_mx_id
+         left join
+     (SELECT mx.xs_sale_mx_id, mx.zhongliang, mx.sum_shui_price
+      FROM sales_return_details mx
+               INNER JOIN sales_return th ON th.id = mx.xs_th_id WHERE th.delete_time is null AND th.status <> 2) thmx2
+     on thmx2.xs_sale_mx_id = tb_mingxi.id
+     inner join area t_city on t_city.id=tb_mingxi.city
+     inner join area t_province on t_province.id=tb_mingxi.province
+    WHERE 1 = 1 ';
+        if (!empty($param['province'])) {
+            $sql .= ' and tb_mingxi.province=:province';
+            $sqlParams['province'] = $param['province'];
+        }
+        if (!empty($param['city'])) {
+            $sql .= ' and tb_mingxi.city=:city';
+            $sqlParams['city'] = $param['city'];
+        }
+        $sql .= ' GROUP BY tb_mingxi.city)';
+        return Db::table($sql)->alias('t')->bind($sqlParams)->order('th_zhongliang', 'asc')->paginate($pageLimit);
+    }
 }
