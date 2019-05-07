@@ -298,10 +298,11 @@ class Steelmanage extends Right
     public function getproductlist()
     {
         $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
+
         $menutree = new Tree($list);
         $menulist = $menutree->leaf();
         $digui = $this->productnamedigui($menulist);
-        return $digui;
+        return returnRes($digui, '没有数据，请添加后重试', $digui);
     }
 
     /**
@@ -314,11 +315,11 @@ class Steelmanage extends Right
     public function productnamedigui($arr)
     {
         foreach ($arr as $k => $v) {
-
-            $arr[$k]['productname'] = db("productname")
+            $productname = db("productname")
                 ->where("companyid", $this->getCompanyId())
                 ->where("classid", $v["id"])
                 ->field("id,name")->select();
+            $arr[$k]['productname']=$productname;
             if (array_key_exists('child', $v)) {
                 $v = $this->productnamedigui($v["child"]);
                 $arr[$k]["child"] = $v;

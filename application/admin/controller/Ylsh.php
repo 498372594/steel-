@@ -5,7 +5,8 @@ namespace app\admin\controller;
 use app\admin\library\traits\Backend;
 use app\admin\model\KcRk;
 use app\admin\model\{KcDiaoboMx, KcRkMd, KcSpot, StockOut};
-use think\{Db,Request};
+use app\admin\validate\KcPandian;
+use think\{Db, Request};
 use think\Exception;
 use think\Session;
 
@@ -19,47 +20,50 @@ class Ylsh extends Right
     {
         $params = request()->param();
         $list = model("ViewKcSpot")->where('companyid', $this->getCompanyId());
-        $list =$this->getsearchcondition($params,$list);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
-
 
 
     /**锁货
      * @return \think\response\Json
      * @throws \Exception
      */
-    public function lock(){
-        if(request()->isPost()){
-            $data=request()->post();
-            foreach($data as $k=>$v){
-                $data[$k]['yuliu_type']="已预留";
-                $data[$k]['companyid']= $this->getCompanyId();
+    public function lock()
+    {
+        if (request()->isPost()) {
+            $data = request()->post();
+            foreach ($data as $k => $v) {
+                $data[$k]['yuliu_type'] = "已预留";
+                $data[$k]['companyid'] = $this->getCompanyId();
 
             }
-            $res=model("KcYlSh")->allowField(true)->saveAll($data);
-            return returnRes($res,'锁定');
+            $res = model("KcYlSh")->allowField(true)->saveAll($data);
+            return returnRes($res, '锁定');
         }
     }
-    public function release(){
-        if(request()->isPost()){
-            $data=request()->post();
-            $res=model("KcYlSh")->allowField(true)->saveAll($data);
-            return returnRes($res,'锁货释放失败');
+
+    public function release()
+    {
+        if (request()->isPost()) {
+            $data = request()->post();
+            $res = model("KcYlSh")->allowField(true)->saveAll($data);
+            return returnRes($res, '锁货释放失败');
         }
     }
 
     /**获取锁货信息
      * @return \think\response\Json
      */
-    public function getlock(){
+    public function getlock()
+    {
         $params = request()->param();
-        $list=db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
+        $list = db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
         if (!empty($params['ids'])) {
-           $list->where('id', 'in',$params['ids']);
+            $list->where('id', 'in', $params['ids']);
         }
-        $list =$this->getsearchcondition($params,$list);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
@@ -68,11 +72,12 @@ class Ylsh extends Right
      * @return \think\response\Json
      * @throws \Exception
      */
-    public function postpone(){
-        if(request()->isPost()){
-            $data=request()->post();
-            $res=model("KcYlSh")->allowField(true)->saveAll($data);
-            return returnRes($res,'锁货延迟失败');
+    public function postpone()
+    {
+        if (request()->isPost()) {
+            $data = request()->post();
+            $res = model("KcYlSh")->allowField(true)->saveAll($data);
+            return returnRes($res, '锁货延迟失败');
         }
     }
 
@@ -83,12 +88,15 @@ class Ylsh extends Right
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    public function storespot($store_id=0){
-        $list=model("ViewSpotMx")->where(array("companyid"=> $this->getCompanyId(),"store_id"=>$store_id))->select();
+    public function storespot($store_id = 0)
+    {
+        $list = model("ViewSpotMx")->where(array("companyid" => $this->getCompanyId(), "store_id" => $store_id))->select();
         return returnRes($list, '没有数据，请添加后重试', $list);
 
     }
-    public function addpandian($data = [], $return = false){
+
+    public function addpandian($data = [], $return = false)
+    {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
             $count = \app\admin\model\KcPandian::whereTime('create_time', 'today')->count();
@@ -130,6 +138,7 @@ class Ylsh extends Right
             return returnFail('请求方式错误');
         }
     }
+
     /**盘点列表
      * @return \think\response\Json
      */
@@ -137,7 +146,7 @@ class Ylsh extends Right
     {
         $params = request()->param();
         $list = $list = \app\admin\model\KcPandian::where('companyid', $this->getCompanyId());
-     $list=$this->getsearchcondition($params,$list);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
@@ -151,7 +160,7 @@ class Ylsh extends Right
      */
     public function pandianmx($id = 0)
     {
-        $data = \app\admin\model\KcPandian::with(['details' => ['specification', 'jsfs', 'storage', 'chandiData', 'caizhiData', 'pinmingData','pjlxData','createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata', 'storageData'])
+        $data = \app\admin\model\KcPandian::with(['details' => ['specification', 'jsfs', 'storage', 'chandiData', 'caizhiData', 'pinmingData', 'pjlxData', 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata', 'storageData'])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
@@ -161,18 +170,19 @@ class Ylsh extends Right
             return returnRes(true, '', $data);
         }
     }
+
     /**调拨列表
      * @return \think\response\Json
      */
     public function diaobolist()
     {
         $params = request()->param();
-        $list = $list = \app\admin\model\KcDiaobo::with(['createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid',$this->getCompanyId());
+        $list = $list = \app\admin\model\KcDiaobo::with(['createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])->where('companyid', $this->getCompanyId());
         if (!empty($params['system_number'])) {
-            $list->where("system_number",$params['system_number']);
+            $list->where("system_number", $params['system_number']);
         }
         if (!empty($params['beizhu'])) {
-            $list->where("beizhu",$params['beizhu']);
+            $list->where("beizhu", $params['beizhu']);
         }
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
@@ -187,7 +197,7 @@ class Ylsh extends Right
      */
     public function diaobomx($id = 0)
     {
-        $data = \app\admin\model\KcDiaobo::with(['details'=>["jsfsData","specification","storageData","newstorageData","pinmingData","caizhiData","chandiData","customData"],'createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])
+        $data = \app\admin\model\KcDiaobo::with(['details' => ["jsfsData", "specification", "storageData", "newstorageData", "pinmingData", "caizhiData", "chandiData", "customData"], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
@@ -202,7 +212,8 @@ class Ylsh extends Right
      * @return \think\response\Json
      * @throws \Exception
      */
-    public function adddiaobo(){
+    public function adddiaobo()
+    {
         if (!request()->isPost()) {
             return returnFail('请求方式错误');
         }
@@ -290,21 +301,21 @@ class Ylsh extends Right
                 $mjo['companyid'] = $companyId;
                 $mjo['diaobo_id'] = $db['id'];
                 $mx = new KcDiaoboMx();
-                $calSpot=(new KcSpot())->calSpot($mjo["changdu"],$mjo["kuandu"],$mjo["jijiafangshi_id"],$mjo["mizhong"],$mjo["jianzhong"],$mjo["counts"],$mjo["zhijian"],$mjo["zhongliang"],$mjo["price"],
-                    $mjo["shuiprice"],$mjo["shuie"]);
-                $mjo["sumprice"]=$calSpot["sumprice"];
-                $mjo["sum_shui_price"]=$calSpot["sum_shui_price"];
+                $calSpot = (new KcSpot())->calSpot($mjo["changdu"], $mjo["kuandu"], $mjo["jijiafangshi_id"], $mjo["mizhong"], $mjo["jianzhong"], $mjo["counts"], $mjo["zhijian"], $mjo["zhongliang"], $mjo["price"],
+                    $mjo["shuiprice"], $mjo["shuie"]);
+                $mjo["sumprice"] = $calSpot["sumprice"];
+                $mjo["sum_shui_price"] = $calSpot["sum_shui_price"];
                 $mx->allowField(true)->save($mjo);
-                $rk=(new KcRk())->insertRuku($mx["id"],1,$db["yw_time"],$db["group_id"],$db["system_number"],$db["create_operator_id"],$this->getAccountId(),$companyId);
-                $ck=(new StockOut())->insertChuku($mx["id"],1,$db["yw_time"],$db["group_id"],$db["system_number"],$db["create_operator_id"],$this->getAccountId(),$companyId);
-                $spot= KcSpot::where("id",$mjo["spot_id"])->find();
-                $mjo["cb_price"]=$spot["cb_price"];
+                $rk = (new KcRk())->insertRuku($mx["id"], 1, $db["yw_time"], $db["group_id"], $db["system_number"], $db["create_operator_id"], $this->getAccountId(), $companyId);
+                $ck = (new StockOut())->insertChuku($mx["id"], 1, $db["yw_time"], $db["group_id"], $db["system_number"], $db["create_operator_id"], $this->getAccountId(), $companyId);
+                $spot = KcSpot::where("id", $mjo["spot_id"])->find();
+                $mjo["cb_price"] = $spot["cb_price"];
 
                 (new KcRk())->insertRkMxMd($rk, $mx["id"], 1, $db["yw_time"], $db["system_number"], null, $mjo["gf_customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
-                    , $mx["jijiafangshi_id"], $mx["old_store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"],null, $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
-                    $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $calSpot["sumprice"], $mx["shuiprice"], $calSpot["sum_shui_price"], $calSpot["shuie"], null,null, $this->getAccountId(), $this->getCompanyId());
-               (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "1",
-                   $db['yw_time'], $db['system_number'], $mjo['gf_customer_id'], $mx['pinming_id'], $mx['caizhi_id'], $mx['chandi_id'],
+                    , $mx["jijiafangshi_id"], $mx["old_store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], null, $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
+                    $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $calSpot["sumprice"], $mx["shuiprice"], $calSpot["sum_shui_price"], $calSpot["shuie"], null, null, $this->getAccountId(), $this->getCompanyId());
+                (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "1",
+                    $db['yw_time'], $db['system_number'], $mjo['gf_customer_id'], $mx['pinming_id'], $mx['caizhi_id'], $mx['chandi_id'],
                     $mx['jijiafangshi_id'], $mx['old_store_id'], $mx['houdu'] ?? 0, $mx['kuandu'] ?? 0,
                     $mx['changdu'] ?? 0, $mx['zhijian'], $mx['lingzhi'] ?? 0, $mx['jianshu'],
                     $mx['counts'] ?? 0, $mx['zhongliang'], $mx['price'], $mx['sumprice'],
@@ -368,4 +379,142 @@ class Ylsh extends Right
 //            return returnFail('请求方式错误');
 //        }
 //    }
+    public function pandianadd()
+    {
+        Db::startTrans();
+        try {
+            $data = request()->post();
+            $validate = new \app\admin\validate\KcPandian();
+            if (!$validate->check($data)) {
+                return returnFail($validate->getError());
+            }
+
+            $addList = [];
+            $updateList = [];
+            $detailValidate = new KcPandianMx();
+            $num = 1;
+//            dump($data['details']);die;
+            foreach ($data['details'] as $item) {
+                if (!$detailValidate->check($item)) {
+
+                    return returnFail('请检查第' . $num . '行  ' . $detailValidate->getError());
+                }
+
+                if (empty($item['id'])) {
+                    $addList[] = $item;
+                } else {
+                    $updateList[] = $item;
+                }
+                $num++;
+            }
+
+            $companyId = $this->getCompanyId();
+
+            if (empty($data['id'])) {
+                $count = KcPandian::whereTime('create_time', 'today')
+                    ->where('companyid', $companyId)
+                    ->count();
+
+                //数据处理
+                $systemNumber = 'KCPD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $data['add_id'] = $this->getAccountId();
+                $data['companyid'] = $companyId;
+                $data['system_number'] = $systemNumber;
+                $data['moshi_type'] = $moshi_type;
+
+                $pd = new KcPandian();
+                $pd->allowField(true)->data($data)->save();
+                $pd_id = $pd["id"];
+
+            } else {
+                $pd = KcPandian::where('companyid', $companyId)->where('id', $data['id'])->find();
+                $pd_id = $pd["id"];
+                if (empty($pd)) {
+                    throw new Exception("对象不存在");
+                }
+                if ($pd["status"] == 1) {
+                    throw new Exception("该单据已经作废");
+                }
+
+                $pd->allowField(true)->data($data)->save();
+            }
+
+            //删除
+            if (!empty($data["delete_mx_ids"])) {
+                $deleteList = model("kc_pandian_mx")->where('id', 'in', $data["delete_mx_ids"])->select();
+                foreach ($deleteList as $pd) {
+                    if ($pd["pandian_type"] == 1) {
+                        (new KcRk())->deleteRuku($pd["id"],2);
+                    } else if($pd["pandian_type"] == "盘亏"){
+                        (new StockOut())->deleteChuku($pd["id"],2);
+                    }
+                    $pd->delete();
+                }
+            }
+
+            //更新
+            if (!empty($updateList)) {
+                foreach ($updateList as $mjo) {
+                    if ($data["ruku_fangshi"] == 1) {
+                        throw new Exception('自动入库单禁止修改');
+                    } else {
+                        $mx = \app\admin\model\CgPurchaseMx::where('id', $mjo['id'])->find();
+                        $mx->allowField(true)->data($mjo)->isUpdate(true)->save();
+                        (new KcRkTz())->updateRukuTz($mx["id"], $mx["ruku_type"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"]
+                            , $mx["houdu"], $mx["changdu"], $mx["kuandu"], $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["sum_shui_price"], $mx["price"],
+                            $mx["shui_price"], $mx["huohao"]
+                            , $mx["pihao"], $mx["beizhu"], $mx["chehao"], $cg["yw_time"], null, $cg["system_number"], $mx["customer_id"]
+                            , $mx["store_id"], $cg["piaoju_id"], $mx["mizhong"], $mx["jianzhong"]);
+                        (new \app\admin\model\Inv())->updateInv($mx["id"], 2, null, $mx["customerId"], $mx["yw_time"], $mx["changdu"], $mx["kuandu"], $mx["houdu"]
+                            , $mx["guige_id"], $mx["jijiafangshi_id"], $mx["piaoju_id"], $mx["pinming_id"], $mx["zhongliang"], $mx["price"], $mx["sum_price"], $mx["sum_shui_price"], $mx["shui_price"]);
+                    }
+                }
+            }
+
+            if (!empty($addList)) {
+                if (!empty($data['id'])) {
+                    $trumpet = \app\admin\model\CgPurchaseMx::where('purchase_id', $data['id'])->max('trumpet');
+                } else {
+                    $trumpet = 0;
+                }
+
+                foreach ($addList as $mjo) {
+                    $trumpet++;
+                    $mjo['trumpet'] = $trumpet;
+                    $mjo["purchase_id"] = $purchase_id;
+                    $mx = new \app\admin\model\CgPurchaseMx();
+
+                    $mx->allowField(true)->data($mjo)->save();
+
+                    if ($data["ruku_fangshi"] == 1) {
+                        (new KcRk())->insertRkMxMd($newRk, $mx["purchase_id"], 4, $data["yw_time"], $data["system_number"], null, $data["customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
+                            , $mx["jijiafangshi_id"], $mx["store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], $data["piaoju_id"], $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
+                            $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $mx["sumprice"], $mx["shui_price"], $mx["sum_shui_price"], $mx["shuie"], $mx["mizhong"], $mx["jianzhong"], $this->getAccountId(), $this->getCompanyId());
+                    } else {
+
+                        (new KcRkTz())->insertRukuTz($mx["id"], 4, $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["houdu"], $mx["changdu"], $mx["kuandu"],
+                            $mx["counts"], $mx["jianshu"], $mx["lingzhi"], $mx["zhijian"], $mx["zhongliang"], $mx["shui_price"], $mx["sumprice"], $mx["sum_shui_price"], $mx["shuie"], $mx["price"], $mx["huohao"],
+                            $mx["pihao"], $mx["beizhu"], $mx["chehao"], $cg["yw_time"], null, $cg["system_number"], $data["customer_id"], $mx["store_id"], $this->getAccountId(),
+                            $mx["mizhong"], $mx["jianzhong"], $this->getCompanyId());
+                    }
+                    (new \app\admin\model\Inv())->insertInv($mx["id"], 2, 2, $mx["changdu"], $mx["kuandu"], $mx["houdu"], $mx["guige_id"], $mx["jijiafangshi_id"], $data["piaoju_id"], $mx["pinming_id"],
+                        $data["system_number"] . "." . $trumpet, $data["customer_id"], $data["yw_time"], $mx["price"], $mx["shui_price"], $mx["sumprice"], $mx["sum_shui_price"], $mx["zhongliang"], $this->getCompanyId());
+                }
+
+            }
+            if (empty($data['delete_other_ids'])) {
+                $data['delete_other_ids'] = null;
+            }
+            if (!empty($data['other'])) {
+                (new CapitalFy())->fymxSave($data['other'], $data['delete_other_ids'], $purchase_id, $data['yw_time'], 1, $data['group_id'] ?? '', $data['sale_operate_id'] ?? '', null, $this->getAccountId(), $this->getCompanyId());
+
+            }
+
+            Db::commit();
+            return returnSuc(['id' => $cg['id']]);
+        } catch (Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
 }
