@@ -409,6 +409,47 @@ class Steelmanage extends Right
             return returnRes($data, '无相关数据', $data);
         }
     }
+    /**
+     * @return Json
+     * @throws DbException
+     */
+    public function originarea()
+    {
+        $list = model("originarea")->where("companyid", $this->getCompanyId())->paginate(10);
+        return returnSuc($list);
+    }
+
+    /**
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    public function addoriginarea()
+    {
+        if (request()->isPost()) {
+            $data = request()->post();
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_id'] = $this->getAccountId();
+            if (empty(request()->post("id"))) {
+                $result = model("originarea")->allowField(true)->save($data);
+                return returnRes($result, '添加失败');
+            } else {
+                $id = request()->post("id");
+                $result = model("originarea")->allowField(true)->save($data, ['id' => $id]);
+                return returnRes($result, '修改失败');
+            }
+
+        } else {
+            $id = request()->param("id");
+            if ($id) {
+                $data['info'] = model("originarea")->where("id", $id)->find();
+            } else {
+                $data = null;
+            }
+            return returnRes($data, '无相关数据', $data);
+        }
+    }
 
     /**
      * @return Json
@@ -903,24 +944,28 @@ class Steelmanage extends Right
     {
         if (request()->post()) {
             $data = request()->post();
+            $info=model("paymentclass")->where("name", $data['class'])->find();
+            if (empty($info)) {
+                $data1['name'] = $data['class'];
+                $data1['companyid'] = $this->getCompanyId();
+                $data1['add_name'] = $this->getAccount()['name'];
+                $data1['add_id'] = $this->getAccountId();
+                model("paymentclass")->allowField(true)->save($data1);
+                $data['classid']=model("paymentclass")->getLastInsID();
+            }else{
+                $data['classid']=$info["id"];
+            }
             if (empty(request()->post("id"))) {
-                if (!model("paymentclass")->where("name", $data['name'])->find()) {
-                    $data1['name'] = $data['name'];
-                    $data1['companyid'] = $this->getCompanyId();
-                    $data1['add_name'] = $this->getAccount()['name'];
-                    $data1['add_id'] = $this->getAccountId();
-                    model("paymentclass")->allowField(true)->save($data1);
-                }
                 $data['sort'] = request()->post("sort", 0);
                 $data['companyid'] = $this->getCompanyId();
                 $data['add_name'] = $this->getAccount()['name'];
                 $data['add_id'] = $this->getAccountId();
+
                 $result = model("paymenttype")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
             } else {
-                $id = request()->post("id");
-                $result = model("paymenttype")->where("id", $id)->update($data);
-                return returnRes($result, '添加失败');
+                $result = model("paymenttype")->isUpdate(true)->save($data);
+                return returnRes($result, '修改失败');
             }
         } else {
             $type = request()->param("type");
