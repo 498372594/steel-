@@ -20,7 +20,7 @@ class Role extends Right
     {
         if($request->isGet()){
             $data = RoleModel::where(['companyid' => $this->getCompanyId()])->order('id desc')->select();
-            return returnRes($data,'没有数据，请联系管理员',$data);
+            return returnSuc($data);
         }
     }
 

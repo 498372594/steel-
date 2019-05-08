@@ -60,7 +60,7 @@ class Inv extends Right
             $list->where('fx_type', $params['fx']);
         }
         $list = $list->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**

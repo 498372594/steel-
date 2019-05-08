@@ -19,7 +19,7 @@ class Right extends Signin
      * 搜索条件
      * @param $params
      * @param Query|Model $list
-     * @return mixed
+     * @return Query|Model
      */
     public function getsearch($params, $list)
     {
@@ -119,7 +119,7 @@ class Right extends Signin
     /**
      * @param $params
      * @param Query|Model $list
-     * @return mixed
+     * @return Query|Model
      */
     public function getsearchcondition($params, $list)
     {
@@ -188,7 +188,7 @@ class Right extends Signin
         if (!empty($params['piaoju_id'])) {
             $list->where('piaoju_id', $params['piaoju_id']);
         }
-        if (isset($params['status'])&&$params['status']!="") {
+        if (isset($params['status']) && $params['status'] != "") {
 
             $list->where('status', $params['status']);
         }
@@ -231,6 +231,14 @@ class Right extends Signin
             $list->where('kehu_name', $params['kehu_name']);
         }
         return $list;
+    }
+
+    public function _empty($name)
+    {
+        if ($name == 'delete') {
+            return returnFail('禁止跳号删除');
+        }
+        return returnFail('404 not found');
     }
 
     /**
@@ -298,13 +306,5 @@ class Right extends Signin
             $id = $model->id;
         }
         return $id;
-    }
-
-    public function _empty($name)
-    {
-        if ($name == 'delete') {
-            return returnFail('禁止跳号删除');
-        }
-        return returnFail('404 not found');
     }
 }

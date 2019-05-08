@@ -606,7 +606,7 @@ class Purchase extends Right
             $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);
         }
         $list = $list->paginate($pageLimit);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -658,7 +658,7 @@ class Purchase extends Right
         $list = Classname::field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
         $list = new Tree($list);
         $list = $list->leaf();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -729,7 +729,7 @@ class Purchase extends Right
     public function getstorage()
     {
         $list = model("storage")->where("companyid", $this->getCompanyId())->field("id,storage")->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -742,7 +742,7 @@ class Purchase extends Right
     public function getpjlx()
     {
         $list = model("pjlx")->where("companyid", $this->getCompanyId())->field("id,pjlx,tax_rate")->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -755,7 +755,7 @@ class Purchase extends Right
     public function getsupplier()
     {
         $list = model("custom")->where(array("companyid" => $this->getCompanyId(), "issupplier" => 1))->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -768,7 +768,7 @@ class Purchase extends Right
     public function getcustom()
     {
         $list = model("custom")->where(array("companyid" => $this->getCompanyId(), "iscustom" => 1))->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -781,7 +781,7 @@ class Purchase extends Right
     public function getallcustom()
     {
         $list = model("custom")->where(array("companyid" => $this->getCompanyId()))->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -794,7 +794,7 @@ class Purchase extends Right
     public function getjiesuanfangshi()
     {
         $list = model("jiesuanfangshi")->where(array("companyid" => $this->getCompanyId()))->field("id,jiesuanfangshi")->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -807,7 +807,7 @@ class Purchase extends Right
     public function gettexture()
     {
         $list = model("texture")->where(array("companyid" => $this->getCompanyId()))->field("id,texturename")->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -820,7 +820,7 @@ class Purchase extends Right
     public function getoriginarea()
     {
         $list = model("originarea")->where(array("companyid" => $this->getCompanyId()))->field("id,originarea")->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -833,13 +833,13 @@ class Purchase extends Right
     public function getproductname()
     {
         $list = model("productname")->where(array("companyid" => $this->getCompanyId()))->field("id,name")->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     public function getzhiyuan()
     {
         $list = model("admin")->where(array("companyid" => $this->getCompanyId()))->field("id,originarea")->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**应付账款汇总表

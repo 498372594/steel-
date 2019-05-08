@@ -2,96 +2,119 @@
 
 namespace app\admin\controller;
 
-use app\admin\library\traits\Backend;
+use app\admin\model\{KcDiaobo, KcDiaoboMx, KcPandian, KcSpot, StockOut};
 use app\admin\model\KcRk;
-use app\admin\model\{KcDiaoboMx, KcRkMd, KcSpot, StockOut};
-use think\{Db,Request};
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    exception\DbException,
+    response\Json};
 use think\Exception;
-use think\Session;
 
 class Ylsh extends Right
 {
-    /**入库单列表
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+    /**
+     * 入库单列表
+     * @return Json
      */
     public function kcspot()
     {
         $params = request()->param();
         $list = model("ViewKcSpot")->where('companyid', $this->getCompanyId());
-        $list =$this->getsearchcondition($params,$list);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
 
-
-    /**锁货
-     * @return \think\response\Json
+    /**
+     * 锁货
+     * @return Json
      * @throws \Exception
      */
-    public function lock(){
-        if(request()->isPost()){
-            $data=request()->post();
-            foreach($data as $k=>$v){
-                $data[$k]['yuliu_type']="已预留";
-                $data[$k]['companyid']= $this->getCompanyId();
-
+    public function lock()
+    {
+        if (request()->isPost()) {
+            $data = request()->post();
+            foreach ($data as $k => $v) {
+                $data[$k]['yuliu_type'] = "已预留";
+                $data[$k]['companyid'] = $this->getCompanyId();
             }
-            $res=model("KcYlSh")->allowField(true)->saveAll($data);
-            return returnRes($res,'锁定');
+            $res = model("KcYlSh")->allowField(true)->saveAll($data);
+            return returnRes($res, '锁定');
         }
-    }
-    public function release(){
-        if(request()->isPost()){
-            $data=request()->post();
-            $res=model("KcYlSh")->allowField(true)->saveAll($data);
-            return returnRes($res,'锁货释放失败');
-        }
+        return returnFail('请求方式错误');
     }
 
-    /**获取锁货信息
-     * @return \think\response\Json
+    /**
+     * 释放
+     * @return Json
+     * @throws \Exception
      */
-    public function getlock(){
-        $params = request()->param();
-        $list=db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
-        if (!empty($params['ids'])) {
-           $list->where('id', 'in',$params['ids']);
+    public function release()
+    {
+        if (request()->isPost()) {
+            $data = request()->post();
+            $res = model("KcYlSh")->allowField(true)->saveAll($data);
+            return returnRes($res, '锁货释放失败');
         }
-        $list =$this->getsearchcondition($params,$list);
+        return returnFail('请求方式错误');
+    }
+
+    /**
+     * 获取锁货信息
+     * @return Json
+     */
+    public function getlock()
+    {
+        $params = request()->param();
+        $list = db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
+        if (!empty($params['ids'])) {
+            $list->where('id', 'in', $params['ids']);
+        }
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**延期
-     * @return \think\response\Json
+     * @return Json
      * @throws \Exception
      */
-    public function postpone(){
-        if(request()->isPost()){
-            $data=request()->post();
-            $res=model("KcYlSh")->allowField(true)->saveAll($data);
-            return returnRes($res,'锁货延迟失败');
+    public function postpone()
+    {
+        if (request()->isPost()) {
+            $data = request()->post();
+            $res = model("KcYlSh")->allowField(true)->saveAll($data);
+            return returnRes($res, '锁货延迟失败');
         }
+        return returnFail('请求方式错误');
     }
 
     /**根据仓库id查询库存
      * @param int $store_id
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
-    public function storespot($store_id=0){
-        $list=model("ViewSpotMx")->where(array("companyid"=> $this->getCompanyId(),"store_id"=>$store_id))->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+    public function storespot($store_id = 0)
+    {
+        $list = model("ViewSpotMx")->where(array("companyid" => $this->getCompanyId(), "store_id" => $store_id))->select();
+        return returnSuc($list);
 
     }
-    public function addpandian($data = [], $return = false){
+
+    /**
+     * @param bool $return
+     * @return bool|string|Json
+     * @throws Exception
+     */
+    public function addpandian($return = false)
+    {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
-            $count = \app\admin\model\KcPandian::whereTime('create_time', 'today')->count();
+            $count = KcPandian::whereTime('create_time', 'today')->count();
             $data = request()->post();
             $data["status"] = 0;
             $data['create_operator_name'] = $this->getAccount()['name'];
@@ -115,7 +138,7 @@ class Ylsh extends Right
                 } else {
                     return true;
                 }
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 if ($return) {
                     return $e->getMessage();
                 } else {
@@ -130,28 +153,31 @@ class Ylsh extends Right
             return returnFail('请求方式错误');
         }
     }
-    /**盘点列表
-     * @return \think\response\Json
+
+    /**
+     * 盘点列表
+     * @return Json
      */
     public function pandianlist()
     {
         $params = request()->param();
-        $list = $list = \app\admin\model\KcPandian::where('companyid', $this->getCompanyId());
-     $list=$this->getsearchcondition($params,$list);
+        $list = $list = KcPandian::where('companyid', $this->getCompanyId());
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
 
-    /**盘点明细列表
+    /**
+     * 盘点明细列表
      * @param int $id
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function pandianmx($id = 0)
     {
-        $data = \app\admin\model\KcPandian::with(['details' => ['specification', 'jsfs', 'storage', 'chandiData', 'caizhiData', 'pinmingData','pjlxData','createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata', 'storageData'])
+        $data = KcPandian::with(['details' => ['specification', 'jsfs', 'storage', 'chandiData', 'caizhiData', 'pinmingData', 'pjlxData', 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata', 'storageData'])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
@@ -161,33 +187,37 @@ class Ylsh extends Right
             return returnRes(true, '', $data);
         }
     }
-    /**调拨列表
-     * @return \think\response\Json
+
+    /**
+     * 调拨列表
+     * @return Json
+     * @throws DbException
      */
     public function diaobolist()
     {
         $params = request()->param();
-        $list = $list = \app\admin\model\KcDiaobo::with(['createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid',$this->getCompanyId());
+        $list = $list = KcDiaobo::with(['createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])->where('companyid', $this->getCompanyId());
         if (!empty($params['system_number'])) {
-            $list->where("system_number",$params['system_number']);
+            $list->where("system_number", $params['system_number']);
         }
         if (!empty($params['beizhu'])) {
-            $list->where("beizhu",$params['beizhu']);
+            $list->where("beizhu", $params['beizhu']);
         }
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
 
-    /**调拨明细列表
+    /**
+     * 调拨明细列表
      * @param int $id
-     * @return \think\response\Json
-     * @throws \think\db\exception\DataNotFoundException
-     * @throws \think\db\exception\ModelNotFoundException
-     * @throws \think\exception\DbException
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
     public function diaobomx($id = 0)
     {
-        $data = \app\admin\model\KcDiaobo::with(['details'=>["jsfsData","specification","storageData","newstorageData","pinmingData","caizhiData","chandiData","customData"],'createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])
+        $data = KcDiaobo::with(['details' => ["jsfsData", "specification", "storageData", "newstorageData", "pinmingData", "caizhiData", "chandiData", "customData"], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
@@ -198,11 +228,13 @@ class Ylsh extends Right
         }
     }
 
-    /**添加调拨
-     * @return \think\response\Json
+    /**
+     * 添加调拨
+     * @return Json
      * @throws \Exception
      */
-    public function adddiaobo(){
+    public function adddiaobo()
+    {
         if (!request()->isPost()) {
             return returnFail('请求方式错误');
         }
@@ -240,14 +272,14 @@ class Ylsh extends Right
             }
 
             if (empty($data['id'])) {
-                $count = \app\admin\model\KcDiaobo::withTrashed()->whereTime('create_time', 'today')
+                $count = KcDiaobo::withTrashed()->whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
                     ->count();
 
                 $data['system_number'] = 'KCDBD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
                 $data['create_operator_id'] = $this->getAccountId();
                 $data['companyid'] = $companyId;
-                $db = new \app\admin\model\KcDiaobo();
+                $db = new KcDiaobo();
                 $db->allowField(true)->save($data);
             } else {
                 throw new Exception('调拨已入库禁止修改');
@@ -290,21 +322,21 @@ class Ylsh extends Right
                 $mjo['companyid'] = $companyId;
                 $mjo['diaobo_id'] = $db['id'];
                 $mx = new KcDiaoboMx();
-                $calSpot=(new KcSpot())->calSpot($mjo["changdu"],$mjo["kuandu"],$mjo["jijiafangshi_id"],$mjo["mizhong"],$mjo["jianzhong"],$mjo["counts"],$mjo["zhijian"],$mjo["zhongliang"],$mjo["price"],
-                    $mjo["shuiprice"],$mjo["shuie"]);
-                $mjo["sumprice"]=$calSpot["sumprice"];
-                $mjo["sum_shui_price"]=$calSpot["sum_shui_price"];
+                $calSpot = (new KcSpot())->calSpot($mjo["changdu"], $mjo["kuandu"], $mjo["jijiafangshi_id"], $mjo["mizhong"], $mjo["jianzhong"], $mjo["counts"], $mjo["zhijian"], $mjo["zhongliang"], $mjo["price"],
+                    $mjo["shuiprice"], $mjo["shuie"]);
+                $mjo["sumprice"] = $calSpot["sumprice"];
+                $mjo["sum_shui_price"] = $calSpot["sum_shui_price"];
                 $mx->allowField(true)->save($mjo);
-                $rk=(new KcRk())->insertRuku($mx["id"],1,$db["yw_time"],$db["group_id"],$db["system_number"],$db["create_operator_id"],$this->getAccountId(),$companyId);
-                $ck=(new StockOut())->insertChuku($mx["id"],1,$db["yw_time"],$db["group_id"],$db["system_number"],$db["create_operator_id"],$this->getAccountId(),$companyId);
-                $spot= KcSpot::where("id",$mjo["spot_id"])->find();
-                $mjo["cb_price"]=$spot["cb_price"];
+                $rk = (new KcRk())->insertRuku($mx["id"], 1, $db["yw_time"], $db["group_id"], $db["system_number"], $db["create_operator_id"], $this->getAccountId(), $companyId);
+                $ck = (new StockOut())->insertChuku($mx["id"], 1, $db["yw_time"], $db["group_id"], $db["system_number"], $db["create_operator_id"], $this->getAccountId(), $companyId);
+                $spot = KcSpot::where("id", $mjo["spot_id"])->find();
+                $mjo["cb_price"] = $spot["cb_price"];
 
                 (new KcRk())->insertRkMxMd($rk, $mx["id"], 1, $db["yw_time"], $db["system_number"], null, $mjo["gf_customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
-                    , $mx["jijiafangshi_id"], $mx["old_store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"],null, $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
-                    $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $calSpot["sumprice"], $mx["shuiprice"], $calSpot["sum_shui_price"], $calSpot["shuie"], null,null, $this->getAccountId(), $this->getCompanyId());
-               (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "1",
-                   $db['yw_time'], $db['system_number'], $mjo['gf_customer_id'], $mx['pinming_id'], $mx['caizhi_id'], $mx['chandi_id'],
+                    , $mx["jijiafangshi_id"], $mx["old_store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], null, $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
+                    $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $calSpot["sumprice"], $mx["shuiprice"], $calSpot["sum_shui_price"], $calSpot["shuie"], null, null, $this->getAccountId(), $this->getCompanyId());
+                (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "1",
+                    $db['yw_time'], $db['system_number'], $mjo['gf_customer_id'], $mx['pinming_id'], $mx['caizhi_id'], $mx['chandi_id'],
                     $mx['jijiafangshi_id'], $mx['old_store_id'], $mx['houdu'] ?? 0, $mx['kuandu'] ?? 0,
                     $mx['changdu'] ?? 0, $mx['zhijian'], $mx['lingzhi'] ?? 0, $mx['jianshu'],
                     $mx['counts'] ?? 0, $mx['zhongliang'], $mx['price'], $mx['sumprice'],

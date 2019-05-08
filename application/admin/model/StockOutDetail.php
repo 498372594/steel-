@@ -31,6 +31,30 @@ class StockOutDetail extends Base
             ->field('id,custom')->bind(['custom_name' => 'custom']);
     }
 
+    public function caizhiData()
+    {
+        return $this->belongsTo('Texture', 'caizhi', 'id')->cache(true, 60)
+            ->field('id,texturename')->bind(['caizhi_name' => 'texturename']);
+    }
+
+    public function chandiData()
+    {
+        return $this->belongsTo('Originarea', 'chandi', 'id')->cache(true, 60)
+            ->field('id,originarea')->bind(['chandi_name' => 'originarea']);
+    }
+
+    public function storageData()
+    {
+        return $this->belongsTo(Storage::class, 'store_id', 'id')->cache(true, 60)
+            ->field('id,storage')->bind(['store_name' => 'storage']);
+    }
+
+    public function createOperator()
+    {
+        return $this->belongsTo('Admin', 'cache_create_operator', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator_name' => 'name']);
+    }
+
     /**
      * @param StockOut $ck
      * @param $dataId

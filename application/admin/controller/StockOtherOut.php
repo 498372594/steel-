@@ -76,6 +76,9 @@ class StockOtherOut extends Right
             'pjlxData',
             'jsfsData',
             'details' => ['specification', 'jsfs', 'storage'],
+            'createOperator',
+            'updateOperator',
+            'saleOperator'
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
