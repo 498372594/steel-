@@ -38,10 +38,14 @@ class SalesTiaohuo extends Right
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = SalesMoshi::with(['custom', 'khpjData', 'khjsfsData'])
-            ->where('companyid', $this->getCompanyId())
+        $list = SalesMoshi::with([
+            'custom',
+            'khpjData',
+            'khjsfsData',
+            'createOperator',
+        ])->where('companyid', $this->getCompanyId())
             ->order('create_time', 'desc')
-            ->where('moshi_type', 2);
+            ->where('moshi_type', 1);
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -85,8 +89,9 @@ class SalesTiaohuo extends Right
             'custom',
             'khpjData',
             'khjsfsData',
-            'details' => ['specification', 'cgJsfsData', 'cgPjData', 'storage', 'jsfs', 'wldwData'],
-            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']]]
+            'details' => ['specification', 'cgJsfsData', 'cgPjData', 'storage', 'jsfs', 'wldwData', 'caizhiData', 'chandiData'],
+            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']]],
+            'createOperator'
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('moshi_type', 1)

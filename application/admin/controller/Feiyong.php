@@ -147,6 +147,7 @@ class Feiyong extends Right
         }
         $params = $request->param();
         $list = CapitalFy::with([
+            'departmentData',
             'custom',
             'pjlxData',
             'szflData',

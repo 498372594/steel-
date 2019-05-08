@@ -46,4 +46,16 @@ class SalesMoshiMx extends Base
         return $this->belongsTo('Custom', 'cg_customer_id', 'id')->cache(true, 60)
             ->field('id,custom')->bind(['gys_name' => 'custom']);
     }
+
+    public function caizhiData()
+    {
+        return $this->belongsTo('Texture', 'caizhi', 'id')->cache(true, 60)
+            ->field('id,texturename')->bind(['caizhi_name' => 'texturename']);
+    }
+
+    public function chandiData()
+    {
+        return $this->belongsTo('Originarea', 'chandi', 'id')->cache(true, 60)
+            ->field('id,originarea')->bind(['chandi_name' => 'originarea']);
+    }
 }

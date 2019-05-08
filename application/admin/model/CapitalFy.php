@@ -59,6 +59,15 @@ class CapitalFy extends Base
         }
     }
 
+    public function departmentData()
+    {
+        return $this->hasOne(Dropdown::class, 'code', 'group_id')
+            ->where('module', 'role')
+            ->cache(true, 60)
+            ->field('val,code')
+            ->bind(['department_name' => 'val']);
+    }
+
     public function szmcData()
     {
         return $this->belongsTo('Paymenttype', 'shouzhimingcheng_id', 'id')->cache(true, 60)
@@ -229,7 +238,7 @@ class CapitalFy extends Base
         if ($fy->hxmoney > 0 || $fy->hxzhongliang > 0) {
             throw new Exception("已经有结算信息!");
         }
-        $fy->customerId = $customerId;
+        $fy->customer_id = $customerId;
         if (empty($beizhu2)) {
             $fy->beizhu = $beizhu;
         } else {
@@ -242,7 +251,7 @@ class CapitalFy extends Base
         $fy->price_and_tax = $sumPrice;
         $fy->tax_rate = $shuiPrice;
         $fy->money = $money;
-        $fy->shouzhifeilei_id = $shouzhiFenleiId;
+        $fy->shouzhifenlei_id = $shouzhiFenleiId;
         $fy->shouzhimingcheng_id = $shouzhimingchengId;
         $fy->zhongliang = $zhongliang;
         $fy->group_id = $groupId;
@@ -250,7 +259,7 @@ class CapitalFy extends Base
         $fy->save();
 
         $fyhx = CapitalFyhx::where('cap_fy_id', $fy['id'])->find();
-        $fyhx->customerId = $customerId;
+        $fyhx->customer_id = $customerId;
         $fyhx->hx_money = $money;
         $fyhx->heji_zhongliang = $zhongliang;
         $fyhx->save();

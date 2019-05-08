@@ -13,8 +13,8 @@ class CapitalFkjsfs extends Base
 
     public function jsfs()
     {
-        return $this->belongsTo('Jsfs', 'jiesuan_id', 'id')->cache(true, 60)
-            ->field('id,jsfs')->bind(['jiesuan_name' => 'jsfs']);
+        return $this->belongsTo('Jiesuanfangshi', 'jiesuan_id', 'id')->cache(true, 60)
+            ->field('id,jiesuanfangshi')->bind(['jiesuan_name' => 'jiesuanfangshi']);
     }
 
     public function bank()

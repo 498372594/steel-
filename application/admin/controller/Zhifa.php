@@ -45,9 +45,10 @@ class Zhifa extends Right
             'khpjData',
             'gfjsfsData',
             'khjsfsData',
+            'createOperator',
         ])->where('companyid', $this->getCompanyId())
             ->order('create_time', 'desc')
-            ->where('moshi_type', 1);
+            ->where('moshi_type', 2);
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -97,8 +98,9 @@ class Zhifa extends Right
             'khpjData',
             'gfjsfsData',
             'khjsfsData',
-            'details' => ['specification', 'jsfs', 'storage'],
-            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']]]
+            'details' => ['specification', 'jsfs', 'storage', 'caizhiData', 'chandiData'],
+            'other' => ['other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']]],
+            'createOperator',
         ])->where('companyid', $this->getCompanyId())
             ->where('moshi_type', 2)
             ->where('id', $id)
@@ -278,7 +280,7 @@ class Zhifa extends Right
             return returnSuc(['id' => $ms['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage() . $e->getTraceAsString());
+            return returnFail($e->getMessage());
         }
     }
 
