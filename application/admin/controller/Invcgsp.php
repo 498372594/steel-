@@ -29,7 +29,7 @@ class Invcgsp extends Right
     public function invywtype()
     {
         $list = model("inv_ywtype")->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     public function invcgsp()

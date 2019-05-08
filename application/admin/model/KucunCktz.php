@@ -13,21 +13,6 @@ class KucunCktz extends Base
 {
     use SoftDelete;
     protected $autoWriteTimestamp = true;
-    protected $type = [
-        'houdu' => 'float',
-        'kuandu' => 'float',
-        'changdu' => 'float',
-        'lingzhi' => 'float',
-        'jianshu' => 'float',
-        'zhijian' => 'float',
-        'counts' => 'float',
-        'zhongliang' => 'float',
-        'price' => 'float',
-        'sumprice' => 'float',
-        'shuie' => 'float',
-        'shui_price' => 'float',
-        'sum_shui_price' => 'float',
-    ];
 
     public function custom()
     {

@@ -55,7 +55,7 @@ class StockOutMd extends Base
     public function storage()
     {
         return $this->belongsTo('Storage', 'store_id', 'id')->cache(true, 60)
-            ->field('id,storage')->bind(['storage_name' => 'storage']);
+            ->field('id,storage')->bind(['store_name' => 'storage']);
     }
 
     public function mainData()

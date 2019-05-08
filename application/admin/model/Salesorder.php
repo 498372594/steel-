@@ -73,6 +73,18 @@ class Salesorder extends Base
             ->field('id,name')->bind(['employer_name' => 'name']);
     }
 
+    public function createOperator()
+    {
+        return $this->belongsTo('Admin', 'add_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['add_name' => 'name']);
+    }
+
+    public function updateOperator()
+    {
+        return $this->belongsTo('Admin', 'changer', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['update_operator_name' => 'name']);
+    }
+
     /**
      * @param $dataId
      * @param $moshiType

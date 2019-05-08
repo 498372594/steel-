@@ -33,4 +33,22 @@ class StockOtherOut extends Base
     {
         return $this->hasMany('StockOtherOutDetails', 'stock_other_out_id', 'id');
     }
+
+    public function createOperator()
+    {
+        return $this->belongsTo('Admin', 'create_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator_name' => 'name']);
+    }
+
+    public function updateOperator()
+    {
+        return $this->belongsTo('Admin', 'update_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['update_operator_name' => 'name']);
+    }
+
+    public function saleOperator()
+    {
+        return $this->belongsTo('Admin', 'sale_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['sale_operator_name' => 'name']);
+    }
 }

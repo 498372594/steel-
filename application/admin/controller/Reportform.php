@@ -50,7 +50,7 @@ class Reportform extends Right
             $list->where('beizhu', $params['beizhu']);
         }
         $list = $list->paginate($pageLimit);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
     /**
      * 采购磅差统计
@@ -212,7 +212,7 @@ class Reportform extends Right
         $list = \app\admin\model\ViewRkcbmx::where('companyid', $this->getCompanyId());
        $list=$this->getsearchcondition($params,$list);
         $list = $list->paginate($pageLimit);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**出入库对照表

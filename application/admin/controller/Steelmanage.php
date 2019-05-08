@@ -256,7 +256,7 @@ class Steelmanage extends Right
             );
         }
         $list = model("view_specification")->where($where)->paginate($pageLimt);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -356,7 +356,7 @@ class Steelmanage extends Right
     {
         $classid = request()->param("classid");
         $list = model("productname")->where("classid", $classid)->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -370,7 +370,7 @@ class Steelmanage extends Right
     {
         $productname_id = request()->param("productname_id");
         $list = model("view_specification")->where("productname_id", $productname_id)->select();
-        return returnRes($list, '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -553,7 +553,7 @@ class Steelmanage extends Right
     public function jsfs()
     {
         $list = model("jsfs")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -677,7 +677,7 @@ class Steelmanage extends Right
     public function storage()
     {
         $list = model("storage")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -721,7 +721,7 @@ class Steelmanage extends Right
     public function transportation()
     {
         $list = model("transportation")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -764,7 +764,7 @@ class Steelmanage extends Right
     public function bank()
     {
         $list = model("bank")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -807,7 +807,7 @@ class Steelmanage extends Right
     public function faxi()
     {
         $list = model("faxi")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -851,7 +851,7 @@ class Steelmanage extends Right
     public function salesmansetting()
     {
         $list = model("faxi")->where("companyid", $this->getCompanyId())->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
@@ -938,7 +938,7 @@ class Steelmanage extends Right
     {
         $type = request()->param("type");
         $list = Paymenttype::with('classData')->where(array("companyid" => $this->getCompanyId(), 'type' => $type))->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**

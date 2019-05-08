@@ -2,34 +2,41 @@
 
 namespace app\admin\controller;
 
-use app\admin\library\traits\Backend;
-use think\Db;
-use think\Exception;
-use think\Session;
+use app\admin\model\KcRkTz;
+use app\admin\model\ViewInstorageDetails;
+use app\admin\model\ViewInstorageOrder;
+use app\admin\model\ViewSpotMx;
+use think\exception\DbException;
+use think\response\Json;
 
 class Resource extends Right
 {
-    /**现货报价查询列表
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+    /**
+     * 现货报价查询列表
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
      */
     public function xhbj($pageLimit = 10)
     {
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageDetails::where('companyid', $this->getCompanyId());
+        $list = ViewInstorageDetails::where('companyid', $this->getCompanyId());
         $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate($pageLimit);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
-    /**现货汇总查询
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+    /**
+     * 现货汇总查询
+     * @param int $pageLimit
+     * @param string $juhe
+     * @return Json
+     * @throws DbException
      */
-    public function xhhz($pageLimit = 10,$juhe = "store_id,pinming_id,guige_id,kuandu,changdu,houdu,classname")
+    public function xhhz($pageLimit = 10, $juhe = "store_id,pinming_id,guige_id,kuandu,changdu,houdu,classname")
     {
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageDetails::where('companyid', $this->getCompanyId());
+        $list = ViewInstorageDetails::where('companyid', $this->getCompanyId());
         $list = $this->getsearchcondition($params, $list);
         if (!empty($params['budengyuling'])) {
             $list->where('counts', 'neq', 0);
@@ -37,34 +44,34 @@ class Resource extends Right
 
         $list = $list->field("storage,classname,pinming,guige,caizhi,chandi,houdu,kuandu,changdu,jianshu,sum(jianshu) as total_jianshu,sum(lingzhi) as total_lingzhi,sum(counts) as total_shuliang,sum(zhongliang) as total_zhongliang,sum(lisuanzongzhong) as total_lisuanzongzhong")
             ->group("$juhe")
-            ->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+            ->paginate($pageLimit);
+        return returnSuc($list);
     }
 
-    /**出入库对照表
-     * @return \think\response\Json
-     * @throws \think\exception\DbException
+    /**
+     * 出入库对照表
+     * @return Json
+     * @throws DbException
      */
     public function getinout()
     {
         $params = request()->param();
-        $list = \app\admin\model\ViewInstorageOrder::where('companyid', $this->getCompanyId());
+        $list = ViewInstorageOrder::where('companyid', $this->getCompanyId());
         $list = $this->getsearch($params, $list);
-
-        $list = $list
-            ->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        $list = $list->paginate(10);
+        return returnSuc($list);
     }
 
-    /**在途库存查询
-     * @return \think\response\Json
+    /**
+     * 在途库存查询
+     * @return Json
+     * @throws DbException
      */
-
     public function getenroute()
     {
         $params = request()->param();
 
-        $list = \app\admin\model\KcRkTz::with(['storage', 'pinmingData', 'caizhiData', 'chandiData'])->where('companyid', $this->getCompanyId());
+        $list = KcRkTz::with(['storage', 'pinmingData', 'caizhiData', 'chandiData'])->where('companyid', $this->getCompanyId());
         $list->where("jianshu", ">", 0)->where("lingzhi", ">", 0)->where("counts", ">", 0);
 
         if (!empty($params['ids'])) {
@@ -107,9 +114,15 @@ class Resource extends Right
             $list->where("zhongliang", ">", 0);
         }
         $list = $list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
-    public function allspot($juhe="cate,pinming,cangku,guige,changdu,houdu")
+
+    /**
+     * @param string $juhe
+     * @return Json
+     * @throws DbException
+     */
+    public function allspot($juhe = "cate,pinming,cangku,guige,changdu,houdu")
     {
         $params = request()->param();
         $list = model("ViewTotalSpot")->alias("t1")->where('companyid', $this->getCompanyId());
@@ -135,13 +148,20 @@ class Resource extends Right
              sum(t1.ztlingzhi)                                      ztlingzhi")
             ->group("$juhe")
             ->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
-    public function xhzymx($pageLimit=10){
+
+    /**
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
+    public function xhzymx($pageLimit = 10)
+    {
         $params = request()->param();
-        $list = \app\admin\model\ViewSpotMx::where('companyid', $this->getCompanyId());
+        $list = ViewSpotMx::where('companyid', $this->getCompanyId());
         $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate($pageLimit);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 }

@@ -39,6 +39,9 @@ class Salesorder extends Right
             'custom',
             'pjlxData',
             'jsfsData',
+            'employerData',
+            'createOperator',
+            'updateOperator'
         ])->where('companyid', $this->getCompanyId())
             ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
@@ -86,8 +89,11 @@ class Salesorder extends Right
             'custom',
             'pjlxData',
             'jsfsData',
-            'details' => ['specification', 'jsfs', 'storage'],
-            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']]
+            'details' => ['specification', 'jsfs', 'storage', 'caizhiData', 'chandiData'],
+            'other' => ['mingxi' => ['szmcData', 'pjlxData', 'custom', 'szflData']],
+            'employerData',
+            'createOperator',
+            'updateOperator'
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)

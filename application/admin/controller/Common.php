@@ -21,7 +21,7 @@ class Common extends  Right
     public function roleName()
     {
         $data = getDropdownList('department','',0);
-        return returnRes($data,'没有数据，请联系管理员',$data);
+        return returnSuc($data);
     }
 
     /**

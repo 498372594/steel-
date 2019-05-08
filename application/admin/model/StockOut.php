@@ -78,6 +78,21 @@ class StockOut extends Base
         return $this->hasMany('StockOutMd', 'stock_out_id', 'id');
     }
 
+    public function saleOperator()
+    {
+        return $this->belongsTo('Admin', 'sale_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['sale_operator_name' => 'name']);
+    }
+
+    public function departmentData()
+    {
+        return $this->hasOne(Dropdown::class, 'code', 'department')
+            ->where('module', 'role')
+            ->cache(true, 60)
+            ->field('val,code')
+            ->bind(['department_name' => 'val']);
+    }
+
     /**
      * @param $dataId
      * @param $chukuType

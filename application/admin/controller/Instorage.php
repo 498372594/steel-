@@ -33,7 +33,7 @@ class Instorage extends Right
             $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
         }
         $list=$list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**入库单明细
@@ -43,7 +43,7 @@ class Instorage extends Right
     public function instorageorder(){
         $instorage_id=request()->param("id");
         $list = model("ViewInstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**修改入库单明细
@@ -92,7 +92,7 @@ class Instorage extends Right
             $list->where('remark', 'like', '%' . $params['specification'] . '%');
         }
         $list = $list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**批量操作入库
@@ -165,7 +165,7 @@ class Instorage extends Right
                 ->group("productname,specification,width,length,houdu_name,texture,originarea,jianzhishu,")
                 ->where("storage_id",$storage_id)
                 ->paginate(10);
-            return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+            return returnSuc($list);
         }
         public function checkstorage(){
             if(request()->isPost()){
@@ -196,7 +196,7 @@ class Instorage extends Right
         public function checkstoragedetails(){
             $check_id=request()->param();
             $list=model("checkstoragedetail")->where(array("companyid"=>$this->getCompanyId(),"check_id"=>$check_id))->paginate(10);
-            return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+            return returnSuc($list);
         }
 
     /**
@@ -273,7 +273,7 @@ class Instorage extends Right
                 $where['productname_id']=array('like','%'. $productname_id.'%');
             }
             $list=model("InstorageDetails")->where($where)->paginate(10);
-            return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+            return returnSuc($list);
         }
 
     /**

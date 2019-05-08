@@ -109,7 +109,7 @@ class Chuku extends Right
             return returnFail('请求方式错误');
         }
         $params = $request->param();
-        $list = StockOut::with(['addData'])
+        $list = StockOut::with(['addData', 'saleOperator', 'departmentData'])
             ->where('companyid', $this->getCompanyId())
             ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
@@ -329,7 +329,7 @@ class Chuku extends Right
             return returnFail('请求方式错误');
         }
         $data = StockOut::with([
-            'wait' => ['specification', 'jsfs', 'custom'],
+            'wait' => ['specification', 'jsfs', 'custom', 'caizhiData', 'chandiData', 'storageData', 'createOperator'],
             'already' => ['specification', 'jsfs', 'spot', 'storage']
         ])
             ->where('id', $id)

@@ -43,7 +43,7 @@ class Rk extends Right
             $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
         }
         $list = $list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**入库单明细
@@ -116,7 +116,7 @@ class Rk extends Right
             $list->where("zhongliang", ">", 0);
         }
         $list = $list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**入库
@@ -452,7 +452,7 @@ class Rk extends Right
             $list->where('counts', 0);
         }
         $list = $list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+        return returnSuc($list);
     }
 
     /**
