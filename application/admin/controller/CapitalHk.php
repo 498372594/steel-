@@ -39,7 +39,8 @@ class CapitalHk extends Right
             ->where('companyid', $this->getCompanyId())
             ->order('yw_time', 'desc')
             ->where('fangxiang', $fangxiang)
-            ->where('status', '<>', 2);
+            ->where('status', '<>', 2)
+            ->where('weihexiao_jine|weihexiao_zhongliang', '<>', 0);
         if ($fangxiang == 1) {
             switch ($params['sklx']) {
                 case 1:
