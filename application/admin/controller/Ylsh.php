@@ -6,7 +6,7 @@ use app\admin\library\traits\Backend;
 use app\admin\model\KcRk;
 use app\admin\model\{KcDiaoboMx, KcPandianMx, KcRkMd, KcSpot, StockOut};
 use app\admin\validate\KcPandian;
-use think\{Db, Request};
+use think\{Db, Request,Validate};
 use think\Exception;
 use think\Session;
 
@@ -385,16 +385,19 @@ class Ylsh extends Right
         try {
             $data = request()->post();
             $validate = new \app\admin\validate\KcPandian();
+
             if (!$validate->check($data)) {
+
                 return returnFail($validate->getError());
             }
 
             $addList = [];
             $updateList = [];
-            $detailValidate = new KcPandianMx();
+            $detailValidate = new \app\admin\validate\KcPandianMx();
             $num = 1;
+
 //            dump($data['details']);die;
-            foreach ($data['details'] as $item) {
+            foreach ($data['detail'] as $item) {
                 if (!$detailValidate->check($item)) {
 
                     return returnFail('请检查第' . $num . '行  ' . $detailValidate->getError());
@@ -411,7 +414,7 @@ class Ylsh extends Right
             $companyId = $this->getCompanyId();
 
             if (empty($data['id'])) {
-                $count = KcPandian::whereTime('create_time', 'today')
+                $count = \app\admin\model\KcPandian::whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
                     ->count();
 
@@ -420,12 +423,12 @@ class Ylsh extends Right
                 $data['add_id'] = $this->getAccountId();
                 $data['companyid'] = $companyId;
                 $data['system_number'] = $systemNumber;
-                $pd = new KcPandian();
+                $pd = new \app\admin\model\KcPandian();
                 $pd->allowField(true)->data($data)->save();
                 $pd_id = $pd["id"];
 
             } else {
-                $pd = KcPandian::where('companyid', $companyId)->where('id', $data['id'])->find();
+                $pd = \app\admin\model\KcPandian::where('companyid', $companyId)->where('id', $data['id'])->find();
                 $pd_id = $pd["id"];
                 if (empty($pd)) {
                     throw new Exception("对象不存在");
@@ -444,7 +447,7 @@ class Ylsh extends Right
                     if ($pd["pandian_type"] == 1) {
                         (new KcRk())->deleteRuku($pd["id"], 2);
                     } else if ($pd["pandian_type"] == "盘亏") {
-                        (new StockOut())->deleteChuku($pd["id"], 2);
+                        (new  StockOut())->deleteChuku($pd["id"], 2);
                     }
                     $pd->delete();
                 }
@@ -459,20 +462,23 @@ class Ylsh extends Right
                 foreach ($addList as $mjo) {
 
                     $mjo['companyid'] = $companyId;
-                    $mjo['pandian_id'] = $pd['id'];
+                    $mjo['pandian_id'] = $pd_id;
                     $mx = new KcPandianMx();
                     $mx->allowField(true)->save($mjo);
                     if ($mx["pandian_type"] == "盘盈") {
                         $rkCount=KcRk::where("data_id",$pd["id"])->count();
                         if($rkCount==0){
+
                             $rk=(new KcRk())->insertRuku($pd["id"],2,$pd["yw_time"],$pd["group_id"],$pd["system_number"],$pd["sale_operator_id"],$this->getAccountId(),$this->getCompanyId());
+
                         }else{
+
                             $rk=(new KcRk())->where("data_id",$pd["id"])->find();
                         }
-                        (new KcRk())->insertRkMxMd($rk, $mx["id"], 1, $pd["yw_time"], $pd["system_number"], null, $mjo["gf_customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
-                            , $mx["jijiafangshi_id"], $mx["old_store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], null, $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
-                            $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $mx["sumprice"], $mx["shuiprice"], $mx["sum_shui_price"], $mx["shuie"], null, null, $this->getAccountId(), $this->getCompanyId());
 
+                        (new KcRk())->insertRkMxMd($rk, $mx["id"], 1, $pd["yw_time"], $pd["system_number"], null, null, $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
+                            , $mx["jijiafangshi_id"], $mx["store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], null, $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
+                            $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $mx["sumprice"], $mx["shuiprice"], $mx["sum_shui_price"], $mx["shuie"], null, null, $this->getAccountId(), $this->getCompanyId());
                     }elseif($mx["pandian_type"] == "盘亏"){
                         $ckCount=StockOut::where("data_id",$pd["id"])->count();
                         if($ckCount==0){
@@ -480,17 +486,18 @@ class Ylsh extends Right
                         }else{
                             $ck=(new StockOut())->where("data_id",$pd["id"])->find();
                         }
-                        (new StockOut())->insertCkMxMd($ck,$mx["spot_id"],$mx["id"],2,$ck["yw_time"],$ck["system_number"],$ck["customer_id"],
-                            $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["store_id`"], $mx["houdu"], $mx["kuandu"], $mx["changdu"], $mx["zhijian"]
+
+                        (new StockOut())->insertCkMxMd($ck,$mx["spot_id"],$mx["id"],2,$ck["yw_time"],null,null,
+                            $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["store_id"], $mx["houdu"], $mx["kuandu"], $mx["changdu"], $mx["zhijian"]
                             , $mx["lingzhi"], $mx["jianshu"], $mx["counts"], $mx["zhongliang"], $mx["price"], $mx["sumprice"], $mx["shuiprice"], $mx["sum_shui_price"], $mx["shuie"],$mx["mizhong"], $mx["jianzhong"],null
-                            , $mx["yk_reason"],$this->getAccountId(),$this->getCompanyId());
+                            , $mx["ykreason"],$this->getAccountId(),$this->getCompanyId());
                     }
                 }
 
             }
             Db::commit();
             return returnSuc(['id' => $pd['id']]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
         }

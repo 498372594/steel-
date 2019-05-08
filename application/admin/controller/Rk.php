@@ -143,7 +143,7 @@ class Rk extends Right
             }
             $addMxList = [];
             $updateMxList = [];
-            $ja = $data['ckmx'];
+            $ja = $data['details'];
             $companyId = $this->getCompanyId();
             if (!empty($ja)) {
                 foreach ($ja as $object) {
@@ -157,6 +157,10 @@ class Rk extends Right
             }
             if (!empty($ja)) {
                 foreach ($ja as $object) {
+                    $tz = model("kc_rk_tz")->where("id", $object["rktz_id"])->find();
+                    if ($tz["status"] == 1) {
+                        throw new Exception("入库源单不存在，请核实后在操作！");
+                    }
                     if (empty($object['zhongliang'])) {
                         throw new Exception("重量不能为空");
                     }
@@ -168,11 +172,9 @@ class Rk extends Right
                     }
                 }
             }
+
             if (empty($data["id"])) {
-                $tz = model("kc_rk_tz")->where("id", $data["rktz_id"])->find();
-                if ($tz["status"] == 1) {
-                    throw new Exception("入库源单不存在，请核实后在操作！");
-                }
+
                 $count = KcRk::whereTime('create_time', 'today')
                     ->where('companyid', $companyId)
                     ->count();
@@ -232,6 +234,7 @@ class Rk extends Right
             if (!empty($addMxList)) {
                 $addNumberCount = empty($data['id']) ? 0 : KcRkMx::where('kc_rk_id', $rk['id'])->max('system_number');
                 foreach ($addMxList as $mjo) {
+
                     if (!empty($mjo["rktz_id"])) {
                         $tz = KcRkTz::get($mjo['rktz_id']);
                         if (!empty($tz)) {
@@ -261,13 +264,14 @@ class Rk extends Right
 
                         }
                     }
-                    (new KcRk())->insertRkMxMd($rk, $mjo["id"], 2, $data["yw_time"], $data["system_number"], null, $data["customer_id"], $mjo["pinming_id"], $mjo["guige_id"], $mjo["caizhi_id"], $mjo["chandi_id"]
-                        , $mjo["jijiafangshi_id"], $mjo["store_id"], $mjo["pihao"], $mjo["huohao"], null, $mjo["beizhu"], $data["piaoju_id"], $mjo["houdu"] ?? 0, $mjo["kuandu"] ?? 0, $mjo["changdu"] ?? 0, $mjo["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
+                    (new KcRk())->insertRkMxMd($rk, $tz["id"], 2, $data["yw_time"], $data["system_number"], null, $mjo["cache_customer_id"], $mjo["pinming_id"], $mjo["guige_id"], $mjo["caizhi_id"], $mjo["chandi_id"]
+                        , $mjo["jijiafangshi_id"], $mjo["store_id"], $mjo["pihao"], $mjo["huohao"], null, $mjo["beizhu"], $mjo["cache_piaoju_id"], $mjo["houdu"] ?? 0, $mjo["kuandu"] ?? 0, $mjo["changdu"] ?? 0, $mjo["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
                         $mjo["counts"] ?? 0, $mjo["zhongliang"] ?? 0, $mjo["price"], $mjo["sumprice"], $mjo["shui_price"], $mjo["sum_shui_price"], $mjo["shuie"], $mjo["mizhong"], $mjo["jianzhong"], $this->getAccountId(), $this->getCompanyId());
 
                 }
             }
             Db::commit();
+
             return returnSuc(['id' => $rk['id']]);
         } catch (Exception $e) {
             Db::rollback();
