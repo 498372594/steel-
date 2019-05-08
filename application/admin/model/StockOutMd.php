@@ -229,6 +229,7 @@ where
      * @param $jianzhong
      * @param $cbPrice
      * @param $beizhu
+     * @param $shuie
      * @param $companyId
      * @throws DbException
      * @throws Exception

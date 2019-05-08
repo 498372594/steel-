@@ -54,6 +54,30 @@ class SalesorderDetails extends Base
             ->field('id,resource_number')->bind('resource_number');
     }
 
+    public function jsfsDataForMx()
+    {
+        return $this->belongsTo('Jiesuanfangshi', 'jsfs', 'id')->cache(true, 60)
+            ->field('id,jiesuanfangshi')->bind(['jisuan_name' => 'jiesuanfangshi']);
+    }
+
+    public function customForMx()
+    {
+        return $this->belongsTo('Custom', 'custom_id', 'id')->cache(true, 60)
+            ->field('id,custom,province,city');
+    }
+
+    public function pjlxDataForMx()
+    {
+        return $this->belongsTo('Pjlx', 'pjlx', 'id')->cache(true, 60)
+            ->field('id,pjlx')->bind(['pjlx_name' => 'pjlx']);
+    }
+
+    public function employerDataForMx()
+    {
+        return $this->belongsTo('Admin', 'employer', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['employer_name' => 'name']);
+    }
+
     /**
      * @param $params
      * @param $pageLimit
@@ -81,8 +105,8 @@ class SalesorderDetails extends Base
             if (!empty($params['customer_id'])) {
                 $query->where('custom_id', $params['customer_id']);
             }
-            if (!empty($params['piaoju_id'])) {
-                $query->where('pjlx', $params['piaoju_id']);
+            if (!empty($params['piaoju'])) {
+                $query->where('pjlx', $params['piaoju']);
             }
             if (!empty($params['department'])) {
                 $query->where('department', $params['department']);
@@ -119,8 +143,10 @@ class SalesorderDetails extends Base
             'caizhiData',
             'chandiData',
             'spot',
-            'salesorder' => ['custom', 'pjlxData', 'employerData', 'jsfsData']
-        ]);
+            'customForMx' => ['provinceData', 'cityData'],
+            'pjlxDataForMx',
+            'employerDataForMx',
+        ])->field('Salesorder.id as xs_id,Salesorder.status,Salesorder.system_no,Salesorder.ywsj,Salesorder.ywlx,Salesorder.custom_id,Salesorder.pjlx,Salesorder.department,Salesorder.employer,SalesorderDetails.*');
         if (!empty($params['kuanduStart'])) {
             $data->where('width', '>=', $params['kuanduStart']);
         }
@@ -149,7 +175,7 @@ class SalesorderDetails extends Base
             $data->where('length', '>=', $params['changduEnd']);
         }
         if (!empty($params['jsfs'])) {
-            $data->where('SalesorderDetails.jsfs', $params['jsfs']);
+            $data->where('SalesorderDetails.jsfs_id', $params['jsfs']);
         }
         if (!empty($params['caizhi'])) {
             $data->where('caizhi', $params['caizhi']);

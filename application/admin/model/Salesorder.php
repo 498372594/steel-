@@ -196,6 +196,7 @@ class Salesorder extends Base
      * @param $zhijian
      * @param $counts
      * @param $zhongliang
+     * @param $jianzhong
      * @param $price
      * @param $sumPrice
      * @param $shuiPrice
