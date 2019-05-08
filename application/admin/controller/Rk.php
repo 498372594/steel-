@@ -127,7 +127,7 @@ class Rk extends Right
      * @return string|Json
      * @throws \Exception
      */
-    public function add()
+    public function ruku()
     {
         if (!request()->isPost()) {
             return returnFail('请求方式错误');
@@ -261,168 +261,175 @@ class Rk extends Right
 
                         }
                     }
+                    (new KcRk())->insertRkMxMd($rk, $mjo["id"], 2, $data["yw_time"], $data["system_number"], null, $data["customer_id"], $mjo["pinming_id"], $mjo["guige_id"], $mjo["caizhi_id"], $mjo["chandi_id"]
+                        , $mjo["jijiafangshi_id"], $mjo["store_id"], $mjo["pihao"], $mjo["huohao"], null, $mjo["beizhu"], $data["piaoju_id"], $mjo["houdu"] ?? 0, $mjo["kuandu"] ?? 0, $mjo["changdu"] ?? 0, $mjo["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
+                        $mjo["counts"] ?? 0, $mjo["zhongliang"] ?? 0, $mjo["price"], $mjo["sumprice"], $mjo["shui_price"], $mjo["sum_shui_price"], $mjo["shuie"], $mjo["mizhong"], $mjo["jianzhong"], $this->getAccountId(), $this->getCompanyId());
+
                 }
             }
+            Db::commit();
+            return returnSuc(['id' => $rk['id']]);
         } catch (Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
         }
     }
 
-    public function ruku(Request $request, $moshi_type = 4, $data = [], $return = false)
-    {
-        if ($request->isPost()) {
-            $companyId = $this->getCompanyId();
-            //数据处理
-            if (empty($data)) {
-                $data = $request->post();
-            }
-
-            if (!empty($data["id"])) {
-                return returnFail("入库单禁止修改");
-            }
-
-            $data['create_operator'] = $this->getAccount()['name'];
-            $data['create_operate_id'] = $this->getAccountId();
-            $data['companyid'] = $companyId;
-            $data['moshi_type'] = $moshi_type;
-            if (!$return) {
-                Db::startTrans();
-            }
-            try {
-                //入库
-
-                //生成入库单
-                $count2 = KcRk::whereTime('create_time', 'today')->count();
-                $data["system_number"] = "RKD" . date('Ymd') . str_pad($count2 + 1, 3, 0, STR_PAD_LEFT);
-                $data["beizhu"] = $data['beizhu'];
-
-                model("KcRk")->allowField(true)->data($data)->save();
-
-                $rkid = model("KcRk")->getLastInsID();
-
-                //处理数据
-                $detailsValidate = new KcRkMx();
-                $num = 1;
-                $count1 = KcSpot::whereTime('create_time', 'today')->count();
-                foreach ($data['details'] as $c => $v) {
-                    $dat['details'][$c]['id'] = $v['id']?? '';
-                    $dat['details'][$c]['counts'] = $v['old_counts'] - $v["counts"];//剩下的总件数
-                    $dat['details'][$c]['jianshu'] = intval(floor($dat['details'][$c]['counts'] / $v["zhijian"]));
-                    $dat['details'][$c]['lingzhi'] = $dat['details'][$c]['counts'] % $v["zhijian"];
-                    $dat['details'][$c]['zhongliang'] = $v['old_zhongliang'] - $v["zhongliang"];//剩下的总件数
-                    $data['details'][$c]['companyid'] = $companyId;
-                    $data['details'][$c]['kc_rk_id'] = $rkid;
-                    $data['details'][$c]['resource_number'] = "KC" . date('Ymd') . str_pad($count1 + 1, 3, 0, STR_PAD_LEFT);
-//                        $data['details'][$c]['data_id'] = $id;
-                    $data['details'][$c]['cache_data_number'] = $v['cache_data_number'];
-                    $data['details'][$c]['cache_customer_id'] = $v['cache_customer_id'] ?? '';
-                    $data['details'][$c]['cache_ywtime'] = $v['cache_ywtime'] ?? '';
-                    $data['details'][$c]['cache_piaoju_id'] = $v['cache_piaoju_id'] ?? '';
-                    $data['details'][$c]['cache_create_operator'] = $v['cache_create_operator'];
-                    $data['details'][$c]['ruku_lingzhi'] = $v['lingzhi'];
-                    $data['details'][$c]['ruku_jianshu'] = $v['jianshu'];
-                    $data['details'][$c]['ruku_shuliang'] = $v['counts'];
-                    $data['details'][$c]['ruku_zhongliang'] = $v['zhongliang'];
-                    unset($data['details'][$c]["id"]);
-//                        if (!$detailsValidate->check($data['details'][$c])) {
-//                            throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
-//                        }
-                    $num++;
-                }
-                //修改通知记录数量
-                model("KcRkTz")->saveAll($dat['details']);
-
-                //入库明细
-
-                model('KcRkMx')->allowField(true)->saveAll($data['details']);
-
-                //入库库存
-                $spot = [];
-                foreach ($data['details'] as $c => $v) {
-                    $spot[] = [
-                        'companyid' => $companyId,
-                        'ruku_type' => 4,
-                        'ruku_fangshi' => 2,
-                        'piaoju_id' => $v['cache_piaoju_id'],
-                        'resource_number' => "KC" . date('Ymd') . str_pad($count1 + 1, 3, 0, STR_PAD_LEFT),
-                        'guige_id' => $v['guige_id'],
-                        'data_id' => $v['id'] ?? '',
-                        'pinming_id' => $v['pinming_id'],
-                        'store_id' => $v['store_id'],
-                        'caizhi_id' => $v['caizhi_id'] ?? '',
-                        'chandi_id' => $v['chandi_id'] ?? '',
-                        'jijiafangshi_id' => $v['jijiafangshi_id'],
-                        'houdu' => $v['houdu'] ?? '',
-                        'kuandu' => $v['kuandu'] ?? '',
-                        'changdu' => $v['changdu'] ?? '',
-                        'lingzhi' => $v['lingzhi'] ?? '',
-                        'jianshu' => $v['jianshu'] ?? '',
-                        'zhijian' => $v['zhijian'] ?? '',
-                        'counts' => $v['counts'] ?? '',
-                        'zhongliang' => $v['zhongliang'] ?? '',
-                        'price' => $v['price'] ?? '',
-                        'cb_price' => $v['price'] ?? '',
-                        'cb_sumprice' => $v['sumprice'] ?? '',
-                        'cb_shuie' => $v['shuie'] ?? '',
-                        'cb_shui_price' => $v['shui_price'] ?? '',
-                        'shuie' => $v['shuie'] ?? '',
-                        'shui_price' => $v['shui_price'] ?? '',
-                        'sum_shui_price' => $v['sum_shui_price'] ?? '',
-                        'beizhu' => $v['beizhu'] ?? '',
-                        'chehao' => $v['chehao'] ?? '',
-                        'pihao' => $v['pihao'] ?? '',
-                        'sumprice' => $v['sumprice'] ?? '',
-                        'huohao' => $v['huohao'] ?? '',
-                        'customer_id' => $v['cache_customer_id'],
-                        'mizhong' => $v['mizhong'] ?? '',
-                        'jianzhong' => $v['jianzhong'] ?? '',
-                        'lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
-                        'guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
-                        'guobang_zhongliang' => $v["zhongliang"] ?? '',
-                        'lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
-                        'guobang_jianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
-                        'lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
-                        'old_lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
-                        'old_guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
-                        'old_lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
-                        'old_guobangjianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
-                        'old_guobangzhongliang' => ($v['zhongliang']) ?? '',
-                        'old_lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
-                        'status' => 0,
-                        'guobang_price' => $v['guobang_price'] ?? '',
-                        'guobang_shui_price' => $v['guobang_shui_price'] ?? '',
-                        'zhi_price' => $v['zhi_price'] ?? '',
-                        'zhi_shui_price' => $v['zhi_shui_price'] ?? '',
-                        'lisuan_shui_price' => $v['lisuan_shui_price'] ?? '',
-                        'lisuan_price' => $v['lisuan_price'] ?? '',
-                    ];
-                }
-
-                model("KcSpot")->allowField(true)->saveAll($spot);
+//    public function ruku(Request $request, $moshi_type = 4, $data = [], $return = false)
+//    {
+//        if ($request->isPost()) {
+//            $companyId = $this->getCompanyId();
+//            //数据处理
+//            if (empty($data)) {
+//                $data = $request->post();
+//            }
+//
+//            if (!empty($data["id"])) {
+//                return returnFail("入库单禁止修改");
+//            }
+//
+//            $data['create_operator'] = $this->getAccount()['name'];
+//            $data['create_operate_id'] = $this->getAccountId();
+//            $data['companyid'] = $companyId;
+//            $data['moshi_type'] = $moshi_type;
+//            if (!$return) {
+//                Db::startTrans();
+//            }
+//            try {
+//                //入库
+//
+//                //生成入库单
+//                $count2 = KcRk::whereTime('create_time', 'today')->count();
+//                $data["system_number"] = "RKD" . date('Ymd') . str_pad($count2 + 1, 3, 0, STR_PAD_LEFT);
+//                $data["beizhu"] = $data['beizhu'];
+//
+//                model("KcRk")->allowField(true)->data($data)->save();
+//
+//                $rkid = model("KcRk")->getLastInsID();
+//
+//                //处理数据
+//                $detailsValidate = new KcRkMx();
+//                $num = 1;
+//                $count1 = KcSpot::whereTime('create_time', 'today')->count();
+//                foreach ($data['details'] as $c => $v) {
+//                    $dat['details'][$c]['id'] = $v['id']?? '';
+//                    $dat['details'][$c]['counts'] = $v['old_counts'] - $v["counts"];//剩下的总件数
+//                    $dat['details'][$c]['jianshu'] = intval(floor($dat['details'][$c]['counts'] / $v["zhijian"]));
+//                    $dat['details'][$c]['lingzhi'] = $dat['details'][$c]['counts'] % $v["zhijian"];
+//                    $dat['details'][$c]['zhongliang'] = $v['old_zhongliang'] - $v["zhongliang"];//剩下的总件数
+//                    $data['details'][$c]['companyid'] = $companyId;
+//                    $data['details'][$c]['kc_rk_id'] = $rkid;
+//                    $data['details'][$c]['resource_number'] = "KC" . date('Ymd') . str_pad($count1 + 1, 3, 0, STR_PAD_LEFT);
+////                        $data['details'][$c]['data_id'] = $id;
+//                    $data['details'][$c]['cache_data_number'] = $v['cache_data_number'];
+//                    $data['details'][$c]['cache_customer_id'] = $v['cache_customer_id'] ?? '';
+//                    $data['details'][$c]['cache_ywtime'] = $v['cache_ywtime'] ?? '';
+//                    $data['details'][$c]['cache_piaoju_id'] = $v['cache_piaoju_id'] ?? '';
+//                    $data['details'][$c]['cache_create_operator'] = $v['cache_create_operator'];
+//                    $data['details'][$c]['ruku_lingzhi'] = $v['lingzhi'];
+//                    $data['details'][$c]['ruku_jianshu'] = $v['jianshu'];
+//                    $data['details'][$c]['ruku_shuliang'] = $v['counts'];
+//                    $data['details'][$c]['ruku_zhongliang'] = $v['zhongliang'];
+//                    unset($data['details'][$c]["id"]);
+////                        if (!$detailsValidate->check($data['details'][$c])) {
+////                            throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
+////                        }
+//                    $num++;
 //                }
-
-                if (!$return) {
-                    Db::commit();
-                    return returnRes(true, '', ['id' => $rkid]);
-                } else {
-                    return true;
-                }
-            } catch (Exception $e) {
-                if ($return) {
-                    return $e->getMessage();
-                } else {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
-                }
-            }
-        }
-        if ($return) {
-            return '请求方式错误';
-        } else {
-            return returnFail('请求方式错误');
-        }
-    }
+//                //修改通知记录数量
+//                model("KcRkTz")->saveAll($dat['details']);
+//
+//                //入库明细
+//
+//                model('KcRkMx')->allowField(true)->saveAll($data['details']);
+//
+//                //入库库存
+//                $spot = [];
+//                foreach ($data['details'] as $c => $v) {
+//                    $spot[] = [
+//                        'companyid' => $companyId,
+//                        'ruku_type' => 4,
+//                        'kc_rk_tz_id' => $v['id']?? '',
+//                        'ruku_fangshi' => 2,
+//                        'piaoju_id' => $v['cache_piaoju_id'],
+//                        'resource_number' => "KC" . date('Ymd') . str_pad($count1 + 1, 3, 0, STR_PAD_LEFT),
+//                        'guige_id' => $v['guige_id'],
+//                        'data_id' => $v['id'] ?? '',
+//                        'pinming_id' => $v['pinming_id'],
+//                        'store_id' => $v['store_id'],
+//                        'caizhi_id' => $v['caizhi_id'] ?? '',
+//                        'chandi_id' => $v['chandi_id'] ?? '',
+//                        'jijiafangshi_id' => $v['jijiafangshi_id'],
+//                        'houdu' => $v['houdu'] ?? '',
+//                        'kuandu' => $v['kuandu'] ?? '',
+//                        'changdu' => $v['changdu'] ?? '',
+//                        'lingzhi' => $v['lingzhi'] ?? '',
+//                        'jianshu' => $v['jianshu'] ?? '',
+//                        'zhijian' => $v['zhijian'] ?? '',
+//                        'counts' => $v['counts'] ?? '',
+//                        'zhongliang' => $v['zhongliang'] ?? '',
+//                        'price' => $v['price'] ?? '',
+//                        'cb_price' => $v['price'] ?? '',
+//                        'cb_sumprice' => $v['sumprice'] ?? '',
+//                        'cb_shuie' => $v['shuie'] ?? '',
+//                        'cb_shui_price' => $v['shui_price'] ?? '',
+//                        'shuie' => $v['shuie'] ?? '',
+//                        'shui_price' => $v['shui_price'] ?? '',
+//                        'sum_shui_price' => $v['sum_shui_price'] ?? '',
+//                        'beizhu' => $v['beizhu'] ?? '',
+//                        'chehao' => $v['chehao'] ?? '',
+//                        'pihao' => $v['pihao'] ?? '',
+//                        'sumprice' => $v['sumprice'] ?? '',
+//                        'huohao' => $v['huohao'] ?? '',
+//                        'customer_id' => $v['cache_customer_id'],
+//                        'mizhong' => $v['mizhong'] ?? '',
+//                        'jianzhong' => $v['jianzhong'] ?? '',
+//                        'lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
+//                        'guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
+//                        'guobang_zhongliang' => $v["zhongliang"] ?? '',
+//                        'lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
+//                        'guobang_jianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
+//                        'lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
+//                        'old_lisuan_zhongliang' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000),
+//                        'old_guobang_zhizhong' => ($v['zhongliang'] / $v["counts"] * $v["zhijian"]) ?? '',
+//                        'old_lisuan_zhizhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"] * $v["zhijian"]),
+//                        'old_guobangjianzhong' => ($v['zhongliang'] / $v["counts"]) ?? '',
+//                        'old_guobangzhongliang' => ($v['zhongliang']) ?? '',
+//                        'old_lisuan_jianzhong' => ($v["counts"] * $v["changdu"] * $v['mizhong'] / 1000 / $v["counts"]),
+//                        'status' => 0,
+//                        'guobang_price' => $v['guobang_price'] ?? '',
+//                        'guobang_shui_price' => $v['guobang_shui_price'] ?? '',
+//                        'zhi_price' => $v['zhi_price'] ?? '',
+//                        'zhi_shui_price' => $v['zhi_shui_price'] ?? '',
+//                        'lisuan_shui_price' => $v['lisuan_shui_price'] ?? '',
+//                        'lisuan_price' => $v['lisuan_price'] ?? '',
+//                    ];
+//                }
+//
+//                model("KcSpot")->allowField(true)->saveAll($spot);
+////                }
+//
+//                if (!$return) {
+//                    Db::commit();
+//                    return returnRes(true, '', ['id' => $rkid]);
+//                } else {
+//                    return true;
+//                }
+//            } catch (Exception $e) {
+//                if ($return) {
+//                    return $e->getMessage();
+//                } else {
+//                    Db::rollback();
+//                    return returnFail($e->getMessage());
+//                }
+//            }
+//        }
+//        if ($return) {
+//            return '请求方式错误';
+//        } else {
+//            return returnFail('请求方式错误');
+//        }
+//    }
 
     /**清库列表
      * @return Json

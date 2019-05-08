@@ -23,41 +23,31 @@ class Reportform extends Right
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
-        if (!empty($params['yw_time'])) {
-            $list->where('service_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+        if (!empty($params['ywsjEnd'])) {
+            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
-        if (!empty($params['storage_id'])) {
-            $list->where('storage_id', $params['storage_id']);
+        if (!empty($params['store_id'])) {
+            $list->where('store_id', $params['store_id']);
         }
         if (!empty($params['status'])) {
             $list->where('status', $params['status']);
         }
-        if (!empty($params['ruku_fangshi_id'])) {
-            $list->where('ruku_fangshi_id', $params['ruku_fangshi_id']);
+
+        if (!empty($params['jijiafangshi_id'])) {
+            $list->where('jijiafangshi_id', $params['jijiafangshi_id']);
         }
-        if (!empty($params['jsfs'])) {
-            $list->where('jsfs', $params['jsfs']);
+        if (!empty($params['customer_id'])) {
+            $list->where('customer_id', $params['customer_id']);
         }
-        if (!empty($params['supplier_id'])) {
-            $list->where('supplier_id', $params['supplier_id']);
-        }
-        if (!empty($params['pjlx'])) {
-            $list->where('pjlx', $params['pjlx']);
-        }
-        if (!empty($params['system_no'])) {
-            $list->where('system_no', 'like', '%' . $params['system_no'] . '%');
+
+        if (!empty($params['system_number'])) {
+            $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
         }
         if (!empty($params['ywlx'])) {
             $list->where('ywlx', $params['ywlx']);
         }
-        if (!empty($params['shdw_id'])) {
-            $list->where('shdw_id', $params['shdw_id']);
-        }
-        if (!empty($params['ysdw_id'])) {
-            $list->where('ysdw_id', $params['ysdw_id']);
-        }
-        if (!empty($params['remark'])) {
-            $list->where('remark', $params['remark']);
+        if (!empty($params['beizhu'])) {
+            $list->where('beizhu', $params['beizhu']);
         }
         $list = $list->paginate($pageLimit);
         return returnSuc($list);

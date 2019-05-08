@@ -70,7 +70,7 @@ class Purchase extends Right
                 $cg->allowField(true)->data($data)->save();
                 $purchase_id = $cg["id"];
                 if ($data['ruku_fangshi'] == 1) {
-                    $newRk = (new KcRk())->insertRuku($cg['id'], "4", $cg['yw_time'], $cg['group_id'], $cg['system_number'], $cg['sale_operate_id'], $this->getAccountId(), $this->getCompanyId());
+                    $newRk = (new KcRk())->insertRuku($cg['id'], "4", $data['yw_time'], $cg['group_id'], $cg['system_number'], $cg['sale_operate_id'], $this->getAccountId(), $this->getCompanyId());
                 }
             } else {
                 $cg = CgPurchase::where('companyid', $companyId)->where('id', $data['id'])->find();

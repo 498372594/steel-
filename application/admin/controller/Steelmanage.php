@@ -229,7 +229,7 @@ class Steelmanage extends Right
             }
 
             $data["unit"] = model("unit")->where("companyid", $this->getCompanyId())->field("id,unit")->select();
-            $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
+            $list = model("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
             $list = new Tree($list);
             $data['classname'] = $list->leaf();
             return returnRes($data, '无相关数据', $data);
@@ -303,7 +303,7 @@ class Steelmanage extends Right
      */
     public function getproductlist()
     {
-        $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
+        $list = model("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
 
         $menutree = new Tree($list);
         $menulist = $menutree->leaf();
@@ -321,8 +321,7 @@ class Steelmanage extends Right
     public function productnamedigui($arr)
     {
         foreach ($arr as $k => $v) {
-            $productname = db("productname")
-                ->where("companyid", $this->getCompanyId())
+            $productname = model("productname")->where("companyid", $this->getCompanyId())
                 ->where("classid", $v["id"])
                 ->field("id,name")->select();
             $arr[$k]['productname']=$productname;
@@ -342,7 +341,7 @@ class Steelmanage extends Right
      */
     public function getproduct()
     {
-        $list = db("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
+        $list = model("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
         $menutree = new Tree($list);
         $menulist = $menutree->leaf();
         $digui = $this->productnamedigui($menulist);
