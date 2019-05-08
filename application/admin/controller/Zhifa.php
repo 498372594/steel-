@@ -331,13 +331,6 @@ class Zhifa extends Right
                 if (!empty($thMxList)) {
                     throw new Exception("该单据已有退货信息，禁止该操作！");
                 }
-
-//            Example esetter = new Example(TbXsEcjsMx .class);
-//            esetter . createCriteria() . andCondition("mx_id=", tbXsSaleMx . getId());
-//            List<TbXsEcjsMx > ecmxList = this . ecmxDao . selectByExample(esetter);
-//            if (ecmxList . size() > 0) {
-//                throw new Exception("该单据已有二次结算信息，禁止该操作！");
-//            }
             }
 
             \app\admin\model\CapitalHk::deleteHk($tbCg['id'], 11);
@@ -345,11 +338,9 @@ class Zhifa extends Right
 
             (new CapitalFy())->deleteByDataIdAndType($sale['id'], 1);
 
-//        this . fxDaoImpl . delFaxiPrice(sale . getId());
-
             (new \app\admin\model\Salesorder())->deleteSale($ms['id'], 2);
 
-            (new CgPurchase())->deleteCaigou($mx['id'], 2);
+            (new CgPurchase())->deleteCaigou($ms['id'], 2);
             Db::commit();
             return returnSuc();
         } catch (Exception $e) {

@@ -246,6 +246,13 @@ class KucunCktz extends Base
         $cktz->save();
     }
 
+    /**
+     * @param $tzid
+     * @param $counts
+     * @param $zhongliang
+     * @throws DbException
+     * @throws Exception
+     */
     public function subtractTzById($tzid, $counts, $zhongliang)
     {
         $counts *= 1;

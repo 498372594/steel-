@@ -21,6 +21,18 @@ class Custom extends Base
             ->bind(['yewuyuan' => 'name']);
     }
 
+    public function provinceData()
+    {
+        return $this->belongsTo('Area', 'province', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['province_name' => 'name']);
+    }
+
+    public function cityData()
+    {
+        return $this->belongsTo('Area', 'city', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['city_name' => 'name']);
+    }
+
     /**
      * 客户利润统计表
      * @param $params

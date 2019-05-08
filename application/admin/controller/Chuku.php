@@ -448,6 +448,12 @@ class Chuku extends Right
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function chengben(Request $request, $pageLimit = 10)
     {
         $params = $request->post();
