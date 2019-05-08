@@ -467,18 +467,8 @@ class KcRk extends Base
             }
         }
     }
+    public function updatePdRkMxMd(){
+
+    }
 }
-//$rk->yw_time = $ywTime;
-//$rk->groupId = $groupId;
-//$rk->setSaleOperatorId = $saleOperatorId;
-//$mxList = KcRkMx::where("kc_rk_id", $rk["id"])->select();
-//foreach ($mxList as $mx) {
-//    if (!empty($storeId)) {
-//        KcRkMx::where("id", $mx["id"])->save(array("store_id" => $storeId));
-//    }
-//    if (!empty($cgCustomerId)) {
-//        KcRkMx::where("id", $mx["id"])->save(array("cache_customer" => $cgCustomerId));
-//    }
-//}
-//
-//$rk = $rk->save();
+
