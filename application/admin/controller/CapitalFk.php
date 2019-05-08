@@ -167,6 +167,7 @@ class CapitalFk extends Right
                 if ($fk['status'] == 2) {
                     throw new Exception("该单据已经作废");
                 }
+                $data['update_operator_id'] = $this->getAccountId();
                 $fk->isUpdate(true)->allowField(true)->save($data);
                 if ($data['fk_type'] == 2) {
                     (new CapitalHkModel())->updateHk($data['id'], 23, $fk['beizhu'], $fk['customer_id'], $fk['yw_time'], null, null, $fk['money'] + $fk['mfmoney'], null, $fk['group_id'], $fk['sale_operator_id']);
@@ -296,7 +297,7 @@ class CapitalFk extends Right
             return returnSuc(['id' => $fk['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage().$e->getTraceAsString().$e->getLine());
+            return returnFail($e->getMessage());
         }
     }
 
@@ -317,7 +318,9 @@ class CapitalFk extends Right
         $data = CapitalFkModel::with([
             'custom',
             'mingxi' => ['jsfs', 'bank'],
-            'details' => ['custom']
+            'details' => ['custom'],
+            'createOperator',
+            'updateOperator',
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)

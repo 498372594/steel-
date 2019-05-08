@@ -62,7 +62,7 @@ class CapitalOther extends Base
         $money = empty($money) ? 0 : $money;
         $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
 
-        $obj = self::get('id', $id);
+        $obj = self::get($id);
 
         if ($money != 0) {
             $obj->hxmoney = $obj['hxmoney'] + $money - $oldMoney;

@@ -298,7 +298,7 @@ class CapitalSk extends Right
             return returnSuc(['id' => $sk['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage());
+            return returnFail($e->getMessage() . $e->getTraceAsString());
         }
     }
 
@@ -319,7 +319,9 @@ class CapitalSk extends Right
         $data = CapitalSkModel::with([
             'custom',
             'mingxi' => ['jsfs', 'bank'],
-            'details' => ['custom']
+            'details' => ['custom'],
+            'createOperator',
+            'updateOperator'
         ])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)

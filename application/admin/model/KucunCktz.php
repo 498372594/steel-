@@ -108,7 +108,7 @@ class KucunCktz extends Base
         $cktz->lingzhi = $lingzhi;
         $cktz->zhijian = $zhijian;
         $cktz->zhongliang = $zhongliang;
-        $cktz->shuiprice = $shuiPrice;
+        $cktz->shui_price = $shuiPrice;
         $cktz->sumprice = $sumprice;
         $cktz->sum_shui_price = $sumShuiPrice;
         $cktz->price = $price;
@@ -117,8 +117,8 @@ class KucunCktz extends Base
         $cktz->remark = $beizhu;
         $cktz->car_no = $chehao;
         $cktz->cache_ywtime = $cacheYwtime;
-        $cktz->cacheData_pnumber = $cacheDataPnumber;
-        $cktz->cacheCustomer_id = $cacheCustomerId;
+        $cktz->cache_data_pnumber = $cacheDataPnumber;
+        $cktz->cache_customer_id = $cacheCustomerId;
         $cktz->save();
     }
 

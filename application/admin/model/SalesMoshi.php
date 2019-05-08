@@ -58,4 +58,22 @@ class SalesMoshi extends Base
         return $this->belongsTo('Pjlx', 'piaoju_id', 'id')->cache(true, 60)
             ->field('id,pjlx')->bind(['khpj_name' => 'pjlx']);
     }
+
+    public function createOperator()
+    {
+        return $this->belongsTo('Admin', 'create_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator_name' => 'name']);
+    }
+
+    public function updateOperator()
+    {
+        return $this->belongsTo('Admin', 'update_operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['update_operator_name' => 'name']);
+    }
+
+    public function saleOperator()
+    {
+        return $this->belongsTo('Admin', 'employer', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['sale_operator_name' => 'name']);
+    }
 }

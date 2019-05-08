@@ -85,6 +85,15 @@ class Salesorder extends Base
             ->field('id,name')->bind(['update_operator_name' => 'name']);
     }
 
+    public function departmentData()
+    {
+        return $this->hasOne(Dropdown::class, 'code', 'department')
+            ->where('module', 'role')
+            ->cache(true, 60)
+            ->field('val,code')
+            ->bind(['department_name' => 'val']);
+    }
+
     /**
      * @param $dataId
      * @param $moshiType

@@ -75,7 +75,7 @@ class StockOtherOut extends Right
             'custom',
             'pjlxData',
             'jsfsData',
-            'details' => ['specification', 'jsfs', 'storage'],
+            'details' => ['specification', 'jsfs', 'storage', 'caizhiData', 'chandiData'],
             'createOperator',
             'updateOperator',
             'saleOperator'
@@ -120,8 +120,8 @@ class StockOtherOut extends Right
                 foreach ($ja as $object) {
 
                     $object['companyid'] = $companyId;
-                    $object['caizhi'] = empty($v['caizhi']) ? '' : $this->getCaizhiId($v['caizhi']);
-                    $object['chandi'] = empty($v['chandi']) ? '' : $this->getChandiId($v['chandi']);
+                    $object['caizhi'] = empty($object['caizhi']) ? '' : $this->getCaizhiId($object['caizhi']);
+                    $object['chandi'] = empty($object['chandi']) ? '' : $this->getChandiId($object['chandi']);
                     if (!$detailsValidate->check($object)) {
                         throw new Exception('请检查第' . $num . '行' . $detailsValidate->getError());
                     }

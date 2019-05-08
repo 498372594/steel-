@@ -41,7 +41,8 @@ class Salesorder extends Right
             'jsfsData',
             'employerData',
             'createOperator',
-            'updateOperator'
+            'updateOperator',
+            'departmentData'
         ])->where('companyid', $this->getCompanyId())
             ->order('create_time', 'desc');
         if (!empty($params['ywsjStart'])) {
@@ -125,9 +126,6 @@ class Salesorder extends Right
             }
             if ($xs['status'] == 2) {
                 throw new Exception("该单据已经作废");
-            }
-            if ($xs['ywlx'] != 1) {
-                throw new Exception("该销售单是由其他单据自动生成的，禁止直接作废！");
             }
             if ($xs['ywlx'] != 7) {
                 if ($xs['ywlx'] == 1)
@@ -236,7 +234,7 @@ class Salesorder extends Right
                 if ($xs['status'] == 2) {
                     throw new Exception('该单据已作废');
                 }
-                if ($xs['ywlx'] != 1) {
+                if ($xs['ywlx'] != 7) {
                     throw new Exception('此销售单是由其他单据自动生成的，禁止直接修改！');
                 }
                 if ($xs['ckfs'] == 2) {
@@ -294,8 +292,8 @@ class Salesorder extends Right
                     throw new Exception("该销售单已有退货信息，禁止该操作！");
                 }
                 $jjfs = \app\admin\model\SalesorderDetails::alias('mx')
-                    ->join('__JSFS__ jjfs', 'mx.jsfs=jjfs.id')
-                    ->where('id', $mjo['id'])
+                    ->join('__JSFS__ jjfs', 'mx.jsfs_id=jjfs.id')
+                    ->where('mx.id', $mjo['id'])
                     ->value('jj_type');
                 if (($jjfs != 2) && empty($mjo['count'])) {
                     throw new Exception("数量必须大于“0”！");
