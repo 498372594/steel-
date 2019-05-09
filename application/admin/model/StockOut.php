@@ -87,7 +87,7 @@ class StockOut extends Base
     public function departmentData()
     {
         return $this->hasOne(Dropdown::class, 'code', 'department')
-            ->where('module', 'role')
+            ->where('module', 'department')
             ->cache(true, 60)
             ->field('val,code')
             ->bind(['department_name' => 'val']);
@@ -297,6 +297,7 @@ class StockOut extends Base
        t.sfguigeId,
        t.sfguigeName,
        t.groupId,
+       t.group_name,
        t.caozuoyuanId,
        t.caozuoyuan,
        t.zhidanrenId,
@@ -335,6 +336,7 @@ class StockOut extends Base
                sfguige.id                                    sfguigeId,
                GROUP_CONCAT(sfguige.specification) sfguigeName,
                sale.department                                    groupId,
+               groups.val                                     group_name,
                oper.`id`                                     caozuoyuanId,
                oper.name                             caozuoyuan,
                sys.`id`                                      zhidanrenId,
@@ -367,12 +369,14 @@ class StockOut extends Base
                    LEFT JOIN storage st ON st.`id` = xsmx.storage_id
                    LEFT JOIN admin sys ON sys.`id` = sale.add_id
                    LEFT JOIN admin oper ON oper.`id` = sale.employer
-            where
-               xsmx.delete_time is null
-                   and sale.delete_time is null
-                   and ck.delete_time is null
-                   and ckmd.delete_time is null
-                   and xsmx.companyid=' . $companyId . '
+                   LEFT JOIN dropdown groups ON groups.code = sale.department
+         where
+               groups.module = \'department\'
+               and xsmx.delete_time is null
+               and sale.delete_time is null
+               and ck.delete_time is null
+               and ckmd.delete_time is null
+               and xsmx.companyid=' . $companyId . '
             GROUP BY
                xsmx.`id`
             UNION ALL
@@ -395,6 +399,7 @@ class StockOut extends Base
                sfguige.id                                    sfguigeId,
                GROUP_CONCAT(sfguige.specification) sfguigeName,
                ckqt.department                                   groupId,
+               groups.val                                     group_name,
                oper.`id`                                     caozuoyuanId,
                oper.name                             caozuoyuan,
                sys.`id`                                      zhidanrenId,
@@ -427,8 +432,10 @@ class StockOut extends Base
                    LEFT JOIN storage st                   ON st.`id` = qtmx.`store_id`
                    LEFT JOIN admin sys                   ON sys.`id` = ckqt.`create_operator_id`
                    LEFT JOIN admin oper                   ON oper.`id` = ckqt.`sale_operator_id`
+                   LEFT JOIN dropdown groups               ON groups.code = ckqt.department
             where
-               ckqt.delete_time is null 
+               groups.module = \'department\'
+               and ckqt.delete_time is null 
                and qtmx.delete_time is null 
                and ck.delete_time is null 
                and ckmd.delete_time is null
@@ -438,15 +445,15 @@ class StockOut extends Base
     where
        1 = 1';
         if (!empty($params['ywsjStart'])) {
-            $sql .= 'AND  t.ywTime  >=   ?';
+            $sql .= ' AND  t.ywTime  >=   ?';
             $sqlParams[] = $params['ywsjStart'];
         }
         if (!empty($params['ywsjEnd'])) {
-            $sql .= 'AND t.ywtime  <  ?';
+            $sql .= ' AND t.ywtime  <  ?';
             $sqlParams[] = date('Y-m-d H:i:s', strtotime($params['ywsjEnd'] . ' +1 day'));
         }
         if (!empty($params['system_number'])) {
-            $sql .= 'AND t.systemNumber LIKE ?';
+            $sql .= ' AND t.systemNumber LIKE ?';
             $sqlParams[] = '%' . $params['system_number'] . '%';
         }
         if (!empty($params['status'])) {
@@ -466,7 +473,7 @@ class StockOut extends Base
             $sqlParams[] = $params['store_id'];
         }
         if (!empty($params['pinming_id'])) {
-            $sql .= 'AND t.pinmingId = ?';
+            $sql .= ' AND t.pinmingId = ?';
             $sqlParams[] = $params['pinming_id'];
         }
         if (!empty($params['guige_id'])) {
@@ -535,40 +542,42 @@ class StockOut extends Base
         $data = Db::table($sql)->alias('t')->bind($sqlParams)->order('ywTime', 'desc')->paginate($pageLimit);
         return $data;
     }
-    public function insertPdKcCkMxMd($ck,$dataId,$chukuType,$ywTime,$systemNumber,$dataNumber,$customerId,$pinmingId,$guigeId,$caizhiId,$chandiId,$jijiafangshiId,$storeId,$houdu,$kuandu,$changdu,$zhijian,
-                                     $lingzhi,$jianshu,$counts, $zhongliang,$price,$sumprice,$shuiprice,$sumShuiPrice,$mizhong,$jianzhong,$cbPrice,$ykreason,$userId,$companyId){
-        $mx=new StockOutDetail();
-        $mx->kc_ck_id=$ck["id"];
-        $mx->kc_ck_tz_id=null;
-        $mx->data_id=$dataId;
-        $mx->chuku_type=$chukuType;
-        $mx->yw_time=$ywTime;
-        $mx->system_number=$systemNumber;
-        $mx->data_number=$dataNumber;
-        $mx->customer_id=$customerId;
-        $mx->pinming_id=$pinmingId;
-        $mx->guige_id=$guigeId;
-        $mx->caizhi_id=$caizhiId;
-        $mx->chandi_id=$chandiId;
-        $mx->jijiafangshi_id=$jijiafangshiId;
-        $mx->store_id=$storeId;
-        $mx->houdu=$houdu;
-        $mx->kuandu=$kuandu;
-        $mx->changdu=$changdu;
-        $mx->lingzhi=$lingzhi;
-        $mx->jianshu=$jianshu;
-        $mx->counts=$counts;
-        $mx->zhongliang=$zhongliang;
-        $mx->price=$price;
-        $mx->sumprice=$sumprice;
-        $mx->shuiprice=$shuiprice;
-        $mx->sum_shui_price=$sumShuiPrice;
-        $mx->mizhong=$mizhong;
-        $mx->jianzhong=$jianzhong;
-        $mx->cb_price=$cbPrice;
-        $mx->ykreason=$ykreason;
-        $mx->user_id=$userId;
-        $mx->companyid=$companyId;
+
+    public function insertPdKcCkMxMd($ck, $dataId, $chukuType, $ywTime, $systemNumber, $dataNumber, $customerId, $pinmingId, $guigeId, $caizhiId, $chandiId, $jijiafangshiId, $storeId, $houdu, $kuandu, $changdu, $zhijian,
+                                     $lingzhi, $jianshu, $counts, $zhongliang, $price, $sumprice, $shuiprice, $sumShuiPrice, $mizhong, $jianzhong, $cbPrice, $ykreason, $userId, $companyId)
+    {
+        $mx = new StockOutDetail();
+        $mx->kc_ck_id = $ck["id"];
+        $mx->kc_ck_tz_id = null;
+        $mx->data_id = $dataId;
+        $mx->chuku_type = $chukuType;
+        $mx->yw_time = $ywTime;
+        $mx->system_number = $systemNumber;
+        $mx->data_number = $dataNumber;
+        $mx->customer_id = $customerId;
+        $mx->pinming_id = $pinmingId;
+        $mx->guige_id = $guigeId;
+        $mx->caizhi_id = $caizhiId;
+        $mx->chandi_id = $chandiId;
+        $mx->jijiafangshi_id = $jijiafangshiId;
+        $mx->store_id = $storeId;
+        $mx->houdu = $houdu;
+        $mx->kuandu = $kuandu;
+        $mx->changdu = $changdu;
+        $mx->lingzhi = $lingzhi;
+        $mx->jianshu = $jianshu;
+        $mx->counts = $counts;
+        $mx->zhongliang = $zhongliang;
+        $mx->price = $price;
+        $mx->sumprice = $sumprice;
+        $mx->shuiprice = $shuiprice;
+        $mx->sum_shui_price = $sumShuiPrice;
+        $mx->mizhong = $mizhong;
+        $mx->jianzhong = $jianzhong;
+        $mx->cb_price = $cbPrice;
+        $mx->ykreason = $ykreason;
+        $mx->user_id = $userId;
+        $mx->companyid = $companyId;
 //        $count = self::withTrashed()
 //            ->where('companyid', $companyId)
 //            ->whereTime('create_time', 'today')
