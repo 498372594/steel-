@@ -87,7 +87,7 @@ class StockOut extends Base
     public function departmentData()
     {
         return $this->hasOne(Dropdown::class, 'code', 'department')
-            ->where('module', 'role')
+            ->where('module', 'department')
             ->cache(true, 60)
             ->field('val,code')
             ->bind(['department_name' => 'val']);
@@ -297,6 +297,7 @@ class StockOut extends Base
        t.sfguigeId,
        t.sfguigeName,
        t.groupId,
+       t.group_name,
        t.caozuoyuanId,
        t.caozuoyuan,
        t.zhidanrenId,
@@ -335,6 +336,7 @@ class StockOut extends Base
                sfguige.id                                    sfguigeId,
                GROUP_CONCAT(sfguige.specification) sfguigeName,
                sale.department                                    groupId,
+               groups.val                                     group_name,
                oper.`id`                                     caozuoyuanId,
                oper.name                             caozuoyuan,
                sys.`id`                                      zhidanrenId,
@@ -367,12 +369,14 @@ class StockOut extends Base
                    LEFT JOIN storage st ON st.`id` = xsmx.storage_id
                    LEFT JOIN admin sys ON sys.`id` = sale.add_id
                    LEFT JOIN admin oper ON oper.`id` = sale.employer
-            where
-               xsmx.delete_time is null
-                   and sale.delete_time is null
-                   and ck.delete_time is null
-                   and ckmd.delete_time is null
-                   and xsmx.companyid=' . $companyId . '
+                   LEFT JOIN dropdown groups ON groups.code = sale.department
+         where
+               groups.module = \'department\'
+               and xsmx.delete_time is null
+               and sale.delete_time is null
+               and ck.delete_time is null
+               and ckmd.delete_time is null
+               and xsmx.companyid=' . $companyId . '
             GROUP BY
                xsmx.`id`
             UNION ALL
@@ -395,6 +399,7 @@ class StockOut extends Base
                sfguige.id                                    sfguigeId,
                GROUP_CONCAT(sfguige.specification) sfguigeName,
                ckqt.department                                   groupId,
+               groups.val                                     group_name,
                oper.`id`                                     caozuoyuanId,
                oper.name                             caozuoyuan,
                sys.`id`                                      zhidanrenId,
@@ -427,8 +432,10 @@ class StockOut extends Base
                    LEFT JOIN storage st                   ON st.`id` = qtmx.`store_id`
                    LEFT JOIN admin sys                   ON sys.`id` = ckqt.`create_operator_id`
                    LEFT JOIN admin oper                   ON oper.`id` = ckqt.`sale_operator_id`
+                   LEFT JOIN dropdown groups               ON groups.code = ckqt.department
             where
-               ckqt.delete_time is null 
+               groups.module = \'department\'
+               and ckqt.delete_time is null 
                and qtmx.delete_time is null 
                and ck.delete_time is null 
                and ckmd.delete_time is null
@@ -466,7 +473,7 @@ class StockOut extends Base
             $sqlParams[] = $params['store_id'];
         }
         if (!empty($params['pinming_id'])) {
-            $sql .= 'AND t.pinmingId = ?';
+            $sql .= ' AND t.pinmingId = ?';
             $sqlParams[] = $params['pinming_id'];
         }
         if (!empty($params['guige_id'])) {

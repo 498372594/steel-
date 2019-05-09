@@ -298,7 +298,7 @@ class CapitalSk extends Right
             return returnSuc(['id' => $sk['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage() . $e->getTraceAsString());
+            return returnFail($e->getMessage());
         }
     }
 

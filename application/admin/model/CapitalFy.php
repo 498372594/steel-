@@ -62,7 +62,7 @@ class CapitalFy extends Base
     public function departmentData()
     {
         return $this->hasOne(Dropdown::class, 'code', 'group_id')
-            ->where('module', 'role')
+            ->where('module', 'department')
             ->cache(true, 60)
             ->field('val,code')
             ->bind(['department_name' => 'val']);
