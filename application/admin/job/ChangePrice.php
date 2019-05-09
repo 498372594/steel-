@@ -19,8 +19,17 @@ class ChangePrice extends Controller
     public function fire(Job $job, $data)
     {
         Log::write('hxc'.$data);
-        $data = json_decode($data,true);
-        $res = Db::table('tp5_test')->where(['order_no' => $data['order_no']])->update(['status'=>1]);
+        $res=Db::table("specification")->where("id",">","0")
+            ->inc("hsgbj",$data)
+            ->inc("hslsj",$data)
+            ->inc("hsdzj",$data)
+            ->inc("qsgbj",$data)
+            ->inc("qslsj",$data)
+            ->inc("qsdzj",$data)
+            ->update();
+        $data=Db::table("specification")->field("id as gg_id,hsgbj,hslsj,hsdzj,qsgbj,qslsj,qsdzj")->select();
+        $res=Db::table("price_log")->insertAll($data);
+//        $res = Db::table('tp5_test')->where(['order_no' => $data['order_no']])->update(['status'=>1]);
         if($res) {
             $job->delete();
         }
