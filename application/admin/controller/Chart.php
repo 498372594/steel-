@@ -236,4 +236,17 @@ class Chart extends Right
             'series' => $series
         ]);
     }
+
+    /**
+     * 库存走势
+     */
+    public function kczs(){
+        $params = $request->param();
+        if (empty($params['ywsjStart'])) {
+            return returnFail('请选择业务开始时间');
+        }
+        if (empty($params['ywsjEnd'])) {
+            return returnFail('请选择业务结束时间');
+        }
+    }
 }

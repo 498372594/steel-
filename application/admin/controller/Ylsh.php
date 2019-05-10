@@ -505,7 +505,7 @@ class Ylsh extends Right
     public function pandiancancel($id=0) {
         Db::startTrans();
         try {
-            $pd = KcPandian::get($id);
+            $pd = \app\admin\model\KcPandian::get($id);
             if (empty($pd)) {
                 throw new Exception("对象不存在");
             }
@@ -521,7 +521,7 @@ class Ylsh extends Right
             $pd->status = 1;
             $pd->save();
 
-            $mxList = KcPandianMx::where('kc_rk_id', $pd['id'])->select();
+            $mxList = KcPandianMx::where('pandian_id', $pd['id'])->select();
             foreach ($mxList as $kcPandianMx) {
                 if($kcPandianMx["pandian_type"]=="盘盈"){
                     (new KcRk())->deleteRuku($kcPandianMx["id"],2);
