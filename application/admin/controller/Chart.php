@@ -4,6 +4,7 @@
 namespace app\admin\controller;
 
 
+use app\admin\model\CapitalFy;
 use app\admin\model\Custom;
 use app\admin\model\ViewSpecification;
 use think\Db;
@@ -35,7 +36,7 @@ class Chart extends Right
                        sum(xsmx.weight)                 zhongliang
                 from salesorder_details xsmx
                          join salesorder xs on xsmx.order_id = xs.id
-                where xs.ywsj > ? and xs.ywsj < ?';
+                where xs.delete_time is null and xs.ywsj > ? and xs.ywsj < ?';
         $sqlParams[] = $params['ywsjStart'];
         $sqlParams[] = date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day'));
         $sql .= ' and xs.companyid = ' . $this->getCompanyId() . ' and xs.employer in (';
@@ -98,7 +99,7 @@ class Chart extends Right
                        sum(xsmx.weight)                 zhongliang
                 from salesorder_details xsmx
                          join salesorder xs on xsmx.order_id = xs.id
-                where xs.ywsj > ? and xs.ywsj < ?';
+                where xs.delete_time is null and xs.ywsj > ? and xs.ywsj < ?';
         $sqlParams[] = $params['ywsjStart'];
         $sqlParams[] = date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day'));
         $sql .= ' and xs.companyid = ' . $this->getCompanyId() . ' and xs.custom_id in (';
@@ -138,6 +139,11 @@ class Chart extends Right
         ]);
     }
 
+    /**
+     * 货物销量折线图
+     * @param Request $request
+     * @return Json
+     */
     public function hwSales(Request $request)
     {
         $params = $request->param();
@@ -156,7 +162,7 @@ class Chart extends Right
                        sum(xsmx.weight)                 zhongliang
                 from salesorder_details xsmx
                          join salesorder xs on xsmx.order_id = xs.id
-                where xs.ywsj > ? and xs.ywsj < ?';
+                where xs.delete_time is null and xs.ywsj > ? and xs.ywsj < ?';
         $sqlParams[] = $params['ywsjStart'];
         $sqlParams[] = date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day'));
         $sql .= ' and xs.companyid = ' . $this->getCompanyId() . ' and xsmx.wuzi_id in (';
@@ -193,6 +199,41 @@ class Chart extends Right
             'legend' => array_merge($legend),
             'xAxis' => $xAxis,
             'series' => array_merge($series)
+        ]);
+    }
+
+    public function feiyong(Request $request)
+    {
+        $params = $request->param();
+        if (empty($params['ywsjStart'])) {
+            return returnFail('请选择业务开始时间');
+        }
+        if (empty($params['ywsjEnd'])) {
+            return returnFail('请选择业务结束时间');
+        }
+        $res = CapitalFy::fieldRaw('DATE_FORMAT(yw_time,\'%Y-%m\') as date,sum(money) as money')
+            ->where('fang_xiang', 2)
+            ->where('companyid', $this->getCompanyId())
+            ->where('yw_time', '>', date('Y-m-d', strtotime($params['ywsjStart'])))
+            ->where('yw_time', '<', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 month')))
+            ->group('date')
+            ->select();
+        $data = [];
+        foreach ($res as $item) {
+            $data[$item['date']] = $item['money'];
+        }
+
+        $end = strtotime($params['ywsjEnd'] . ' +1 month');
+        $xAxis = [];
+        $series = [];
+        for ($start = strtotime($params['ywsjStart']); $start < $end; $start += 2678400) {
+            $currentData = date('Y-m', $start);
+            $xAxis[] = $currentData;
+            $series[] = floatval($data[$currentData] ?? 0);
+        }
+        return returnSuc([
+            'xAxis' => $xAxis,
+            'series' => $series
         ]);
     }
 }
