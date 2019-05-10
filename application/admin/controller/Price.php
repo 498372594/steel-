@@ -79,8 +79,6 @@ class Price extends Right
                     cache("price_change_time",$time,$time*60);
                     \think\Queue::push('app\admin\job\ChangePrice',$data=$data["upprice"],$queue = null);
                 }
-
-
             }catch (\Exception $e) {
                 Db::rollback();
                 return returnFail($e->getMessage());
