@@ -4,12 +4,13 @@
 namespace app\admin\controller;
 
 
-use app\admin\model\CapitalFy;
-use app\admin\model\Custom;
-use app\admin\model\ViewSpecification;
-use think\Db;
-use think\Request;
-use think\response\Json;
+use app\admin\model\{CapitalFy, Custom, ViewSpecification};
+use think\{Db,
+    db\exception\DataNotFoundException,
+    db\exception\ModelNotFoundException,
+    exception\DbException,
+    Request,
+    response\Json};
 
 class Chart extends Right
 {
@@ -36,7 +37,7 @@ class Chart extends Right
                        sum(xsmx.weight)                 zhongliang
                 from salesorder_details xsmx
                          join salesorder xs on xsmx.order_id = xs.id
-                where xs.delete_time is null and xs.ywsj > ? and xs.ywsj < ?';
+                where xs.delete_time is null and xs.status <> 2 and xs.ywsj > ? and xs.ywsj < ?';
         $sqlParams[] = $params['ywsjStart'];
         $sqlParams[] = date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day'));
         $sql .= ' and xs.companyid = ' . $this->getCompanyId() . ' and xs.employer in (';
@@ -99,7 +100,7 @@ class Chart extends Right
                        sum(xsmx.weight)                 zhongliang
                 from salesorder_details xsmx
                          join salesorder xs on xsmx.order_id = xs.id
-                where xs.delete_time is null and xs.ywsj > ? and xs.ywsj < ?';
+                where xs.delete_time is null and xs.status <> 2 and xs.ywsj > ? and xs.ywsj < ?';
         $sqlParams[] = $params['ywsjStart'];
         $sqlParams[] = date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day'));
         $sql .= ' and xs.companyid = ' . $this->getCompanyId() . ' and xs.custom_id in (';
@@ -162,7 +163,7 @@ class Chart extends Right
                        sum(xsmx.weight)                 zhongliang
                 from salesorder_details xsmx
                          join salesorder xs on xsmx.order_id = xs.id
-                where xs.delete_time is null and xs.ywsj > ? and xs.ywsj < ?';
+                where xs.delete_time is null and xs.status <> 2 and xs.ywsj > ? and xs.ywsj < ?';
         $sqlParams[] = $params['ywsjStart'];
         $sqlParams[] = date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day'));
         $sql .= ' and xs.companyid = ' . $this->getCompanyId() . ' and xsmx.wuzi_id in (';
@@ -202,6 +203,14 @@ class Chart extends Right
         ]);
     }
 
+    /**
+     * 费用对比柱状图
+     * @param Request $request
+     * @return Json
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
+     */
     public function feiyong(Request $request)
     {
         $params = $request->param();
@@ -216,6 +225,7 @@ class Chart extends Right
             ->where('companyid', $this->getCompanyId())
             ->where('yw_time', '>', date('Y-m-d', strtotime($params['ywsjStart'])))
             ->where('yw_time', '<', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 month')))
+            ->where('status', '<>', 2)
             ->group('date')
             ->select();
         $data = [];
@@ -240,7 +250,8 @@ class Chart extends Right
     /**
      * 库存走势
      */
-    public function kczs(){
+    public function kczs()
+    {
         $params = $request->param();
         if (empty($params['ywsjStart'])) {
             return returnFail('请选择业务开始时间');
