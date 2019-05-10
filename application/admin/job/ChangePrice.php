@@ -9,29 +9,41 @@
 
 namespace app\admin\job;
 
+use app\admin\model\PriceLog;
+use app\admin\model\Specification;
+use think\Controller;
+use think\Db;
 use think\Log;
 use think\queue\Job;
-use think\Db;
-use think\Controller;
 
 class ChangePrice extends Controller
 {
     public function fire(Job $job, $data)
     {
-        Log::write('hxc'.$data);
-        $res=Db::table("specification")->where("id",">","0")
-            ->inc("hsgbj",$data)
-            ->inc("hslsj",$data)
-            ->inc("hsdzj",$data)
-            ->inc("qsgbj",$data)
-            ->inc("qslsj",$data)
-            ->inc("qsdzj",$data)
-            ->update();
-        $data=Db::table("specification")->field("id as gg_id,hsgbj,hslsj,hsdzj,qsgbj,qslsj,qsdzj")->select();
-        $res=Db::table("price_log")->insertAll($data);
-//        $res = Db::table('tp5_test')->where(['order_no' => $data['order_no']])->update(['status'=>1]);
-        if($res) {
+        Db::startTrans();
+        try {
+            Specification::where("id", ">", "0")
+                ->inc("hsgbj", $data)
+                ->inc("hslsj", $data)
+                ->inc("hsdzj", $data)
+                ->inc("qsgbj", $data)
+                ->inc("qslsj", $data)
+                ->inc("qsdzj", $data)
+                ->update();
+            $data = Specification::field("id as gg_id,hsgbj,hslsj,hsdzj,qsgbj,qslsj,qsdzj")->select();
+            $insert = [];
+            $nowDateTime = date('Y-m-d H:i:s');
+            foreach ($data as $index => $item) {
+                $insert[$index] = $item->toArray();
+                $insert[$index]['create_time'] = $nowDateTime;
+                $insert[$index]['update_time'] = $nowDateTime;
+            }
+            (new PriceLog())->insertAll($insert);
+            Db::commit();
             $job->delete();
+        } catch (\Exception $e) {
+            Db::rollback();
+            Log::write('queue error:' . $e->getMessage() . ',file:' . $e->getFile() . ',line:' . $e->getLine());
         }
         if ($job->attempts() > 3) {
             $job->delete();
@@ -40,7 +52,7 @@ class ChangePrice extends Controller
 
     public function jobDone($data)
     {
-        print("<info>Job is Done status!"."</info> \n");
+        print("<info>Job is Done status!" . "</info> \n");
 
     }
 }
