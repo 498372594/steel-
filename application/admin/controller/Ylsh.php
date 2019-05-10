@@ -314,13 +314,14 @@ class Ylsh extends Right
                 (new KcRk())->insertRkMxMd($rk, $mx["id"], 1, $db["yw_time"], $db["system_number"], null, $mjo["gf_customer_id"], $mx["pinming_id"], $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"]
                     , $mx["jijiafangshi_id"], $mx["old_store_id"], $mx["pihao"], $mx["huohao"], null, $mx["beizhu"], null, $mx["houdu"] ?? 0, $mx["kuandu"] ?? 0, $mx["changdu"] ?? 0, $mx["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
                     $mx["counts"] ?? 0, $mx["zhongliang"] ?? 0, $mx["price"], $calSpot["sumprice"], $mx["shuiprice"], $calSpot["sum_shui_price"], $calSpot["shuie"], null, null, $this->getAccountId(), $this->getCompanyId());
-                (new StockOut())->insertCkMxMd($ck, $mx['kc_spot_id'] ?? '', $mx['id'], "1",
+//                dump($mx);die;
+                (new StockOut())->insertCkMxMd($ck, $mx['spot_id'] ?? '', $mx['id'], "1",
                     $db['yw_time'], $db['system_number'], $mjo['gf_customer_id'], $mx['pinming_id'], $mx['caizhi_id'], $mx['chandi_id'],
                     $mx['jijiafangshi_id'], $mx['old_store_id'], $mx['houdu'] ?? 0, $mx['kuandu'] ?? 0,
                     $mx['changdu'] ?? 0, $mx['zhijian'], $mx['lingzhi'] ?? 0, $mx['jianshu'],
                     $mx['counts'] ?? 0, $mx['zhongliang'], $mx['price'], $mx['sumprice'],
-                    $mx['shuiprice'] ?? 0, $mx['sum_shui_price'], $mx['shuie'], null,
-                    null, null, '', $this->getAccountId(), $this->getCompanyId());
+                    $mx['shuiprice'] ?? 0, $mx['sum_shui_price'], $mx['shuie'], $mx['mizhong'],
+                    $mx['jianzhong'], null, '', $this->getAccountId(), $this->getCompanyId());
             }
             Db::commit();
             return returnSuc(['id' => $db['id']]);
@@ -489,7 +490,7 @@ class Ylsh extends Right
 
                         (new StockOut())->insertCkMxMd($ck,$mx["spot_id"],$mx["id"],2,$ck["yw_time"],null,null,
                             $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["store_id"], $mx["houdu"], $mx["kuandu"], $mx["changdu"], $mx["zhijian"]
-                            , $mx["lingzhi"], $mx["jianshu"], $mx["counts"], $mx["zhongliang"], $mx["price"], $mx["sumprice"], $mx["shuiprice"], $mx["sum_shui_price"], $mx["shuie"],$mx["mizhong"], $mx["jianzhong"],null
+                            , $mx["lingzhi"], $mx["jianshu"], $mx["counts"], $mx["zhinsertCkMxMdongliang"], $mx["price"], $mx["sumprice"], $mx["shuiprice"], $mx["sum_shui_price"], $mx["shuie"],$mx["mizhong"], $mx["jianzhong"],null
                             , $mx["ykreason"],$this->getAccountId(),$this->getCompanyId());
                     }
                 }
