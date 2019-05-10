@@ -241,30 +241,30 @@ class StockOut extends Base
         }
 
         $ck = StockOut::where('data_id', $dataId)->where('chuku_type', $chukuType)->find();
-        if (empty($ck)) {
-            throw new Exception("对象不存在");
-        }
+        if (!empty($ck)) {
+            $ckmd = StockOutMd::where('stock_out_id', $ck['id'])->select();
+            foreach ($ckmd as $md) {
+                $spot = KcSpot::get($md['kc_spot_id']);
+                $rkMd = KcRkMd::get($spot['rk_md_id']);
+                if ($md['out_mode'] == 2 && ($rkMd['counts'] != $spot['counts'] || $rkMd['zhongliang'] != $spot['zhongliang'])) {
+                    throw new Exception("已经有出库信息!");
+                }
 
-        $ckmd = StockOutMd::where('stock_out_id', $ck['id'])->select();
-        foreach ($ckmd as $md) {
-            $spot = KcSpot::get($md['kc_spot_id']);
-            $rkMd = KcRkMd::get($spot['rk_md_id']);
-            if ($md['out_mode'] == 2 && ($rkMd['counts'] != $spot['counts'] || $rkMd['zhongliang'] != $spot['zhongliang'])) {
-                throw new Exception("已经有出库信息!");
+                (new KcSpot())->adjustSpotById($md['kc_spot_id'], true, $md['counts'], $md['zhongliang'], $md['jijiafangsshi_id'], $md['tax']);
             }
 
-            (new KcSpot())->adjustSpotById($md['kc_spot_id'], true, $md['counts'], $md['zhongliang'], $md['jijiafangsshi_id'], $md['tax']);
+            StockOutMd::destroy(function (Query $query) use ($ck) {
+                $query->where('stock_out_id', $ck['id']);
+            });
+
+            StockOutDetail::destroy(function (Query $query) use ($ck) {
+                $query->where('stock_out_id', $ck['id']);
+            });
+
+            $ck->delete();
         }
 
-        StockOutMd::destroy(function (Query $query) use ($ck) {
-            $query->where('stock_out_id', $ck['id']);
-        });
 
-        StockOutDetail::destroy(function (Query $query) use ($ck) {
-            $query->where('stock_out_id', $ck['id']);
-        });
-
-        $ck->delete();
     }
 
     /**

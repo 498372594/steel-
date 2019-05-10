@@ -359,42 +359,42 @@ class KcRk extends Base
 
 
         $rk = self::where('data_id', $dataId)->where('ruku_type', $rukuType)->find();
-        if (empty($rk)) {
-            throw new Exception("对象不存在");
-        }
-
-        $mdList = KcRkMd::where('kc_rk_id', $rk['id'])->select();
-        if (!empty($mdList)) {
-            foreach ($mdList as $tbKcRkMd) {
-                $spList = KcSpot::where('rk_md_id', $tbKcRkMd['id'])->select();
-                if (!empty($spList)) {
-                    foreach ($spList as $spot) {
-                        if ($spot['status'] == 2) {
-                            throw new Exception("该单据已执行清库操作");
-                        }
-                        $shList = KcYlSh::where('spot_id', $spot['id'])->select();
-                        if (!empty($shList)) {
-                            throw new Exception("该单据已预留锁货！");
+        if (!empty($rk)) {
+            $mdList = KcRkMd::where('kc_rk_id', $rk['id'])->select();
+            if (!empty($mdList)) {
+                foreach ($mdList as $tbKcRkMd) {
+                    $spList = KcSpot::where('rk_md_id', $tbKcRkMd['id'])->select();
+                    if (!empty($spList)) {
+                        foreach ($spList as $spot) {
+                            if ($spot['status'] == 2) {
+                                throw new Exception("该单据已执行清库操作");
+                            }
+                            $shList = KcYlSh::where('spot_id', $spot['id'])->select();
+                            if (!empty($shList)) {
+                                throw new Exception("该单据已预留锁货！");
+                            }
                         }
                     }
                 }
             }
+
+
+            $listids = KcRkMd::findIdsByRkid($rk['id']);
+            foreach ($listids as $mdid) {
+                KcSpot::deleteSpotByRkMd($mdid);
+            }
+            KcRkMx::destroy(function (Query $query) use ($rk) {
+                $query->where('kc_rk_id', $rk['id']);
+            });
+
+            KcRkMd::destroy(function (Query $query) use ($rk) {
+                $query->where('kc_rk_id', $rk['id']);
+            });
+
+            $rk->delete();
         }
 
 
-        $listids = KcRkMd::findIdsByRkid($rk['id']);
-        foreach ($listids as $mdid) {
-            KcSpot::deleteSpotByRkMd($mdid);
-        }
-        KcRkMx::destroy(function (Query $query) use ($rk) {
-            $query->where('kc_rk_id', $rk['id']);
-        });
-
-        KcRkMd::destroy(function (Query $query) use ($rk) {
-            $query->where('kc_rk_id', $rk['id']);
-        });
-
-        $rk->delete();
     }
 
     /**
