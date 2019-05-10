@@ -2,10 +2,11 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\CgPurchaseMx;
 use think\Config;
 use think\Controller;
-use think\Session;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\ModelNotFoundException;
+use think\exception\DbException;
 
 /**
  * Class Base
@@ -28,24 +29,28 @@ class Base extends Controller
         $siteName = getSettings("site", "siteName");
         $this->assign("sysName", $siteName);
     }
+
     /**
      * 自动释放
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
+     * @throws DbException
      */
-    public function autorelease(){
+    public function autorelease()
+    {
 
-        $list=model("reserved")->select();
+        $list = model("reserved")->select();
 
-        foreach ($list as $key=>$value){
-            if(strtotime($value["reserved_time"])<time()){
-                $info=model("purchasedetails")->where("id",$value["purchasedetails_id"])->find();
-                $inf["shuliang"]=$info["shuliang"]+$value["reserved_num"];
-                $inf["lingzhi"]=$info["lingzhi"]+$value["reserved_lingzhi"];
-                $inf["jianshu"]=$info["jianshu"]+$value["reserved_jianshu"];
-                $inf["heavy"]=$info["heavy"]+$value["reserved_heavy"];
-                $inf["id"]=$info["id"];
-//                dump($inf);die;
-                $re=model("purchasedetails")->where("id",$inf["id"])->update($inf);
-                if($re){
+        foreach ($list as $key => $value) {
+            if (strtotime($value["reserved_time"]) < time()) {
+                $info = model("purchasedetails")->where("id", $value["purchasedetails_id"])->find();
+                $inf["shuliang"] = $info["shuliang"] + $value["reserved_num"];
+                $inf["lingzhi"] = $info["lingzhi"] + $value["reserved_lingzhi"];
+                $inf["jianshu"] = $info["jianshu"] + $value["reserved_jianshu"];
+                $inf["heavy"] = $info["heavy"] + $value["reserved_heavy"];
+                $inf["id"] = $info["id"];
+                $re = model("purchasedetails")->where("id", $inf["id"])->update($inf);
+                if ($re) {
                     model("reserved")->where("id", $value["id"])->delete();
                 }
             }
