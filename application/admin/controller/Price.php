@@ -77,7 +77,7 @@ class Price extends Right
                     db("setting")->where("code","price_rise")->udpate(array("val"=>$heavy));
                     db("setting")->where("code","price_time_rise")->udpate(array("val"=>$time));
                     cache("price_change_time",$time,$time*60);
-                    \think\Queue::later($time*60,'app\admin\job\ChangePrice',$data=$data["upprice"],$queue = null);
+                    \think\Queue::push('app\admin\job\ChangePrice',$data=$data["upprice"],$queue = null);
                 }
 
 

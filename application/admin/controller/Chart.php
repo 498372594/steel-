@@ -6,6 +6,7 @@ namespace app\admin\controller;
 
 use app\admin\model\CapitalFy;
 use app\admin\model\Custom;
+use app\admin\model\KcSpot;
 use app\admin\model\ViewSpecification;
 use think\Db;
 use think\Request;
@@ -241,12 +242,55 @@ class Chart extends Right
      * 库存走势
      */
     public function kczs(){
-        $params = $request->param();
+        $params = request()->param();
         if (empty($params['ywsjStart'])) {
             return returnFail('请选择业务开始时间');
         }
         if (empty($params['ywsjEnd'])) {
             return returnFail('请选择业务结束时间');
         }
+        $res = KcSpot::fieldRaw('DATE_FORMAT(create_time,\'%Y-%m-%d\') as date,sum(zhongliang) as zhongliang')
+            ->where('companyid', $this->getCompanyId())
+            ->where('create_time', '>', date('Y-m-d', strtotime($params['ywsjStart'])))
+            ->where('create_time', '<', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')))
+            ->group('date')
+            ->select();
+        $res1 = \app\admin\model\SalesorderDetails::alias("a")->join("salesorder b","a.order_id=b.id","left")->fieldRaw('DATE_FORMAT(ywsj,\'%Y-%m-%d\') as date,sum(a.weight) as xiaoliang')
+            ->where('a.companyid', $this->getCompanyId())
+            ->where('b.ywsj', '>', date('Y-m-d', strtotime($params['ywsjStart'])))
+            ->where('b.ywsj', '<', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')))
+            ->group('date')
+            ->select();
+        $legend =[];
+        $data = [];
+        $legend[0]="重量";
+        $legend[1]="销量";
+        foreach ($res as $item) {
+            $data[0][$item['date']] = $item['zhongliang'];
+
+        }
+        foreach ($res1 as $item) {
+            $data[1][$item['date']] = $item['xiaoliang'];
+
+        }
+
+
+        $end = strtotime($params['ywsjEnd'] . ' +1 day');
+        $xAxis = [];
+        $series = [];
+        for ($start = strtotime($params['ywsjStart']); $start < $end; $start += 86400) {
+            $currentData = date('Y-m-d', $start);
+            $xAxis[] = $currentData;
+            $series[0]['name'] = "重量";
+            $series[1]['name'] = "销量";
+            $series[0]['data'][] = floatval($data[0][$currentData] ?? 0);
+            $series[1]['data'][] = floatval($data[1][$currentData] ?? 0);
+        }
+
+        return returnSuc([
+            'legend' => array_merge($legend),
+            'xAxis' => $xAxis,
+            'series' => $series
+        ]);
     }
 }
