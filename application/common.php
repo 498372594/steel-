@@ -1,9 +1,18 @@
 <?php
-/**
- * 不同环境下获取真实的IP
- * @return array|false|string
- */
+
+use app\admin\model\Setting;
+use think\Cache;
+use think\Db;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\ModelNotFoundException;
+use think\exception\DbException;
+use think\response\Json;
+
 if (!function_exists('get_real_client_ip')) {
+    /**
+     * 不同环境下获取真实的IP
+     * @return array|false|string
+     */
     function get_real_client_ip()
     {
         // 防止重复运行代码或者重复的来访者IP
@@ -56,7 +65,7 @@ if (!function_exists("info")) {
 
 /**
  * 根据小时判断早上 中午 下午 傍晚 晚上
- * @param  date $h [1-24]
+ * @param string|int $h [1-24]
  * @return string
  */
 function get_curr_time_section($h = '')
@@ -67,8 +76,6 @@ function get_curr_time_section($h = '')
     if (empty($h)) {
         $h = date("H");
     }
-
-    $str = '';
 
     if ($h < 11) $str = "早上好";
     else if ($h < 13) $str = "中午好";
@@ -81,7 +88,6 @@ function get_curr_time_section($h = '')
 
 /**
  * 格式化的当前日期
- *
  * @return false|string
  */
 function now_datetime()
@@ -94,7 +100,7 @@ function now_datetime()
  * @param $code
  * @param $msg
  * @param $data
- * @return \think\response\Json
+ * @return Json
  */
 function json_return($code = "", $msg = "", $data = "")
 {
@@ -106,7 +112,7 @@ function json_return($code = "", $msg = "", $data = "")
  * @param int $code
  * @param string $msg
  * @param string $data
- * @return \think\response\Json
+ * @return Json
  */
 function json_suc($code = 0, $msg = "操作成功！", $data = "")
 {
@@ -118,7 +124,7 @@ function json_suc($code = 0, $msg = "操作成功！", $data = "")
  * @param int $code
  * @param string $msg
  * @param string $data
- * @return \think\response\Json
+ * @return Json
  */
 function json_err($code = -1, $msg = "操作失败！", $data = "")
 {
@@ -197,10 +203,14 @@ function clear_temp_cache()
 
 /**
  * 重新加载配置缓存信息
+ * @return array
+ * @throws DataNotFoundException
+ * @throws ModelNotFoundException
+ * @throws DbException
  */
 function loadCache()
 {
-    $settings = \think\Db::table("setting")->select();
+    $settings = Db::table("setting")->select();
     $refer = [];
     if ($settings) {
         foreach ($settings as $k => $v) {
@@ -213,21 +223,56 @@ function loadCache()
 /**
  * 配置缓存
  * 加载系统配置并缓存
+ * @return array
+ * @throws DataNotFoundException
+ * @throws DbException
+ * @throws ModelNotFoundException
  */
 function cacheSettings()
 {
-    \think\Cache::set("settings", NULL);
+    Cache::set("settings", NULL);
     $settings = loadCache();
-    \think\Cache::set("settings", $settings, 0);
+    Cache::set("settings", $settings, 0);
     return $settings;
 }
 
 /**
+ * 设置配置
+ * @param string $module
+ * @param string|array $code
+ * @param mixed $value
+ * @throws DataNotFoundException
+ * @throws DbException
+ * @throws ModelNotFoundException
+ */
+function setSettings($module, $code, $value = null)
+{
+    if (is_array($code)) {
+        foreach ($code as $index => $val) {
+            Setting::where('code', $index)
+                ->where('module', $module)
+                ->save(['val' => $val]);
+        }
+    } else {
+        Setting::where('code', $code)
+            ->where('module', $module)
+            ->save(['val' => $value]);
+    }
+    cacheSettings();
+}
+
+/**
  * 获取配置缓存信息
+ * @param string $module
+ * @param string $code
+ * @return mixed|null
+ * @throws DataNotFoundException
+ * @throws DbException
+ * @throws ModelNotFoundException
  */
 function getSettings($module = "", $code = "")
 {
-    $settings = \think\Cache::get("settings");
+    $settings = Cache::get("settings");
     if (empty($settings)) {
         $settings = cacheSettings();
     }
@@ -247,14 +292,19 @@ function getSettings($module = "", $code = "")
             return NULL;
         }
     }
+    return null;
 }
 
 /**
  * 重新加载下拉表缓存信息
+ * @return array
+ * @throws DataNotFoundException
+ * @throws DbException
+ * @throws ModelNotFoundException
  */
 function loadDropdownList()
 {
-    $data = \think\Db::table("dropdown")->select();
+    $data = Db::table("dropdown")->select();
     $refer = [];
     if ($data) {
         foreach ($data as $k => $v) {
@@ -272,10 +322,13 @@ function loadDropdownList()
  * @param string $code code
  * @param bool $hasEmpty 是否包含空值
  * @return array|mixed|null
+ * @throws DataNotFoundException
+ * @throws DbException
+ * @throws ModelNotFoundException
  */
 function getDropdownList($module = '', $code = '', $hasEmpty = true)
 {
-    $dropdown = \think\Cache::get("dropdown");
+    $dropdown = Cache::get("dropdown");
 
     // 如果缓存没有数据
     if (empty($dropdown)) {
@@ -312,22 +365,29 @@ function getDropdownList($module = '', $code = '', $hasEmpty = true)
 
 /**
  * 加载下拉框
+ * @return array
+ * @throws DataNotFoundException
+ * @throws DbException
+ * @throws ModelNotFoundException
  */
 function loadDropdown()
 {
-    \think\Cache::set('dropdown', NULL);
+    Cache::set('dropdown', NULL);
     $dropdown = selDropdown();
-    \think\Cache::set('dropdown', $dropdown, 0);
+    Cache::set('dropdown', $dropdown, 0);
     return $dropdown;
 }
 
 /**
  * 检索下拉框
  * @return array
+ * @throws DataNotFoundException
+ * @throws DbException
+ * @throws ModelNotFoundException
  */
 function selDropdown()
 {
-    $data = \think\Db::table('dropdown')->select();
+    $data = Db::table('dropdown')->select();
     $refer = [];
     if ($data) {
         foreach ($data as $k => $v) {
@@ -399,7 +459,7 @@ function get($key)
  * @param $res @desc 判断依据
  * @param $errors @desc 错误提示
  * @param $successData @desc 成功时要返回的数据，可选
- * @return \think\response\Json
+ * @return Json
  */
 function returnRes($res, $errors, $successData = '')
 
@@ -423,7 +483,7 @@ function returnRes($res, $errors, $successData = '')
 /**
  * 错误返回
  * @param $errors
- * @return \think\response\Json
+ * @return Json
  */
 function returnFail($errors)
 {
@@ -433,7 +493,7 @@ function returnFail($errors)
 /**
  * 操作成功时的返回
  * @param array $data
- * @return \think\response\Json
+ * @return Json
  */
 function returnSuc($data = [])
 {
