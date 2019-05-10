@@ -370,7 +370,7 @@ class Steelmanage extends Right
     {
         $productname_id = request()->param("productname_id");
         $list = model("view_specification")->where("productname_id", $productname_id)->select();
-        return returnSuc($list);
+        return returnRes(true, '', $list);
     }
 
     /**
