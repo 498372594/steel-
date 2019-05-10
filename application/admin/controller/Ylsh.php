@@ -502,4 +502,39 @@ class Ylsh extends Right
             return returnFail($e->getMessage());
         }
     }
+    public function pandiancancel($id=0) {
+        Db::startTrans();
+        try {
+            $pd = KcPandian::get($id);
+            if (empty($pd)) {
+                throw new Exception("对象不存在");
+            }
+            if ($pd->companyid != $this->getCompanyId()) {
+                throw new Exception("对象不存在");
+            }
+            if (!empty($pd['data_id'])) {
+                throw new Exception("当前单据是只读单据,请到关联单据作废");
+            }
+            if ($pd['status'] == 1) {
+                throw new Exception("该单据已经作废");
+            }
+            $pd->status = 1;
+            $pd->save();
+
+            $mxList = KcPandianMx::where('kc_rk_id', $pd['id'])->select();
+            foreach ($mxList as $kcPandianMx) {
+                if($kcPandianMx["pandian_type"]=="盘盈"){
+                    (new KcRk())->deleteRuku($kcPandianMx["id"],2);
+                }else if ($kcPandianMx["pandian_type"]=="盘亏"){
+                    (new StockOut())->deleteChuku($kcPandianMx["id"],2);
+                }
+
+            }
+            Db::commit();
+            return returnSuc();
+        } catch (\Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
+    }
 }
