@@ -243,7 +243,7 @@ class Chart extends Right
         }
         return returnSuc([
             'xAxis' => $xAxis,
-            'series' => $series
+            'series' => ['data' => $series]
         ]);
     }
 
@@ -265,16 +265,16 @@ class Chart extends Right
             ->where('create_time', '<', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')))
             ->group('date')
             ->select();
-        $res1 = \app\admin\model\SalesorderDetails::alias("a")->join("salesorder b","a.order_id=b.id","left")->fieldRaw('DATE_FORMAT(ywsj,\'%Y-%m-%d\') as date,sum(a.weight) as xiaoliang')
+        $res1 = \app\admin\model\SalesorderDetails::alias("a")->join("salesorder b", "a.order_id=b.id", "left")->fieldRaw('DATE_FORMAT(ywsj,\'%Y-%m-%d\') as date,sum(a.weight) as xiaoliang')
             ->where('a.companyid', $this->getCompanyId())
             ->where('b.ywsj', '>', date('Y-m-d', strtotime($params['ywsjStart'])))
             ->where('b.ywsj', '<', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')))
             ->group('date')
             ->select();
-        $legend =[];
+        $legend = [];
         $data = [];
-        $legend[0]="重量";
-        $legend[1]="销量";
+        $legend[0] = "重量";
+        $legend[1] = "销量";
         foreach ($res as $item) {
             $data[0][$item['date']] = $item['zhongliang'];
 
