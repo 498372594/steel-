@@ -62,6 +62,9 @@ $list = db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
 if (!empty($params['ids'])) {
 $list->where('id', 'in', $params['ids']);
 }
+    if (!empty($params['is_pass'])) {
+        $list->where('is_pass', 1);
+    }
 $list = $this->getsearchcondition($params, $list);
 $list = $list->paginate(10);
 return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
@@ -514,8 +517,8 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
                     $dat[$key]["is_pass"] = 1;
                     $dat[$key]["update_operator_id"] = $this->getAccountId();
                 }
-                model("KcYlShLog")->allowField(true)->saveAll($data);
-                $res = model("KcYlSh")->allowField(true)->saveAll($dat);
+                model("KcYlShLog")->isUpdate(false)->allowField(true)->saveAll($data);
+                $res = model("KcYlSh")->isUpdate(true)->allowField(true)->saveAll($dat);
                 Db::commit();
                 return returnRes($res, '锁货延迟修改提交失败');
             } catch (\Exception $e) {
@@ -565,7 +568,7 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
                       throw new Exception("释放重量不能为空");
                   }
                   $ylsh=new KcYlSh();
-                  $ylsh->where("id",$ja["id"])->find();
+                  $ylsh= $ylsh->where("id",$ja["id"])->find();
                   if($ylsh["zhongliang"]<$ja["zhongliang"]){
                       throw new Exception("释放数量不能大于预留数量");
                   }
@@ -580,10 +583,11 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
                     $ylsh->guobang_zhongliang=$ylsh["zhongliang"]-$ja["zhongliang"];
                     $ylsh->jianshu=intval(($ylsh["shuliang"]-$ja["shuliang"])/$ja["zhijian"]);
                     $ylsh->lingzhi=($ylsh["shuliang"]-$ja["shuliang"])%$ja["zhijian"];
-                   $re=$ylsh->isUpdate(true)->allowField(true)->save($ylsh);
+                    model("kc_yl_sh_release")->allowField(true)->save($ja);
+                  $ylsh->isUpdate(true)->allowField(true)->save($ylsh);
                 }
                 Db::commit();
-                return returnRes($re->id, '锁货延迟修改提交失败');
+                return returnRes($ylsh->id, '锁货延迟修改提交失败');
             } catch (\Exception $e) {
                 Db::rollback();
                 return returnFail($e->getMessage());
