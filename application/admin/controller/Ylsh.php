@@ -4,7 +4,7 @@ namespace app\admin\controller;
 
 use app\admin\library\traits\Backend;
 use app\admin\model\KcRk;
-use app\admin\model\{KcDiaoboMx, KcPandianMx, KcRkMd, KcSpot, StockOut};
+use app\admin\model\{KcDiaoboMx, KcPandianMx, KcRkMd, KcSpot, KcYlSh, StockOut};
 use app\admin\validate\KcPandian;
 use think\{Db, Request, Validate};
 use think\Exception;
@@ -43,6 +43,7 @@ class Ylsh extends Right
                 }
                 $data[$k]['yuliu_type'] = "已预留";
                 $data[$k]['companyid'] = $this->getCompanyId();
+                $data[$k]['create_operator_id'] = $this->getAccountId();
                 $num++;
 
             }
@@ -51,30 +52,20 @@ class Ylsh extends Right
         }
     }
 
-    public function release()
-    {
-        if (request()->isPost()) {
-            $data = request()->post();
-            $res = model("KcYlSh")->allowField(true)->saveAll($data);
-            return returnRes($res, '锁货释放失败');
-        }
-    }
-
     /**获取锁货信息
      * @return \think\response\Json
      */
     public function getlock()
-    {
-        $params = request()->param();
-        $list = db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
-        if (!empty($params['ids'])) {
-            $list->where('id', 'in', $params['ids']);
-        }
-        $list = $this->getsearchcondition($params, $list);
-        $list = $list->paginate(10);
-        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
-    }
-
+{
+$params = request()->param();
+$list = db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
+if (!empty($params['ids'])) {
+$list->where('id', 'in', $params['ids']);
+}
+$list = $this->getsearchcondition($params, $list);
+$list = $list->paginate(10);
+return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
+}
     /**延期
      * @return \think\response\Json
      * @throws \Exception
@@ -534,8 +525,8 @@ class Ylsh extends Right
         }
     }
     public function ylshpass(){
-        if (request()->isPost()) {
-            $ids = request()->post("ids");
+
+            $ids = request()->param("ids");
             $ids=explode(",",$ids);
             $list=model("kc_yl_sh_log")->where("ylsh_id","in",$ids)->select();
 
@@ -555,15 +546,48 @@ class Ylsh extends Right
                 Db::rollback();
                 return returnFail($e->getMessage());
             }
-        }
+
     }
     public function ylshdeny(){
-        if (request()->isPost()) {
-            $ids = request()->post("ids");
-            $reason=request()->post("reason");
-            $res=model("KcYlSh")->where("ylsh_id","in",$ids)->update(array("reason"=>$reason,"is_pass"=>3));
-                return returnRes($res, '锁货延迟修改提交失败');
+            $ids = request()->param("ids");
+            $reason=request()->param("reason");
+            $res=model("KcYlSh")->where("id","in",$ids)->update(array("reason"=>$reason,"is_pass"=>3));
+            return returnRes($res, '锁货延迟修改提交失败');
 
+    }
+    public function release(){
+        if (request()->isPost()) {
+            $data = request()->post();
+            Db::startTrans();
+            try {
+                foreach ($data as $key => $ja) {
+                  if(empty($ja["zhongliang"])){
+                      throw new Exception("释放重量不能为空");
+                  }
+                  $ylsh=new KcYlSh();
+                  $ylsh->where("id",$ja["id"])->find();
+                  if($ylsh["zhongliang"]<$ja["zhongliang"]){
+                      throw new Exception("释放数量不能大于预留数量");
+                  }
+                    if($ylsh["shuliang"]<$ja["shuliang"]){
+                        throw new Exception("释放数量不能大于预留数量");
+                    }
+                    if(empty($ylsh["data_id"])){
+                        throw new Exception("此数据为销售预订,不能释放");
+                    }
+                    $ylsh->shuliang=$ylsh["shuliang"]-$ja["shuliang"];
+                    $ylsh->zhongliang=$ylsh["zhongliang"]-$ja["zhongliang"];
+                    $ylsh->guobang_zhongliang=$ylsh["zhongliang"]-$ja["zhongliang"];
+                    $ylsh->jianshu=intval(($ylsh["shuliang"]-$ja["shuliang"])/$ja["zhijian"]);
+                    $ylsh->lingzhi=($ylsh["shuliang"]-$ja["shuliang"])%$ja["zhijian"];
+                   $re=$ylsh->isUpdate(true)->allowField(true)->save($ylsh);
+                }
+                Db::commit();
+                return returnRes($re->id, '锁货延迟修改提交失败');
+            } catch (\Exception $e) {
+                Db::rollback();
+                return returnFail($e->getMessage());
+            }
         }
     }
 }

@@ -4,9 +4,7 @@ namespace app\admin\model;
 use traits\model\SoftDelete;
 class KcYlShLog extends Base
 {
-    use SoftDelete;
-    protected $deleteTime = 'delete_time';
-    protected $autoWriteTimestamp = 'datetime';
+
 
     // 验证规则
     public $rules = [
