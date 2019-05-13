@@ -54,7 +54,7 @@ class Rk extends Right
     {
         $data = KcRk::with([
             'custom',
-            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData', 'customData'],
+            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData', 'customData','createoperatordata'],
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
