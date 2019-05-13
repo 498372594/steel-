@@ -15,6 +15,51 @@ class CapitalHk extends Base
     protected $autoWriteTimestamp = true;
 
     /**
+     * @param $id
+     * @param $money
+     * @param $zhongliang
+     * @throws DbException
+     */
+    public static function jianMoney($id, $money, $zhongliang)
+    {
+        $money = empty($money) ? 0 : $money;
+        $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
+        $obj = self::get($id);
+        if ($money != 0) {
+            $obj['hxmoney'] -= $money;
+        }
+        if ($zhongliang != 0) {
+            $obj['hxzhongliang'] -= $zhongliang;
+        }
+        $obj->save();
+    }
+
+    /**
+     * @param $dataId
+     * @param $ywType
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     * @throws Exception
+     */
+    public static function deleteHk($dataId, $ywType)
+    {
+        $obj = CapitalHk::where('data_id', $dataId)->where('hk_type', $ywType)->find();
+        if (empty($obj)) {
+            return;
+        }
+        if ($obj['hxmoney'] != 0 || $obj['hxzhongliang'] != 0) {
+            throw new Exception("已经有结算信息!");
+        }
+        $obj->delete();
+    }
+
+    public function salesDetailsForLirunlv()
+    {
+        return $this->hasMany('SalesorderDetails', 'order_id', 'data_id');
+    }
+
+    /**
      * @param $dataId
      * @param $ywType
      * @param $systemNumber
@@ -194,46 +239,5 @@ class CapitalHk extends Base
         }
 
         $obj->save();
-    }
-
-    /**
-     * @param $id
-     * @param $money
-     * @param $yfkMoney
-     * @param $zhongliang
-     * @throws DbException
-     */
-    public static function jianMoney($id, $money, $zhongliang)
-    {
-        $money = empty($money) ? 0 : $money;
-        $zhongliang = empty($zhongliang) ? 0 : $zhongliang;
-        $obj = self::get($id);
-        if ($money != 0) {
-            $obj['hxmoney'] -= $money;
-        }
-        if ($zhongliang != 0) {
-            $obj['hxzhongliang'] -= $zhongliang;
-        }
-        $obj->save();
-    }
-
-    /**
-     * @param $dataId
-     * @param $ywType
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
-     * @throws Exception
-     */
-    public static function deleteHk($dataId, $ywType)
-    {
-        $obj = CapitalHk::where('data_id', $dataId)->where('hk_type', $ywType)->find();
-        if (empty($obj)) {
-            return;
-        }
-        if ($obj['hxmoney'] != 0 || $obj['hxzhongliang'] != 0) {
-            throw new Exception("已经有结算信息!");
-        }
-        $obj->delete();
     }
 }

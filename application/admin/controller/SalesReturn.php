@@ -204,7 +204,7 @@ class SalesReturn extends Right
             }
 
             $thBeizhu = "销售退货费用";
-            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'] ?? [], $th['id'], $th['yw_time'], 5,
+            (new CapitalFy())->fymxSave($data['other'] ?? [], $data['deleteOtherIds'] ?? [], $th['id'], $th['yw_time'], 5,
                 $th['group_id'], $th['sale_operator_id'], $thBeizhu, $this->getAccountId(), $companyId);
             Db::commit();
             return returnSuc(['id' => $th['id']]);

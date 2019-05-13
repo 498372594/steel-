@@ -25,15 +25,18 @@ class Price extends Right
             $data = request()->post();
             $ids = $data["id"];
             unset($data["id"]);
-            $ids = explode(",", $ids);
-            foreach ($ids as $id) {
-                $dat = $data;
-                $dat["id"] = $id;
-                $re = (new Specification())->where("id", $id)->save($data);
-                (new PriceLog())->allowField(true)->data($dat)->save();
+//            $ids = explode(",", $ids);
+            $specifications = Specification::where('id', 'in', $ids)->select();
+            if (!empty($specifications)) {
+                foreach ($specifications as $specification) {
+                    $dat = $data;
+                    $dat['gg_id'] = $specification->id;
+                    $specification->allowField(true)->save($data);
+                    (new PriceLog())->allowField(true)->data($dat)->save();
+                }
             }
             Db::commit();
-            return returnSuc(['id' => $re['id']]);
+            return returnSuc();
         } catch (\Exception $e) {
             Db::rollback();
             return returnFail($e->getMessage());
