@@ -302,27 +302,29 @@ class KcRkTz extends Base
             throw new Exception("请传入数量,重量等");
         }
 
-        $tz = KcRk::get($tzid);
-
-        if ($counts != 0) {
-            $newCounts = $tz['counts'] + $counts;
-            if ($tz['zhijian'] == 0) {
-                $tz->lingzhi = $newCounts;
-            } else {
-                $tz->jianshu = floor($newCounts / $tz['zhijian']);
-                $tz->lingzhi = $newCounts % $tz['zhijian'];
+        $tz = KcRkTz::get($tzid);
+        if(!empty($tz)){
+            if ($counts != 0) {
+                $newCounts = $tz['counts'] + $counts;
+                if ($tz['zhijian'] == 0) {
+                    $tz->lingzhi = $newCounts;
+                } else {
+                    $tz->jianshu = floor($newCounts / $tz['zhijian']);
+                    $tz->lingzhi = $newCounts % $tz['zhijian'];
+                }
+                $tz->counts = $newCounts;
             }
-            $tz->counts = $newCounts;
-        }
 
-        if ($zhongliang != 0) {
-            $tz->zhongliang = $tz['zhongliang'] + $zhongliang;
-        }
+            if ($zhongliang != 0) {
+                $tz->zhongliang = $tz['zhongliang'] + $zhongliang;
+            }
 //        $guige = ViewSpecification::where('id', $tz['guige_id'])->cache(true, 60)->find();
 //        $jjfs=Jsfs::where('id',$tz['jijiafangshi_id'])->cache(true,60)->find();
 //        Spot s = SpotUtil . calSpotZhongliang(pinming, tz . getChangdu(), tz . getKuandu(), jjfs . getBaseJijialeixingId(), tz . getMizhong(), tz . getJianzhong(), tz . getCounts(), tz . getLingzhi(), tz . getZhongliang(), zt);
 //        tz . setGuobangZhongliang(s . getGuobangZhongliang());
 //        tz . setLisuanZhongliang(s . getLisuanZhongliang());
-        $tz->save();
+            $tz->save();
+        }
+
     }
 }

@@ -201,7 +201,7 @@ class KcRk extends Base
      * @throws Exception
      */
     public function insertRkMxMd($rk, $dataId, $rukuType, $ywTime, $dataPnumber, $dataNumber, $customerId, $pinmingId, $guigeId, $caizhiId, $chandiId, $jijiafangshiId, $storeId, $pihao, $huohao, $chehao
-        , $beizhu, $pjlx, $houdu, $kuandu, $changdu, $zhijian, $lingzhi, $jianshu, $counts, $zhongliang, $price, $sumPrice, $shuiPrice, $sumShuiPrice, $shuie, $mizhong, $jianzhong, $userId, $companyId)
+        , $beizhu, $pjlx, $houdu, $kuandu, $changdu, $zhijian, $lingzhi, $jianshu, $counts, $zhongliang, $price, $sumPrice, $shuiPrice, $sumShuiPrice, $shuie, $mizhong, $jianzhong, $userId, $companyId,$kc_rk_tz_id)
     {
         $mx = new KcRkMx();
         if (empty($dataId)) {
@@ -289,7 +289,7 @@ class KcRk extends Base
         $md->companyid = $companyId;
         $md->kc_rk_id = $rk["id"];
         $md->ruku_mx_id = $mx["id"];
-        $md->kc_rk_tz_id = null;
+        $md->kc_rk_tz_id = $kc_rk_tz_id;
         $md->data_id = $mx["data_id"];
         $md->ruku_type = $mx["ruku_type"];
         $md->ruku_fangshi = $mx["ruku_fangshi"];
