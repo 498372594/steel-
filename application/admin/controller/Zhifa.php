@@ -237,7 +237,7 @@ class Zhifa extends Right
                     $cgmx['price'], $cgmx['shui_price'], $cgmx['sumprice'], $cgmx['sum_shui_price'], $cgmx['zhongliang'], $companyId);
             }
 
-            (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'] ?? [], $sale['id'], $sale['ywsj'], 1, $ms['department'], $ms['employer'], null, $this->getAccountId(), $companyId);
+            (new CapitalFy())->fymxSave($data['other'] ?? [], $data['deleteOtherIds'] ?? [], $sale['id'], $sale['ywsj'], 1, $ms['department'], $ms['employer'], null, $this->getAccountId(), $companyId);
 
             $mxList = SalesorderDetails::where('order_id', $sale['id'])->select();
             if (!empty($mxList)) {
