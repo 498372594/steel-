@@ -80,6 +80,7 @@ class Price extends Right
             $time = $data["time"];
             $heavy = $data["heavy"];
             if ($data["type"] == 1) {
+
                 if (cache("?price_change_time")) {
                     $priceVal = getSettings('price', 'upprice');
                     throw new Exception('已设置' . cache("price_change_time") . "分钟后，执行调价" . $priceVal . '元');

@@ -24,7 +24,7 @@ class Rk extends Right
     {
         $params = request()->param();
         $list = KcRk::with([
-            'custom',
+            'custom','saleoperatordata','createoperatordata'
         ])->where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
@@ -54,7 +54,7 @@ class Rk extends Right
     {
         $data = KcRk::with([
             'custom',
-            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData', 'customData'],
+            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData', 'customData','createoperatordata'],
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
@@ -266,7 +266,7 @@ class Rk extends Right
                     }
                     (new KcRk())->insertRkMxMd($rk, $tz["id"], 2, $data["yw_time"], $data["system_number"], null, $mjo["cache_customer_id"], $mjo["pinming_id"], $mjo["guige_id"], $mjo["caizhi_id"], $mjo["chandi_id"]
                         , $mjo["jijiafangshi_id"], $mjo["store_id"], $mjo["pihao"], $mjo["huohao"], null, $mjo["beizhu"], $mjo["cache_piaoju_id"], $mjo["houdu"] ?? 0, $mjo["kuandu"] ?? 0, $mjo["changdu"] ?? 0, $mjo["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
-                        $mjo["counts"] ?? 0, $mjo["zhongliang"] ?? 0, $mjo["price"], $mjo["sumprice"], $mjo["shui_price"], $mjo["sum_shui_price"], $mjo["shuie"], $mjo["mizhong"], $mjo["jianzhong"], $this->getAccountId(), $this->getCompanyId());
+                        $mjo["counts"] ?? 0, $mjo["zhongliang"] ?? 0, $mjo["price"], $mjo["sumprice"], $mjo["shui_price"], $mjo["sum_shui_price"], $mjo["shuie"], $mjo["mizhong"], $mjo["jianzhong"], $this->getAccountId(), $this->getCompanyId(),$mjo["kc_rk_tz_id"]);
 
                 }
             }
@@ -784,11 +784,10 @@ class Rk extends Right
 
             $mdList = KcRkMd::where('kc_rk_id', $rk['id'])->select();
             foreach ($mdList as $tbKcRkMd) {
-
                 KcRk::allPanduanByMxId($tbKcRkMd);
-
                 KcSpot::deleteSpotByRkMd($tbKcRkMd['id']);
                 KcRkTz::addTzById($tbKcRkMd['kc_rk_tz_id'], $tbKcRkMd['counts'], $tbKcRkMd['zhongliang']);
+
             }
             Db::commit();
             return returnSuc();

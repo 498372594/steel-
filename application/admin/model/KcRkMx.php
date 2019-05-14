@@ -51,4 +51,9 @@ class KcRkMx extends Base
         return $this->belongsTo('custom', 'cache_customer', 'id')->cache(true, 60)
             ->field('id,custom')->bind(['custom_name' => 'custom']);
     }
+    public function createoperatordata()
+    {
+        return $this->belongsTo('admin', 'cache_create_operator', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['create_operator' => 'name']);
+    }
 }
