@@ -257,6 +257,9 @@ class Chuku extends Right
                     if (!empty($mjo['mdList'])) {
                         foreach ($mjo['mdList'] as $tmd) {
                             $s = KcSpot::get($tmd['kc_spot_id']);
+                            if (empty($s)) {
+                                throw new Exception('库存资源不存在');
+                            }
 
                             $tmd['stock_out_id'] = $ck['id'];
                             $tmd['stock_out_detail_id'] = $mx['id'];

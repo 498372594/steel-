@@ -1,6 +1,5 @@
 <?php
 
-use app\admin\model\Setting;
 use think\Cache;
 use think\Db;
 use think\db\exception\DataNotFoundException;
@@ -244,19 +243,21 @@ function cacheSettings()
  * @throws DataNotFoundException
  * @throws DbException
  * @throws ModelNotFoundException
+ * @throws \think\Exception
+ * @throws \think\exception\PDOException
  */
 function setSettings($module, $code, $value = null)
 {
     if (is_array($code)) {
         foreach ($code as $index => $val) {
-            Setting::where('code', $index)
+            Db::name('setting')->where('code', $index)
                 ->where('module', $module)
-                ->save(['val' => $val]);
+                ->update(['val' => $val]);
         }
     } else {
-        Setting::where('code', $code)
+        Db::name('setting')->where('code', $code)
             ->where('module', $module)
-            ->save(['val' => $value]);
+            ->update(['val' => $value]);
     }
     cacheSettings();
 }
