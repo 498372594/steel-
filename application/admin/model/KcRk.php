@@ -18,7 +18,16 @@ class KcRk extends Base
     {
         return $this->hasMany('KcRkMx', 'kc_rk_id', 'id');
     }
-
+    public function pinmingData()
+    {
+        return $this->belongsTo('Productname', 'pinming_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['pinming' => 'name']);
+    }
+    public function guigeData()
+    {
+        return $this->belongsTo('specification', 'guige_id', 'id')->cache(true, 60)
+            ->field('id,specification')->bind(['guige' => 'specification']);
+    }
     public function custom()
     {
         return $this->belongsTo('Custom', 'customer_id', 'id')->cache(true, 60)

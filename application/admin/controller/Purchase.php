@@ -1526,10 +1526,11 @@ where 1 = 1";
      */
     public function getYfzkTongjiMxList($pageLimit = 10)
     {
+        $params = request()->param();
         if (!empty($params['customer_id'])) {
             $customer_id = $params['customer_id'];
         }
-        $params = request()->param();
+
         $ywsjStart = '';
         if (!empty($params['ywsjStart'])) {
             $ywsjStart = $params['ywsjStart'];

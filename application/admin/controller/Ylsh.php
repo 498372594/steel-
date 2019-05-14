@@ -424,7 +424,7 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
                     $mjo['companyid'] = $companyId;
                     $mjo['pandian_id'] = $pd_id;
                     $mx = new KcPandianMx();
-                    $mx->allowField(true)->save($mjo);
+                    $mx->allowField(true)->isUpdate(false)->save($mjo);
                     if ($mx["pandian_type"] == "盘盈") {
                         $rkCount = KcRk::where("data_id", $pd["id"])->count();
                         if ($rkCount == 0) {
