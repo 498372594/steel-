@@ -27,7 +27,11 @@ class Salesman extends Right
         $data = $model->lirun($params, $pageLimit, $this->getCompanyId());
         return returnSuc($data);
     }
-
+    /**业务提成规则1添加
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function salesmansetting()
     {
         if (request()->isPost()) {
@@ -54,7 +58,11 @@ class Salesman extends Right
             return returnRes($data, '无相关数据', $data);
         }
     }
-
+    /**业务提成规则2添加
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function salesmanHkxsRule()
     {
         if (request()->isPost()) {
@@ -81,7 +89,11 @@ class Salesman extends Right
             return returnRes($data, '无相关数据', $data);
         }
     }
-
+    /**业务提成规则1列表
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function getSalesmansetting($pageLimit = 10)
     {
         $list = Salesmansetting::where("companyid", $this->getCompanyId())->paginate($pageLimit);
@@ -89,6 +101,11 @@ class Salesman extends Right
         return returnRes(true, '', $list);
     }
 
+    /**业务提成规则2列表
+     * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     */
     public function getSalesmanHkxsRule($pageLimit = 10)
     {
         $list = SalesmanHkxsRule::where("companyid", $this->getCompanyId())->paginate($pageLimit);
@@ -161,18 +178,24 @@ WHERE 1 = 1 AND ck.delete_time is null and ck.status!=2 and mx.companyid=" . $th
                 foreach ($list as $settingEx) {
                     if (!empty($setList)) {
                         foreach ($setList as $setting) {
-                            if($setting["weight_start"]){
-
+                            if ($setting["weight_start"] <= $settingEx["benqiSalesZhongliang"] && $settingEx["benqiSalesZhongliang"] < $setting["weight_end"]) {
+                                $settingEx["benqitichengSumPrice"] = $setting["ticheng_price"] * $settingEx["benqiSalesZhongliang"];
                             }
                         }
                     }
-
                 }
-
             }
 
         } else {
 
+
+        }
+    }
+    public function ceshi(){
+        $list=model("capital_hk")->alias("b")->join("salesorder a","a.id=b.data_id","left")
+            ->where(" b.hk_type=12 and b.money=b.hxmoney and b.money !=0")->field("b.id,b.yw_time")->select();
+        foreach ($list as $item){
+            $list=model("salesorder_details")->where("order_id",$item["id"])->field("")->select();
         }
 
     }

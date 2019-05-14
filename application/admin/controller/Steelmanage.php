@@ -163,6 +163,16 @@ class Steelmanage extends Right
                     $query->where('id', 'in', $ids);
                 });
                 break;
+            case 'salesmansetting':
+                Transportation::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'salesman_hkxs_rule':
+                Transportation::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
             case 'originarea':
                 Originarea::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
