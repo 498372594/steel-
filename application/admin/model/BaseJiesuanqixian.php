@@ -7,7 +7,8 @@ use traits\model\SoftDelete;
 class BaseJiesuanqixian extends Base
 {
     use SoftDelete;
-    protected $autoWriteTimestamp = true;
+    protected $autoWriteTimestamp = 'datetime';
+
     public function createoperatordata()
     {
         return $this->belongsTo('admin', 'create_operator_id', 'id')->cache(true, 60)

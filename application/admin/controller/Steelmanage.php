@@ -178,6 +178,22 @@ class Steelmanage extends Right
                     $query->where('id', 'in', $ids);
                 });
                 break;
+
+            case 'base_jiesuanqixian':
+                Originarea::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'base_xinyongedu':
+                Originarea::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'sales_edu':
+                Originarea::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
             default:
                 //默认写法风险太高，理论上可以删除任何数据
                 return returnFail('参数错误');

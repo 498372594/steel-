@@ -82,7 +82,7 @@ class Initinput extends Right
      * @param Model $list
      * @return Model
      */
-    public function getinitsearch($params, Model $list)
+    public function getinitsearch($params, $list)
     {
         //系统单号
         if (!empty($params['system_number'])) {

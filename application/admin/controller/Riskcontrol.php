@@ -64,7 +64,8 @@ class Riskcontrol extends Right
         $params = request()->param();
         $list = BaseJiesuanqixian::with(['createoperatordata', 'udpateoperatordata'])
             ->where('companyid', $this->getCompanyId());
-        $list = $this->getsearchcondition($params, $list)->paginate(10);
+        $list = $this->getsearchcondition($params, $list);
+        $list=$list->paginate(10);
         return returnRes(true, '', $list);
     }
     public function addxinyongedu($return = false)
@@ -195,7 +196,7 @@ class Riskcontrol extends Right
             }
             $ava=new AvaWeight();
             $ava->allowField(true)->data($param)->save();
-            return returnSuc(['id' => $cg['id']]);
+            return returnSuc(['id' => $ava['id']]);
         }
         catch (Exception $e) {
             Db::rollback();
