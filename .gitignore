@@ -3,8 +3,4 @@
 runtime
 thinkphp
 vendor
-public/index.html
-public/css/
-public/js/
-public/img/
-public/fonts
+public/uploads

@@ -9,6 +9,8 @@ use app\admin\model\Jsfs;
 use app\admin\model\PriceLog;
 use app\admin\model\ViewZijinCount;
 use think\Db;
+use think\db\exception\DataNotFoundException;
+use think\db\exception\ModelNotFoundException;
 use think\exception\DbException;
 use think\Request;
 use think\response\Json;
@@ -97,6 +99,10 @@ class Customer extends Right
      * 客户利润率报表
      * @param Request $request
      * @param int $pageLimit
+     * @return Json
+     * @throws DbException
+     * @throws DataNotFoundException
+     * @throws ModelNotFoundException
      */
     public function lirunlv(Request $request, $pageLimit = 10)
     {
