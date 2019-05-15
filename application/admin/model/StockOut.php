@@ -217,6 +217,7 @@ class StockOut extends Base
         (new StockOutMd())->insertCkMd($ck['id'], $mx['id'], $spotId, $dataId, $chukuType, $mx['pinming_id'], $guigeId,
             $caizhiId, $chandiId, $jijiafangshiId, $storeId, $houdu, $kuandu, $changdu, $zhijian, $lingzhi, $jianshu,
             $counts, $zhongliang, $mizhong, $jianzhong, $cbPrice, $beizhu, $shuie, $companyId);
+
         $spot = KcSpot::get($spotId);
         if (empty($spot) || empty($spotId)) {
             throw new Exception("引用的采购单还未入库，请入库后再操作！");

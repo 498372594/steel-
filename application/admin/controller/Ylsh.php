@@ -446,10 +446,9 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
                         } else {
                             $ck = (new StockOut())->where("data_id", $pd["id"])->find();
                         }
-
                         (new StockOut())->insertCkMxMd($ck, $mx["spot_id"], $mx["id"], 2, $ck["yw_time"], null, null,
                             $mx["guige_id"], $mx["caizhi_id"], $mx["chandi_id"], $mx["jijiafangshi_id"], $mx["store_id"], $mx["houdu"], $mx["kuandu"], $mx["changdu"], $mx["zhijian"]
-                            , $mx["lingzhi"], $mx["jianshu"], $mx["counts"], $mx["zhinsertCkMxMdongliang"], $mx["price"], $mx["sumprice"], $mx["shuiprice"], $mx["sum_shui_price"], $mx["shuie"], $mx["mizhong"], $mx["jianzhong"], null
+                            , $mx["lingzhi"], $mx["jianshu"], $mx["counts"], $mx["zhongliang"], $mx["price"], $mx["sumprice"], $mx["shuiprice"], $mx["sum_shui_price"], $mx["shuie"], $mx["mizhong"], $mx["jianzhong"], null
                             , $mx["ykreason"], $this->getAccountId(), $this->getCompanyId());
                     }
                 }
