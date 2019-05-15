@@ -176,14 +176,16 @@ class Riskcontrol extends Right
 		WHERE 
 		date(we.nowtime) = curdate()) ";
         $data = Db::table($sql)->alias("t")->where("t.companyid",$this->getCompanyId())->find();
-        return returnSuc($data);
+        return returnRes(true, '', $data);
     }
     public function addAva(){
-        $param=request()-post();
+        $param=request()->post();
+        $param["companyid"]=$this->getCompanyId();
+        $param["status"]=0;
         $param["nowtime"]=date("Y-m-d H:s:i",time());
         try{
             $sql="( SELECT 
-		(we.`zhongliang` - SUM(we.edu)) leftzhongliang,companyid
+		(we.`zhongliang` - sum(we.edu)) leftzhongliang,companyid
 		FROM ava_weight we
 		WHERE date(we.nowtime) = curdate()
         and we.status!=1) ";
@@ -192,7 +194,7 @@ class Riskcontrol extends Right
                 $leftzhongliang=$param["zhongliang"];
             }
             if( $leftzhongliang<$param["edu"]){
-                throw new \Exception("今日可售额度为：".$param["zhongliang"].",还剩".$leftzhongliang.",小于设置额度，保存失败！");
+                throw new Exception("今日可售额度为：".$param["zhongliang"].",还剩".$leftzhongliang.",小于设置额度，保存失败！");
             }
             $ava=new AvaWeight();
             $ava->allowField(true)->data($param)->save();
