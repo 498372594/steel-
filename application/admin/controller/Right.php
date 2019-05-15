@@ -253,12 +253,13 @@ class Right extends Signin
         }
         $id = Texture::where('id', $caizhi)
             ->where('companyid', $this->getCompanyId())
+            ->cache(60)
             ->value('id');
         if (!empty($id)) {
             return $id;
         }
         $id = Texture::where('texturename', $caizhi)
-            ->cache(true, 60)
+            ->cache(60)
             ->where('companyid', $this->getCompanyId())
             ->value('id');
         if (empty($id)) {
@@ -267,7 +268,7 @@ class Right extends Signin
             $model->companyid = $this->getCompanyId();
             $model->add_name = $this->getAccount()['name'];
             $model->add_id = $this->getAccountId();
-            $model->remark = $caizhi;
+            $model->remark = '';
             $model->zjm = $caizhi;
             $model->save();
             $id = $model->id;
@@ -287,12 +288,13 @@ class Right extends Signin
         }
         $id = Originarea::where('id', $chandi)
             ->where('companyid', $this->getCompanyId())
+            ->cache(60)
             ->value('id');
         if (!empty($id)) {
             return $id;
         }
         $id = Originarea::where('originarea', $chandi)
-            ->cache(true, 60)
+            ->cache(60)
             ->where('companyid', $this->getCompanyId())
             ->value('id');
         if (empty($id)) {
