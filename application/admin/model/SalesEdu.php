@@ -8,6 +8,7 @@ class SalesEdu extends Base
 {
     use SoftDelete;
     protected $autoWriteTimestamp = 'datetime';
+    protected $deleteTime = 'delete_time';
     public function createoperatordata()
     {
         return $this->belongsTo('admin', 'create_operator_id', 'id')->cache(true, 60)

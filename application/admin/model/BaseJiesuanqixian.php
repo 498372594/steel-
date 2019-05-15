@@ -7,7 +7,9 @@ use traits\model\SoftDelete;
 class BaseJiesuanqixian extends Base
 {
     use SoftDelete;
+    protected $deleteTime = 'delete_time';
     protected $autoWriteTimestamp = 'datetime';
+
 
     public function createoperatordata()
     {

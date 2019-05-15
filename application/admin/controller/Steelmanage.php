@@ -4,6 +4,8 @@ namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
 use app\admin\model\Bank;
+use app\admin\model\BaseJiesuanqixian;
+use app\admin\model\BaseXinyongedu;
 use app\admin\model\Classname;
 use app\admin\model\Custom;
 use app\admin\model\Jianzhishu;
@@ -13,6 +15,9 @@ use app\admin\model\Originarea;
 use app\admin\model\Paymenttype;
 use app\admin\model\Pjlx;
 use app\admin\model\Productname;
+use app\admin\model\SalesEdu;
+use app\admin\model\SalesmanHkxsRule;
+use app\admin\model\Salesmansetting;
 use app\admin\model\Specification;
 use app\admin\model\Storage;
 use app\admin\model\Texture;
@@ -164,12 +169,12 @@ class Steelmanage extends Right
                 });
                 break;
             case 'salesmansetting':
-                Transportation::destroy(function (Query $query) use ($ids) {
+                Salesmansetting::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
                 break;
             case 'salesman_hkxs_rule':
-                Transportation::destroy(function (Query $query) use ($ids) {
+                SalesmanHkxsRule::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
                 break;
@@ -180,17 +185,17 @@ class Steelmanage extends Right
                 break;
 
             case 'base_jiesuanqixian':
-                Originarea::destroy(function (Query $query) use ($ids) {
+                BaseJiesuanqixian::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
                 break;
             case 'base_xinyongedu':
-                Originarea::destroy(function (Query $query) use ($ids) {
+                BaseXinyongedu::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
                 break;
             case 'sales_edu':
-                Originarea::destroy(function (Query $query) use ($ids) {
+                SalesEdu::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
                 break;
