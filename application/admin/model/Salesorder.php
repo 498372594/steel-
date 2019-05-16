@@ -2,6 +2,7 @@
 
 namespace app\admin\model;
 
+use app\admin\controller\Signin;
 use PDOStatement;
 use think\{Db,
     db\exception\DataNotFoundException,
@@ -10,7 +11,8 @@ use think\{Db,
     Exception,
     exception\DbException,
     Model,
-    Paginator};
+    Paginator,
+    Queue};
 use traits\model\SoftDelete;
 
 class Salesorder extends Base
@@ -36,6 +38,30 @@ class Salesorder extends Base
         $xs->status = 2;
         $xs->save();
         return $xs;
+    }
+
+    protected static function init()
+    {
+        $changePrice = function () {
+            $priceRise = getSettings('price', 'price_rise');
+            $price = getSettings('price', 'upprice');
+            if ($priceRise <= 0 && $price <= 0) {
+                return;
+            }
+            $signIn = new Signin();
+            $weight = SalesorderDetails::hasWhere('salesorder', function (Query $query) {
+                $query->whereTime('salesorder.ywsj', 'today')
+                    ->where('salesorder.status', '<>', 2);
+            })->where('companyid', $signIn->getCompanyId())
+                ->sum('weight');
+            if ($weight >= $priceRise) {
+                Queue::push('app\admin\job\ChangePrice', $price);
+
+                setSettings('price', 'price_rise', 0);
+            }
+        };
+        User::afterInsert($changePrice);
+        User::afterUpdate($changePrice);
     }
 
     public function details()
