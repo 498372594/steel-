@@ -191,12 +191,21 @@ WHERE 1 = 1 AND ck.delete_time is null and ck.status!=2 and mx.companyid=" . $th
 
         }
     }
-    public function ceshi(){
-        $list=model("capital_hk")->alias("b")->join("salesorder a","a.id=b.data_id","left")
-            ->where(" b.hk_type=12 and b.money=b.hxmoney and b.money !=0")->field("b.id,b.yw_time")->select();
-        foreach ($list as $item){
-            $list=model("salesorder_details")->where("order_id",$item["id"])->field("")->select();
-        }
-
+//    public function ceshi(){
+//        $list=model("capital_hk")->alias("b")->join("salesorder a","a.id=b.data_id","left")
+//            ->where(" b.hk_type=12 and b.money=b.hxmoney and b.money !=0")->field("b.id,b.yw_time")->select();
+//        foreach ($list as $item){
+//            $list=model("salesorder_details")->where("order_id",$item["id"])->field("")->select();
+//        }
+//    }
+    /**规则默认查询
+     * @return Json
+     * @throws DbException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     */
+    public function getmoren(){
+        $data=model("company")->where("id",$this->getCompanyId())->field("id,tc_type")->find();
+        return returnRes($data, '无相关数据', $data);
     }
 }

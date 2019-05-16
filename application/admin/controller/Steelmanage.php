@@ -336,8 +336,7 @@ class Steelmanage extends Right
      */
     public function getproductlist()
     {
-        $list = model("classname")->field("pid,id,classname")->where("companyid", $this->getCompanyId())->select();
-
+        $list = db("classname")->field("pid,id,classname")->where("delete_time is null")->where("companyid", $this->getCompanyId())->select();
         $menutree = new Tree($list);
         $menulist = $menutree->leaf();
         $digui = $this->productnamedigui($menulist);
@@ -354,11 +353,23 @@ class Steelmanage extends Right
     public function productnamedigui($arr)
     {
         foreach ($arr as $k => $v) {
+
             $productname = model("productname")->where("companyid", $this->getCompanyId())
                 ->where("classid", $v["id"])
                 ->field("id,name")->select();
             $arr[$k]['productname']=$productname;
+
             if (array_key_exists('child', $v)) {
+
+//                foreach ($v["child"] as $w=>$x){
+//                    $productname1 = model("productname")->where("companyid", $this->getCompanyId())
+//                        ->where("classid", $x["id"])
+//                        ->field("id,name")->select();
+//
+//
+//                    $v["child"][$w]['productname']=$productname1;
+//
+//                }
                 $v = $this->productnamedigui($v["child"]);
                 $arr[$k]["child"] = $v;
             }
