@@ -3,6 +3,7 @@
 namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
+use app\admin\model\AvaWeight;
 use app\admin\model\Bank;
 use app\admin\model\BaseJiesuanqixian;
 use app\admin\model\BaseXinyongedu;
@@ -189,8 +190,9 @@ class Steelmanage extends Right
                     $query->where('id', 'in', $ids);
                 });
                 break;
-            case 'base_xinyongedu':
-                BaseXinyongedu::destroy(function (Query $query) use ($ids) {
+
+            case 'ava_weight':
+                AvaWeight::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
                 break;

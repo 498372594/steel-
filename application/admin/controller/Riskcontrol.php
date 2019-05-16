@@ -140,7 +140,7 @@ class Riskcontrol extends Right
                 } else {
                     return true;
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 if ($return) {
                     return $e->getMessage();
                 } else {
@@ -188,7 +188,7 @@ class Riskcontrol extends Right
 		(we.`zhongliang` - sum(we.edu)) leftzhongliang,companyid
 		FROM ava_weight we
 		WHERE date(we.nowtime) = curdate()
-        and we.status!=1) ";
+        and we.status!=1 and we.delete_time is null) ";
             $leftzhongliang = Db::table($sql)->alias("t")->where("t.companyid",$this->getCompanyId())->value("leftzhongliang");
             if(empty($leftzhongliang)){
                 $leftzhongliang=$param["zhongliang"];
@@ -205,11 +205,39 @@ class Riskcontrol extends Right
             return returnFail($e->getMessage());
         }
     }
-    public function getava(){
-        $sql="(SELECT we.*
+    public function updateAva(){
+        $data=request()->param();
+        try {
+            $ava = model("ava_weight")->where("id", $data["id"])->find();
+            $currentZhongliang =$data["zhongliang"];
+            if ($ava["zhongliang"] != $currentZhongliang) {
+                $sql = "(update ava_weight we set we.zhongliang=" . $currentZhongliang . " where date(we.nowtime) = curdate()  and we.status!=1 and we.delete_time is null)";
+                model("ava_weight")->query($sql);
+            }
+            $sql = "( SELECT 
+		(we.`zhongliang` - sum(we.edu)) leftzhongliang,companyid
 		FROM ava_weight we
+		WHERE date(we.nowtime) = curdate()
+        and we.status!=1 and we.delete_time is null) ";
+            $leftzhongliang = Db::table($sql)->alias("t")->where("t.companyid", $this->getCompanyId())->value("leftzhongliang");
+            $leftzhongliang=$leftzhongliang+$ava["edu"];
+            if( $leftzhongliang<$data["edu"]){
+                throw new Exception("今日可售额度为：".$data["zhongliang"].",还剩".$leftzhongliang.",小于设置额度，保存失败！");
+            }
+            $ava=new AvaWeight();
+            $ava->allowField(true)->isUpdate(true)->data($data)->save();
+            return returnSuc(['id' => $ava['id']]);
+        }catch (Exception $e) {
+                Db::rollback();
+                return returnFail($e->getMessage());
+            }
+
+    }
+    public function getava(){
+        $sql="(SELECT we.*,b.name as operator
+		FROM ava_weight we left join admin b on we.operator_id=b.id
 		WHERE 
-		date(we.nowtime) = curdate())";
+		date(we.nowtime) = curdate() and we.delete_time is null) ";
         $data = Db::table($sql)->alias("t")->where("t.companyid",$this->getCompanyId())->select();
         return returnSuc($data);
     }

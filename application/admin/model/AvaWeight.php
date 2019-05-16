@@ -19,4 +19,9 @@ class AvaWeight extends Base
         return $this->belongsTo('admin', 'update_operator_id', 'id')->cache(true, 60)
             ->field('id,name')->bind(['update_operator' => 'name']);
     }
+    public function operatordata()
+    {
+        return $this->belongsTo('admin', 'operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['operator' => 'name']);
+    }
 }
