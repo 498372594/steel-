@@ -325,4 +325,16 @@ class Admin extends Right
             }
         }
     }
+    /**
+     * 首页快捷单设置
+     */
+    public function menuset(){
+        if(request()->isPost()){
+            $re=model("company")->where("id",$this->getCompanyId())->save(['menuset'=>request()->post("menu")]);
+            return returnRes($re, '添加失败');
+        }else{
+            $menu=model("company")->where("id",$this->getCompanyId())->field("id,menuset")->find();
+            return returnSuc($menu);
+        }
+    }
 }

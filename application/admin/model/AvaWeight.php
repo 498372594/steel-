@@ -7,7 +7,7 @@ use traits\model\SoftDelete;
 class AvaWeight extends Base
 {
     use SoftDelete;
-    protected $autoWriteTimestamp = true;
+    protected $autoWriteTimestamp = "datetime";
     public function createoperatordata()
     {
         return $this->belongsTo('admin', 'create_operator_id', 'id')->cache(true, 60)
@@ -18,5 +18,10 @@ class AvaWeight extends Base
     {
         return $this->belongsTo('admin', 'update_operator_id', 'id')->cache(true, 60)
             ->field('id,name')->bind(['update_operator' => 'name']);
+    }
+    public function operatordata()
+    {
+        return $this->belongsTo('admin', 'operator_id', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['operator' => 'name']);
     }
 }
