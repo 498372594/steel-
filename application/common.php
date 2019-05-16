@@ -500,9 +500,7 @@ function returnSuc($data = [])
 {
     $res = [
         'code' => 1,
+        'data' => $data
     ];
-    if ($data) {
-        $res['data'] = $data;
-    }
     return json($res);
 }
