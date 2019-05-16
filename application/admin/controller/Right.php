@@ -147,7 +147,6 @@ class Right extends Signin
         if (!empty($params['width_start'])) {
             $list->where('kuandu', '>=', $params['width_start']);
         }
-
         if (!empty($params['width_end'])) {
             $list->where('kuandu', '<=', $params['width_end']);
         }
@@ -165,6 +164,9 @@ class Right extends Signin
         //资源号
         if (!empty($params['resource_number'])) {
             $list->where('resource_number', $params['resource_number']);
+        }
+        if (!empty($params['class_id'])) {
+            $list->where('class_id', $params['class_id']);
         }
         //规格
         if (!empty($params['chandi_id'])) {
