@@ -97,11 +97,7 @@ class SalesTiaohuo extends Right
             ->where('moshi_type', 1)
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnRes(true, '', $data);
-        }
+        return returnRes(true, '', $data);
     }
 
     /**

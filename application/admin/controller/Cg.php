@@ -2,8 +2,7 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{CapitalFy, CgPurchase, CgPurchaseMx, CgTh, CgThMx, InitYskp, KcRk, KcRkTz, KcSpot, StockOut};
-use app\admin\validate\{FeiyongDetails};
+use app\admin\model\{CapitalFy, CgPurchase, CgPurchaseMx, CgTh, CgThMx, KcRk, KcRkTz, KcSpot, StockOut};
 use Exception;
 use think\{Db, Request};
 
@@ -40,11 +39,7 @@ class Cg extends Right
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnRes(true, '', $data);
-        }
+        return returnRes(true, '', $data);
     }
 
 //    public function addcgth(Request $request, $data = [], $return = false)
@@ -363,7 +358,9 @@ class Cg extends Right
             return returnFail($e->getMessage());
         }
     }
-    public function addcgth(){
+
+    public function addcgth()
+    {
         Db::startTrans();
         try {
             if (empty($data)) {
@@ -380,19 +377,19 @@ class Cg extends Right
             $num = 1;
             foreach ($data['details'] as $item) {
                 if (!$detailValidate->check($item)) {
-                    return returnFail('请检查第' . $num . '行  ' .$detailValidate->getError());
+                    return returnFail('请检查第' . $num . '行  ' . $detailValidate->getError());
                 }
-                if(empty($item["lingzhi"]&&empty($item["jianshu"])&&!empty($item["zhijian"]))){
+                if (empty($item["lingzhi"] && empty($item["jianshu"]) && !empty($item["zhijian"]))) {
                     throw new Exception("不能只输输入件支数");
                 }
 
-                if($item["lingzhi"]&&$item["jianshu"]&&$item["counts"]){
-                    if($item["counts"]!==(($item["lingzhi"]+$item["jianshu"]*$item["zhijian"]))){
-                        throw new Exception("计算的数量".($item["lingzhi"]+$item["jianshu"]*$item["zhijian"]).",您实际输入的数量:".$item["counts"].",计算数量与实际数量不相等");
+                if ($item["lingzhi"] && $item["jianshu"] && $item["counts"]) {
+                    if ($item["counts"] !== (($item["lingzhi"] + $item["jianshu"] * $item["zhijian"]))) {
+                        throw new Exception("计算的数量" . ($item["lingzhi"] + $item["jianshu"] * $item["zhijian"]) . ",您实际输入的数量:" . $item["counts"] . ",计算数量与实际数量不相等");
                     }
                 }
-                if($item["lingzhi"]>$item["zhijian"]){
-                    throw new Exception("您输入的零支为:".$item["lingzhi"].",您输入的件支数为:".$item["zhijian"].",零支不能大于或者等于件支数");
+                if ($item["lingzhi"] > $item["zhijian"]) {
+                    throw new Exception("您输入的零支为:" . $item["lingzhi"] . ",您输入的件支数为:" . $item["zhijian"] . ",零支不能大于或者等于件支数");
                 }
                 if (empty($item['id'])) {
                     $addList[] = $item;
@@ -416,7 +413,7 @@ class Cg extends Right
                 $th->allowField(true)->data($data)->save();
                 $th_id = $th["id"];
 
-                    $ck = (new StockOut())->insertChuku($th['id'], "10", $th['yw_time'], $th['group_id'], $th['system_number'], $th['sale_operator_id'], $this->getAccountId(), $this->getCompanyId());
+                $ck = (new StockOut())->insertChuku($th['id'], "10", $th['yw_time'], $th['group_id'], $th['system_number'], $th['sale_operator_id'], $this->getAccountId(), $this->getCompanyId());
 
             } else {
                 $th = CgPurchase::where('companyid', $companyId)->where('id', $data['id'])->find();
@@ -432,7 +429,7 @@ class Cg extends Right
             if (!empty($data["delete_mx_ids"])) {
                 $deleteList = model("cg_th_mx")->where('id', 'in', $data["delete_mx_ids"])->select();
                 foreach ($deleteList as $mx) {
-                    (new StockOut())->deleteChuku($mx["id"],10);
+                    (new StockOut())->deleteChuku($mx["id"], 10);
                     (new \app\admin\model\Inv())->deleteInv($mx['id'], 25);
                     $th->delete();
                 }
@@ -448,33 +445,33 @@ class Cg extends Right
                     $mjo['trumpet'] = $trumpet;
                     $mjo["cg_th_id"] = $th_id;
                     $mx = new CgThMx();
-                    $mx =$mx->where('id', $mjo['id'])->find();
-                    $spot=KcSpot::where("id",$mjo["spot_id"])->find();
-                    if($mjo["counts"]>($mx["counts"]+$spot["counts"])){
-                        throw new Exception("退货数量不能大于库存数量(库存数量为：".$spot["counts"].")");
+                    $mx = $mx->where('id', $mjo['id'])->find();
+                    $spot = KcSpot::where("id", $mjo["spot_id"])->find();
+                    if ($mjo["counts"] > ($mx["counts"] + $spot["counts"])) {
+                        throw new Exception("退货数量不能大于库存数量(库存数量为：" . $spot["counts"] . ")");
                     }
-                    if($mjo["zhongliang"]>($mx["zhongliang"]+$spot["zhongliang"])){
-                        throw new Exception("退货重量不能大于库存重量(库存重量为：".$spot["zhongliang"].")");
+                    if ($mjo["zhongliang"] > ($mx["zhongliang"] + $spot["zhongliang"])) {
+                        throw new Exception("退货重量不能大于库存重量(库存重量为：" . $spot["zhongliang"] . ")");
                     }
                     $mx->allowField(true)->data($mjo)->save();
 
-                        (new StockOut())->insertCkMxMd($ck, $spot['id'], $mx['id'], 10, $th['yw_time'], $th['system_number'],
-                            $th['customer_id'], $mx['guige_id'], $mx['caizhi_id'], $mx['chandi_id'], $mx['jijiafangshi_id'], $mx['store_id'],
-                            $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['lingzhi'], $mx['jianshu'], $mx['counts'],
-                            $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['shui_price'], $mx['sum_shui_price'], $mx['shuie'], $mx['mizhong'],
-                            $mx['jianzhong'], null, '', $this->getAccountId(), $companyId);
+                    (new StockOut())->insertCkMxMd($ck, $spot['id'], $mx['id'], 10, $th['yw_time'], $th['system_number'],
+                        $th['customer_id'], $mx['guige_id'], $mx['caizhi_id'], $mx['chandi_id'], $mx['jijiafangshi_id'], $mx['store_id'],
+                        $mx['houdu'], $mx['kuandu'], $mx['changdu'], $mx['zhijian'], $mx['lingzhi'], $mx['jianshu'], $mx['counts'],
+                        $mx['zhongliang'], $mx['price'], $mx['sumprice'], $mx['shui_price'], $mx['sum_shui_price'], $mx['shuie'], $mx['mizhong'],
+                        $mx['jianzhong'], null, '', $this->getAccountId(), $companyId);
                     (new \app\admin\model\Inv())->insertInv($mx["id"], 5, 2, $mx["chagndu"], $mx["kuandu"], $mx["houdu"], $mx["guige_id"], $mx["jijiafangshi_id"], $mx["piaoju_id"], $mx["pinming_id"],
                         $mx["system_number"], $mx["customer_id"], $mx["yw_time"], $mx["price"], $mx["shui_price"], $mx["sum_price"], $mx["sum_shui_price"], $mx["zhongliang"], $this->getCompanyId());
                 }
 
             }
-            $sumMoney =(new CgThMx())->where("cg_th_id",$th["id"])->sum("sum_shui_price");
-            $sumZhongliang =(new CgThMx())->where("cg_th_id",$th["id"])->sum("zhongliang");
-            if(empty($data['id'])){
-                (new \app\admin\model\CapitalHk())->insertHk($th["id"],13,$th["system_number"],$th["beizhu"],$th["customer_id"],2,$th["yw_time"],$th['jiesuan_id'], $th['piaoju_id'], $sumMoney, $sumZhongliang, $th['group_id']);
+            $sumMoney = (new CgThMx())->where("cg_th_id", $th["id"])->sum("sum_shui_price");
+            $sumZhongliang = (new CgThMx())->where("cg_th_id", $th["id"])->sum("zhongliang");
+            if (empty($data['id'])) {
+                (new \app\admin\model\CapitalHk())->insertHk($th["id"], 13, $th["system_number"], $th["beizhu"], $th["customer_id"], 2, $th["yw_time"], $th['jiesuan_id'], $th['piaoju_id'], $sumMoney, $sumZhongliang, $th['group_id']);
             }
-            if(empty( $data['deleteOtherIds'])){
-                $data['deleteOtherIds']=null;
+            if (empty($data['deleteOtherIds'])) {
+                $data['deleteOtherIds'] = null;
             }
             (new CapitalFy())->fymxSave($data['other'], $data['deleteOtherIds'], $th['id'], $th['yw_time'], 1, $th['group_id'] ?? '', $th['sale_operator_id'] ?? '', "采购退货费用", $this->getAccountId(), $this->getCompanyId());
             Db::commit();

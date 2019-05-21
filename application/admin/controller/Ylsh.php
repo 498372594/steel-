@@ -2,13 +2,10 @@
 
 namespace app\admin\controller;
 
-use app\admin\library\traits\Backend;
+use app\admin\model\{KcDiaoboMx, KcPandianMx, KcSpot, KcYlSh, StockOut};
 use app\admin\model\KcRk;
-use app\admin\model\{KcDiaoboMx, KcPandianMx, KcRkMd, KcSpot, KcYlSh, KcYlShRelease, StockOut};
-use app\admin\validate\KcPandian;
-use think\{Db, Request, Validate};
+use think\{Db};
 use think\Exception;
-use think\Session;
 
 class Ylsh extends Right
 {
@@ -56,19 +53,20 @@ class Ylsh extends Right
      * @return \think\response\Json
      */
     public function getlock()
-{
-$params = request()->param();
-$list = db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
-if (!empty($params['ids'])) {
-$list->where('id', 'in', $params['ids']);
-}
-    if (!empty($params['is_pass'])) {
-        $list->where('is_pass', 1);
+    {
+        $params = request()->param();
+        $list = db("ViewKcYlsh")->where('companyid', $this->getCompanyId());
+        if (!empty($params['ids'])) {
+            $list->where('id', 'in', $params['ids']);
+        }
+        if (!empty($params['is_pass'])) {
+            $list->where('is_pass', 1);
+        }
+        $list = $this->getsearchcondition($params, $list);
+        $list = $list->paginate(10);
+        return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
     }
-$list = $this->getsearchcondition($params, $list);
-$list = $list->paginate(10);
-return returnRes($list->toArray()['data'], '没有数据，请添加后重试', $list);
-}
+
     /**延期
      * @return \think\response\Json
      * @throws \Exception
@@ -123,11 +121,7 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnRes(true, '', $data);
-        }
+        return returnRes(true, '', $data);
     }
 
     /**调拨列表
@@ -160,11 +154,7 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnRes(true, '', $data);
-        }
+        return returnRes(true, '', $data);
     }
 
     /**添加调拨
@@ -526,74 +516,80 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
             }
         }
     }
-    public function ylshpass(){
 
-            $ids = request()->param("ids");
-            $ids=explode(",",$ids);
-            $list=db("kc_yl_sh_log")->where("ylsh_id","in",$ids)->field("zhongliang,zhijian,jianshu,baoliu_time,kehu_name,sale_operator_id,ylsh_id")->select();
+    public function ylshpass()
+    {
 
-            Db::startTrans();
-            try {
-                foreach ($list as $key => $item) {
-                    $list[$key]["id"] = $item["ylsh_id"];
-                    unset($list[$key]["id"]);
-                    $list[$key]["id"] = $item["ylsh_id"];
-                    $list[$key]["is_pass"] = 2;
-                }
+        $ids = request()->param("ids");
+        $ids = explode(",", $ids);
+        $list = db("kc_yl_sh_log")->where("ylsh_id", "in", $ids)->field("zhongliang,zhijian,jianshu,baoliu_time,kehu_name,sale_operator_id,ylsh_id")->select();
 
-                $res = model("KcYlSh")->isUpdate(true)->allowField(true)->saveAll($list);
-                Db::commit();
-                return returnRes($res, '锁货延迟修改审核通过失败');
-            } catch (\Exception $e) {
-                Db::rollback();
-                return returnFail($e->getMessage());
+        Db::startTrans();
+        try {
+            foreach ($list as $key => $item) {
+                $list[$key]["id"] = $item["ylsh_id"];
+                unset($list[$key]["id"]);
+                $list[$key]["id"] = $item["ylsh_id"];
+                $list[$key]["is_pass"] = 2;
             }
 
-    }
-    public function ylshdeny(){
-            $ids = request()->param("ids");
-            $reason=request()->param("reason");
-            $res=model("KcYlSh")->where("id","in",$ids)->update(array("reason"=>$reason,"is_pass"=>3));
-            return returnRes($res, '锁货延迟修改提交失败');
+            $res = model("KcYlSh")->isUpdate(true)->allowField(true)->saveAll($list);
+            Db::commit();
+            return returnRes($res, '锁货延迟修改审核通过失败');
+        } catch (\Exception $e) {
+            Db::rollback();
+            return returnFail($e->getMessage());
+        }
 
     }
-    public function release(){
+
+    public function ylshdeny()
+    {
+        $ids = request()->param("ids");
+        $reason = request()->param("reason");
+        $res = model("KcYlSh")->where("id", "in", $ids)->update(array("reason" => $reason, "is_pass" => 3));
+        return returnRes($res, '锁货延迟修改提交失败');
+
+    }
+
+    public function release()
+    {
         if (request()->isPost()) {
             $data = request()->post();
             Db::startTrans();
             try {
                 foreach ($data as $key => $ja) {
 
-                  if(empty($ja["zhongliang"])){
-                      throw new Exception("释放重量不能为空");
-                  }
-                  $ylsh=new KcYlSh();
-                  $ylsh= $ylsh->where("id",$ja["id"])->find();
-                  if($ylsh["zhongliang"]<$ja["zhongliang"]){
-                      throw new Exception("释放数量不能大于预留数量");
-                  }
-                    if($ylsh["shuliang"]<$ja["shuliang"]){
+                    if (empty($ja["zhongliang"])) {
+                        throw new Exception("释放重量不能为空");
+                    }
+                    $ylsh = new KcYlSh();
+                    $ylsh = $ylsh->where("id", $ja["id"])->find();
+                    if ($ylsh["zhongliang"] < $ja["zhongliang"]) {
                         throw new Exception("释放数量不能大于预留数量");
                     }
-                    if(empty($ylsh["data_id"])){
+                    if ($ylsh["shuliang"] < $ja["shuliang"]) {
+                        throw new Exception("释放数量不能大于预留数量");
+                    }
+                    if (empty($ylsh["data_id"])) {
                         throw new Exception("此数据为销售预订,不能释放");
                     }
-                    $ylsh->shuliang=$ylsh["shuliang"]-$ja["shuliang"];
-                    $ylsh->zhongliang=$ylsh["zhongliang"]-$ja["zhongliang"];
-                    $ylsh->guobang_zhongliang=$ylsh["zhongliang"]-$ja["zhongliang"];
-                    $ylsh->jianshu=intval(($ylsh["shuliang"])/$ja["zhijian"]);
-                    $ylsh->lingzhi=($ylsh["shuliang"])%$ja["zhijian"];
+                    $ylsh->shuliang = $ylsh["shuliang"] - $ja["shuliang"];
+                    $ylsh->zhongliang = $ylsh["zhongliang"] - $ja["zhongliang"];
+                    $ylsh->guobang_zhongliang = $ylsh["zhongliang"] - $ja["zhongliang"];
+                    $ylsh->jianshu = intval(($ylsh["shuliang"]) / $ja["zhijian"]);
+                    $ylsh->lingzhi = ($ylsh["shuliang"]) % $ja["zhijian"];
                     unset($ja["id"]);
-                    $ja["spot_id"]=$ylsh["spot_id"];
-                    $ja["kehu_name"]=$ylsh["kehu_name"];
-                    $ja["baoliu_time"]=$ylsh["baoliu_time"];
-                    $ja["data_id"]=$ylsh["data_id"];
-                    $ja["price"]=$ylsh["price"];
-                    $ja["companyid"]=$this->getCompanyId();
-                    $ja["yuliu_type"]="已撤销";
+                    $ja["spot_id"] = $ylsh["spot_id"];
+                    $ja["kehu_name"] = $ylsh["kehu_name"];
+                    $ja["baoliu_time"] = $ylsh["baoliu_time"];
+                    $ja["data_id"] = $ylsh["data_id"];
+                    $ja["price"] = $ylsh["price"];
+                    $ja["companyid"] = $this->getCompanyId();
+                    $ja["yuliu_type"] = "已撤销";
 //                    dump($ja);die;
                     model("kc_yl_sh_release")->isUpdate(false)->allowField(true)->save($ja);
-                  $ylsh->isUpdate(true)->allowField(true)->save($ylsh);
+                    $ylsh->isUpdate(true)->allowField(true)->save($ylsh);
                 }
                 Db::commit();
                 return returnRes($ylsh->id, '锁货延迟修改提交失败');
@@ -608,10 +604,11 @@ return returnRes($list->toArray()['data'], '没有数据，请添加后重试', 
      * @return \think\response\Json
      * @throws \think\exception\DbException
      */
-    public function getrelease(){
+    public function getrelease()
+    {
         $params = request()->param();
         $list = $list = \app\admin\model\KcYlShRelease::where('companyid', $this->getCompanyId());
-        $list=$this->getsearchcondition($params,$list);
+        $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
