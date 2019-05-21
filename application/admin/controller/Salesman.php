@@ -115,7 +115,14 @@ class Salesman extends Right
     public function salesmanstat()
     {
         $params = request()->param();
-
+        if(empty($params['ywsjEnd'])){
+            $params['ywsjEnd']=date("Y-m-d H:i:s",time());
+        }
+        if(empty($params['ywsjStart'])){
+//            $param['ywsjStart']="2018-00-00 00:00:00";
+            $params['ywsjStart']=date("Y-m",time())."-01 00:00:00";
+        }
+//        dump($param['ywsjEnd']); dump($param['ywsjStart']);die;
         $tc_type = model("company")->where("id", $this->getCompanyId())->value("tc_type");
         if ($tc_type = 1) {
             $setList = db("salesmansetting")->where("companyid", $this->getCompanyId())->select();
@@ -132,6 +139,8 @@ class Salesman extends Right
             }
             $sqlParams = [];
             $sql = "(SELECT
+            oper.id,
+            oper.base_salary,
        oper.`name` salesOperatorName,
        SUM(IFNULL(md.`zhongliang`, 0)) benqiSalesZhongliang,
        SUM(
@@ -141,7 +150,7 @@ class Salesman extends Right
            ELSE IFNULL(md.`zhongliang`, 0) * IFNULL(mx.price, 0)
              END
            ) benqiSalesSumPrice,
-       SUM(mx.sum_shui_price),
+       SUM(mx.sum_shui_price) as sum_shui_price,
        (SELECT SUM(
                  IFNULL(sk.`money`, 0) + IFNULL(sk.`msmoney`, 0)
                    ) FROM capital_sk sk WHERE sk.`sale_operator_id` = oper.`id` and sk.delete_time is null and sk.status != 1) benqihuikuanSumPrice,
@@ -160,21 +169,23 @@ FROM
        LEFT JOIN admin oper
          ON oper.`id` = ck.`sale_operator_id`
 WHERE 1 = 1 AND ck.delete_time is null and ck.status!=2 and mx.companyid=" . $this->getCompanyId();
-            if (!empty($param['sale_operator_id'])) {
+            if (!empty($params['sale_operator_id'])) {
                 $sql .= ' and ck.sale_operator_id =?';
-                $sqlParams[] = $param['sale_operator_id'];
+                $sqlParams[] = $params['sale_operator_id'];
             }
-            if (!empty($param['ywsjStart'])) {
+            if (!empty($params['ywsjStart'])) {
                 $sql .= ' and ck.yw_time >=?';
                 $sqlParams[] = $ywsjStart;
             }
-            if (!empty($param['ywsjEnd'])) {
+            if (!empty($params['ywsjEnd'])) {
                 $sql .= ' and ck.yw_time < ?';
                 $sqlParams[] = $ywsjEnd;
             }
             $sql .= " GROUP BY oper.`id` ORDER BY ck.yw_time)";
-            $list = Db::table($sql)->alias('t')->bind($sqlParams)->select();
 
+            $list = Db::table($sql)->alias('t')->bind($sqlParams)->select();
+//            dump($list);die;
+$days=(strtotime($params['ywsjEnd'])-strtotime($params['ywsjStart']))/3600/30;
             if (!empty($list)) {
                 foreach ($list as $key=>$settingEx) {
                     if (!empty($setList)) {
@@ -182,13 +193,14 @@ WHERE 1 = 1 AND ck.delete_time is null and ck.status!=2 and mx.companyid=" . $th
 
                             if (($setting["weight_start"] <= $settingEx["benqiSalesZhongliang"] && $settingEx["benqiSalesZhongliang"] < $setting["weight_end"])||($setting["weight_start"] <= $settingEx["benqiSalesZhongliang"] &&$setting["weight_end"]="") ) {
 
-                                $list[$key]["benqitichengSumPrice"] = $setting["ticheng_price"] * $settingEx["benqiSalesZhongliang"];
+                                $list[$key]["benqitichengSumPrice"] = $setting["ticheng_price"] * $settingEx["benqiSalesZhongliang"]+$setting["base_salary"];
+                                $list[$key]["Salary"]= round($list[$key]["benqitichengSumPrice"]+$list[$key]["base_salary"]*$days,2);
                             }
                         }
                     }
                 }
             }
-//            dump($list);
+            dump($list);
 
 
 
