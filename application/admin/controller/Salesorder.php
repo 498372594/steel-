@@ -16,6 +16,7 @@ use Exception;
 use think\{Db,
     db\exception\DataNotFoundException,
     db\exception\ModelNotFoundException,
+    db\Query,
     exception\DbException,
     Request,
     response\Json};
@@ -613,6 +614,26 @@ class Salesorder extends Right
         $model = new \app\admin\model\SalesorderDetails();
         $data = $model->getList($params, $pageLimit, $this->getCompanyId());
         return returnSuc($data);
+    }
+
+    /**
+     * 获取某一天销量
+     * @param string $date
+     * @return float|int
+     */
+    public function getSalesVolume($date = '')
+    {
+        if ($date == 'today') {
+            $date = date('Y-m-d');
+        } elseif ($date == 'yesterday') {
+            $date = date('Y-m-d', strtotime('-1 day'));
+        }
+        $number = \app\admin\model\SalesorderDetails::hasWhere('salesorder', function (Query $query) use ($date) {
+            $query->where('salesorder.companyid', $this->getCompanyId())
+                ->where('ywsj', 'between', [$date, date('Y-m-d', strtotime($date . ' +1 day'))])
+                ->where('status', '<>', 2);
+        })->sum('weight');
+        return returnSuc($number);
     }
 
     /**

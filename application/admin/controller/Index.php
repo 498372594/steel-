@@ -1,9 +1,10 @@
 <?php
+
 namespace app\admin\controller;
 
 use think\Cache;
 
-class Index extends Signin
+class Index extends Right
 {
 
     public function index()
@@ -19,6 +20,9 @@ class Index extends Signin
 
     /**
      * 清除所有缓存（数据缓存、模板缓存）
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
      */
     public function clearCacheData()
     {
