@@ -4,6 +4,7 @@ namespace app\admin\model;
 
 use think\Db;
 use think\exception\DbException;
+use think\Log;
 use think\Paginator;
 use traits\model\SoftDelete;
 
@@ -152,7 +153,7 @@ SUM(ifnull(ckmd.cb_shuie, 0))    chengBenShuiPrice';
                       AND ckmx.delete_time is null
                       and kcck.companyid = ' . $companyId;
         if (!empty($params['ywsjStart'])) {
-            $sql .= 'and kcck.yw_time >= ?';
+            $sql .= ' and kcck.yw_time >= ?';
             $sqlParams[] = $params['ywsjStart'];
         }
         if (!empty($params['ywsjEnd'])) {

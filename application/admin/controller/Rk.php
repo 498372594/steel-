@@ -12,7 +12,6 @@ use think\{Db,
     Request,
     response\Json};
 use think\Exception;
-use think\Session;
 
 class Rk extends Right
 {
@@ -24,7 +23,7 @@ class Rk extends Right
     {
         $params = request()->param();
         $list = KcRk::with([
-            'custom','saleoperatordata','createoperatordata'
+            'custom', 'saleoperatordata', 'createoperatordata'
         ])->where('companyid', $this->getCompanyId());
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
@@ -32,7 +31,7 @@ class Rk extends Right
         if (!empty($params['ywsjEnd'])) {
             $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
         }
-        if (isset($params['status'])&&$params['status']!="") {
+        if (isset($params['status']) && $params['status'] != "") {
 
             $list->where('status', $params['status']);
         }
@@ -54,15 +53,11 @@ class Rk extends Right
     {
         $data = KcRk::with([
             'custom',
-            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData', 'customData','createoperatordata'],
+            'details' => ['specification', 'jsfs', 'storage', 'pinmingData', 'caizhiData', 'chandiData', 'customData', 'createoperatordata'],
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnRes(true, '', $data);
-        }
+        return returnRes(true, '', $data);
     }
 
     /**获取待入库明细
@@ -73,7 +68,7 @@ class Rk extends Right
     {
         $params = request()->param();
 
-        $list = ViewKcrktz::with(['storage','customData','rukufangshiData'])->where('companyid', $this->getCompanyId());
+        $list = ViewKcrktz::with(['storage', 'customData', 'rukufangshiData'])->where('companyid', $this->getCompanyId());
         $list->where("jianshu", ">", 0)->where("lingzhi", ">", 0)->where("counts", ">", 0);
 
         if (!empty($params['ids'])) {
@@ -112,7 +107,7 @@ class Rk extends Right
         if (!empty($params['beizhu'])) {
             $list->where('remark', $params['remark']);
         }
-        if (!empty($params['zhongliang'])&&$params['zhongliang']) {
+        if (!empty($params['zhongliang']) && $params['zhongliang']) {
             $list->where("zhongliang", ">", 0);
         }
         $list = $list->paginate(10);
@@ -266,7 +261,7 @@ class Rk extends Right
                     }
                     (new KcRk())->insertRkMxMd($rk, $tz["id"], 2, $data["yw_time"], $data["system_number"], null, $mjo["cache_customer_id"], $mjo["pinming_id"], $mjo["guige_id"], $mjo["caizhi_id"], $mjo["chandi_id"]
                         , $mjo["jijiafangshi_id"], $mjo["store_id"], $mjo["pihao"], $mjo["huohao"], null, $mjo["beizhu"], $mjo["cache_piaoju_id"], $mjo["houdu"] ?? 0, $mjo["kuandu"] ?? 0, $mjo["changdu"] ?? 0, $mjo["zhijian"], $mx["lingzhi"] ?? 0, $mx["jianshu"] ?? 0,
-                        $mjo["counts"] ?? 0, $mjo["zhongliang"] ?? 0, $mjo["price"], $mjo["sumprice"], $mjo["shui_price"], $mjo["sum_shui_price"], $mjo["shuie"], $mjo["mizhong"], $mjo["jianzhong"], $this->getAccountId(), $this->getCompanyId(),$mjo["kc_rk_tz_id"]);
+                        $mjo["counts"] ?? 0, $mjo["zhongliang"] ?? 0, $mjo["price"], $mjo["sumprice"], $mjo["shui_price"], $mjo["sum_shui_price"], $mjo["shuie"], $mjo["mizhong"], $mjo["jianzhong"], $this->getAccountId(), $this->getCompanyId(), $mjo["kc_rk_tz_id"]);
 
                 }
             }
@@ -444,15 +439,15 @@ class Rk extends Right
         $params = request()->param();
         $list = ViewQingku::where(array("companyid" => $this->getCompanyId()));
         $list = $this->getsearchcondition($params, $list);
-        if (!empty($params['qingku_status'])&&$params['qingku_status']) {
+        if (!empty($params['qingku_status']) && $params['qingku_status']) {
             $list->where('status', 2);
         } else {
             $list->where('status', 1);
         }
-        if (!empty($params['guobang_zhongliang'])&&$params['guobang_zhongliang']) {
+        if (!empty($params['guobang_zhongliang']) && $params['guobang_zhongliang']) {
             $list->where('guobang_zhongliang', 0);
         }
-        if (!empty($params['counts'])&&$params['counts']) {
+        if (!empty($params['counts']) && $params['counts']) {
             $list->where('counts', 0);
         }
         $list = $list->paginate(10);
@@ -505,7 +500,7 @@ class Rk extends Right
     public function qtrklist()
     {
         $params = request()->param();
-        $list = $list = KcQtrk::with(['customData','createoperatordata','saleoperatordata','udpateoperatordata','checkoperatordata'])->where('companyid', $this->getCompanyId());
+        $list = $list = KcQtrk::with(['customData', 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])->where('companyid', $this->getCompanyId());
         $list = $this->getsearchcondition($params, $list);
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
@@ -528,11 +523,7 @@ class Rk extends Right
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnRes(true, '', $data);
-        }
+        return returnRes(true, '', $data);
     }
 
 //    public function addqtrk($data = [], $return = false)

@@ -188,11 +188,7 @@ class Invxskp extends Right
             ->where('company_id', $this->getCompanyId())
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnSuc($data);
-        }
+        return returnSuc($data);
     }
 
     /**

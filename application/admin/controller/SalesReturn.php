@@ -78,11 +78,7 @@ class SalesReturn extends Right
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
-        if (empty($data)) {
-            return returnFail('数据不存在');
-        } else {
-            return returnRes(true, '', $data);
-        }
+        return returnRes(true, '', $data);
     }
 
     /**
