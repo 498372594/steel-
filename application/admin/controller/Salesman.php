@@ -6,7 +6,7 @@ namespace app\admin\controller;
 
 use app\admin\model\SalesmanHkxsRule;
 use app\admin\model\Salesmansetting;
-use think\{exception\DbException, Request, response\Json};
+use think\{Db,exception\DbException, Request, response\Json};
 
 class Salesman extends Right
 {
@@ -118,7 +118,7 @@ class Salesman extends Right
 
         $tc_type = model("company")->where("id", $this->getCompanyId())->value("tc_type");
         if ($tc_type = 1) {
-            $setList = Salesmansetting::where("companyid", $this->getCompanyId())->select();
+            $setList = db("salesmansetting")->where("companyid", $this->getCompanyId())->select();
             if (!empty($params['sales_operator_id'])) {
                 $sales_operator_id = $params['sales_operator_id'];
             }
@@ -160,9 +160,9 @@ FROM
        LEFT JOIN admin oper
          ON oper.`id` = ck.`sale_operator_id`
 WHERE 1 = 1 AND ck.delete_time is null and ck.status!=2 and mx.companyid=" . $this->getCompanyId();
-            if (!empty($param['create_operator_id'])) {
-                $sql .= ' and ck.create_operator_id =?';
-                $sqlParams[] = $param['create_operator_id'];
+            if (!empty($param['sale_operator_id'])) {
+                $sql .= ' and ck.sale_operator_id =?';
+                $sqlParams[] = $param['sale_operator_id'];
             }
             if (!empty($param['ywsjStart'])) {
                 $sql .= ' and ck.yw_time >=?';
@@ -172,24 +172,31 @@ WHERE 1 = 1 AND ck.delete_time is null and ck.status!=2 and mx.companyid=" . $th
                 $sql .= ' and ck.yw_time < ?';
                 $sqlParams[] = $ywsjEnd;
             }
-            $sql .= "GROUP BY oper.`id` ORDER BY ck.yw_time)";
-            $list = Db::table($sql)->alias('t')->bind($sqlParams)->order('yw_time')->select();
+            $sql .= " GROUP BY oper.`id` ORDER BY ck.yw_time)";
+            $list = Db::table($sql)->alias('t')->bind($sqlParams)->select();
+
             if (!empty($list)) {
-                foreach ($list as $settingEx) {
+                foreach ($list as $key=>$settingEx) {
                     if (!empty($setList)) {
                         foreach ($setList as $setting) {
-                            if ($setting["weight_start"] <= $settingEx["benqiSalesZhongliang"] && $settingEx["benqiSalesZhongliang"] < $setting["weight_end"]) {
-                                $settingEx["benqitichengSumPrice"] = $setting["ticheng_price"] * $settingEx["benqiSalesZhongliang"];
+
+                            if (($setting["weight_start"] <= $settingEx["benqiSalesZhongliang"] && $settingEx["benqiSalesZhongliang"] < $setting["weight_end"])||($setting["weight_start"] <= $settingEx["benqiSalesZhongliang"] &&$setting["weight_end"]="") ) {
+
+                                $list[$key]["benqitichengSumPrice"] = $setting["ticheng_price"] * $settingEx["benqiSalesZhongliang"];
                             }
                         }
                     }
                 }
             }
+//            dump($list);
+
+
 
         } else {
 
 
         }
+        return returnRes(true, '', $list);
     }
 //    public function ceshi(){
 //        $list=model("capital_hk")->alias("b")->join("salesorder a","a.id=b.data_id","left")
