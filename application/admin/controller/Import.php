@@ -5,6 +5,7 @@ namespace app\admin\controller;
 
 
 use app\admin\model\Classname;
+use app\admin\model\Jsfs;
 use app\admin\model\Productname;
 use app\admin\model\Specification;
 use Exception;
@@ -33,7 +34,7 @@ class Import extends Right
         if (!$file) {
             return returnFail('请上传文件');
         }
-        $info = $file->move(ROOT_PATH . 'public' . DS . 'uploads');
+        $info = $file->validate(['ext' => 'xls,xlsx'])->move(ROOT_PATH . 'public' . DS . 'uploads');
         if (!$info) {
             return returnFail($file->getError());
         }
@@ -284,5 +285,150 @@ class Import extends Right
         } else {
             $model->save($data);
         }
+    }
+
+    public function init(Request $request)
+    {
+        $file = $request->file('file');
+
+        if (!$file) {
+            return returnFail('请上传文件');
+        }
+        $info = $file->validate(['ext' => 'xls,xlsx'])->move(ROOT_PATH . 'public' . DS . 'uploads');
+        if (!$info) {
+            return returnFail($file->getError());
+        }
+        $path = $info->getRealPath();
+
+        $spreadSheet = IOFactory::load($path);
+
+        $data = $spreadSheet->getSheet(0)->toArray(null, true, true, true);
+
+        $list = [];
+        foreach ($data as $index => $row) {
+            if ($index <= 2) {
+                continue;
+            }
+
+            $mx = [];
+
+            $cate = $row['A'];
+            $pinming = $row['B'];
+            $guige = $row['C'];
+            $houdu = $row['D'];
+            $kuandu = $row['E'];
+            $changdu = $row['F'];
+            $caizhi = $row['G'];
+            $chandi = $row['H'];
+            $mizhong = $row['I'];
+            $jianzhong = $row['J'];
+            $jisuanfangshi = $row['K'];
+            $lingzhi = $row['L'];
+            $jianshu = $row['M'];
+            $zhijian = $row['N'];
+            $counts = $row['O'];
+            $zhongliang = $row['P'];
+            $price = $row['Q'];
+            $sumprice = $row['R'];
+            $shuiprice = $row['S'];
+            $shuie = $row['T'];
+            $sumshuiprice = $row['U'];
+            $pihao = $row['V'];
+            $huowei = $row['W'];
+            if (!empty($cate) || !empty($pinming) || !empty($guige) || !empty($jisuanfangshi) || !empty($zhijian) || !empty($zhongliang)) {
+
+                //类别
+                if (!empty($cate)) {
+                    $cateData = Classname::where('classname', $cate)
+                        ->cache(true, 60)
+                        ->where('companyid', $this->getCompanyId())
+                        ->find();
+                    $cateId = $cateData['id'];
+                    $cateCode = $cateData['zjm'];
+                    $mx['cate_name'] = $cate;
+                    $mx['cate_id'] = $cateId;
+                    $mx['cate_code'] = $cateCode;
+                }
+                if (empty($cateId)) {
+                    continue;
+                }
+
+                //品名
+                if (!empty($pinming)) {
+                    $pinmingId = Productname::where('companyid', $this->getCompanyId())
+                        ->where('classid', $cateId)
+                        ->where('name', $pinming)
+                        ->cache(true, 60)
+                        ->value('id');
+                    $mx['pinming_id'] = $pinmingId;
+                    $mx['pinming_name'] = $pinming;
+                }
+                if (empty($pinmingId)) {
+                    continue;
+                }
+
+                if (!empty($guige)) {
+                    $guigeId = Specification::where('companyid', $this->getCompanyId())
+                        ->where('specification', $guige)
+                        ->where('productname_id', $pinmingId)
+                        ->cache(true, 60)
+                        ->value('id');
+                    $mx['guige_id'] = $guigeId;
+                    $mx['guige_name'] = $guige;
+                }
+                if (empty($guigeId)) {
+                    continue;
+                }
+
+                $mx['houdu'] = $houdu ?? '';
+                $mx['kuandu'] = $kuandu ?? '';
+                $mx['changdu'] = $changdu ?? '';
+                if (!empty($caizhi)) {
+                    $caizhiId = $this->getCaizhiId($caizhi);
+                    $mx['caizhi_name'] = $caizhi;
+                    $mx['caizhi_id'] = $caizhiId;
+                }
+                if (!empty($chandi)) {
+                    $chandiId = $this->getChandiId($chandi);
+                    $mx['chandi_name'] = $chandi;
+                    $mx['chandi_id'] = $chandiId;
+                }
+                $mx['mizhong'] = $mizhong ?? '';
+                $mx['jianzhong'] = $jianzhong ?? '';
+                if (!empty($jisuanfangshi)) {
+                    $jisuanfangshiId = Jsfs::where('jsfs', $jisuanfangshi)
+                        ->where('companyid', $this->getCompanyId())
+                        ->cache(true, 60)
+                        ->value('id');
+                    $mx['jisuanfangshi_id'] = $jisuanfangshiId;
+                    $mx['jisuanfangshi_name'] = $jisuanfangshi;
+                }
+                if (empty($jisuanfangshiId)) {
+                    continue;
+                }
+                $mx['lingzhi'] = $lingzhi ?? '';
+                $mx['jianshu'] = $jianshu ?? '';
+                if (!empty($zhijian)) {
+                    $mx['zhijian'] = $zhijian;
+                } else {
+                    continue;
+                }
+                $mx['counts'] = $counts ?? '';
+                if (!empty($zhongliang)) {
+                    $mx['zhongliang'] = $zhongliang;
+                } else {
+                    continue;
+                }
+                $mx['price'] = $price ?? '';
+                $mx['shuiprice'] = $shuiprice ?? '';
+                $mx['shuie'] = $shuie ?? '';
+                $mx['sumshuiprice'] = $sumshuiprice ?? '';
+                $mx['pihao'] = $pihao ?? '';
+                $mx['huowei'] = $huowei ?? '';
+                $mx['sumprice'] = $sumprice ?? '';
+                $list[] = $mx;
+            }
+        }
+        return returnSuc($list);
     }
 }

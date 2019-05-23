@@ -32,7 +32,6 @@ class Initinput extends Right
     public function instorageinit()
     {
         if (request()->isPost()) {
-//            $ids = request()->param("id");
             $count = Instoragelist::whereTime('create_time', 'today')->count();
             $data["rkdh"] = "RKD" . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             $data["status"] = 1;
@@ -44,7 +43,6 @@ class Initinput extends Right
             $data['service_time'] = date("Y-m-d H:s:i", time());
             $data['remark'] = request()->post("remark");
             $data['remark'] = request()->post("remark");
-//            $KC="KC".time();
             model("instoragelist")->save($data);
             $purchasedetails = request()->post("purchasedetails");
             $instorage_id = model("instoragelist")->id;
@@ -56,7 +54,6 @@ class Initinput extends Right
             }
             $model = new Purchasedetails();
             $res = $model->allowField(true)->saveAll($purchasedetails);
-//            $res =model("purchasedetails")->where("id","in","ids")->update(array("is_finished"=>2,"instorage_id"=>$instorage_id));
             return returnRes($res, '失败');
         }
         return returnFail('请求方式错误');
@@ -146,15 +143,12 @@ class Initinput extends Right
         return returnRes(true, '', $data);
     }
 
-
     /**
      * 银行账户余额初始录入添加修改
-     * @param array $data
-     * @param bool $return
      * @return string|Json
      * @throws \Exception
      */
-    public function initbankadd($data = [], $return = false)
+    public function initbankadd()
     {
         if (request()->isPost()) {
 
@@ -166,9 +160,7 @@ class Initinput extends Right
             $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_number'] = 'XJYHYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            if (!$return) {
-                Db::startTrans();
-            }
+            Db::startTrans();
             try {
                 if (empty($data["id"])) {
                     model("init_bank")->allowField(true)->isUpdate(false)->save($data);
@@ -189,26 +181,14 @@ class Initinput extends Right
                         model('InitBankMx')->allowField(true)->update($data['details'][$c]);
                     }
                 }
-                if (!$return) {
-                    Db::commit();
-                    return returnRes(true, '', ['id' => $id]);
-                } else {
-                    return true;
-                }
+                Db::commit();
+                return returnRes(true, '', ['id' => $id]);
             } catch (\Exception $e) {
-                if ($return) {
-                    return $e->getMessage();
-                } else {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
-                }
+                Db::rollback();
+                return returnFail($e->getMessage());
             }
         }
-        if ($return) {
-            return '请求方式错误';
-        } else {
-            return returnFail('请求方式错误');
-        }
+        return returnFail('请求方式错误');
     }
 
     /**
@@ -238,155 +218,13 @@ class Initinput extends Right
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }
-//public function kcadd()
-//{
-//    if (!request()->isPost()) {
-//        return returnFail('请求方式错误');
-//    }
-//
-//    Db::startTrans();
-//    try {
-//        $data = request()->post();
-//
-//        $validate = new \app\admin\validate\InitKc();
-//        if (!$validate->check($data)) {
-//            throw new Exception($validate->getError());
-//        }
-//        $addMxList = [];
-//        $updateMxList = [];
-//        $ja = $data['details'];
-//        $companyId = $this->getCompanyId();
-//        if (!empty($ja)) {
-//            foreach ($ja as $object) {
-//                $object['companyid'] = $companyId;addkc
-//                if (empty($object['id'])) {
-//                    $addMxList[] = $object;
-//                } else {
-//                    $updateMxList[] = $object;
-//                }
-//            }
-//        }
-//        if (!empty($ja)) {
-//            foreach ($ja as $object) {
-//                if (empty($object['zhongliang'])) {
-//                    throw new Exception("重量不能为空");
-//                }
-//
-//                if (empty($object['id'])) {
-//                    $addMdList[] = $object;
-//                } else {
-//                    $updateMdList[] = $object;
-//                }
-//            }
-//        }
-//        if (empty($data["id"])) {
-//
-//            $count = KcRk::whereTime('create_time', 'today')
-//                ->where('companyid', $companyId)
-//                ->count();
-//            $data['companyid'] = $companyId;
-//            $data['yw_time'] = date("Y-m-d H:s:i",time());
-//            $data['system_number'] = 'KCQCYE' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-//            $data['create_operator_id'] = $this->getAccountId();
-////            $data['ruku_fangshi'] = 2;
-//            $data['ruku_type'] = 8;
-//            $ck = new InitKc();
-//            $ck->allowField(true)->data($data)->save();
-//            $rk=new KcRk();
-//            $rk->insertRuku($ck["id"],8,$ck["yw_time"],$ck["group_id"],$data["system_number"],$data["sale_operator_id"],$this->getAccountId(),$companyId);
-//        } else {
-//            throw new Exception('入库单禁止修改');
-////                  rk = (TbKcRk)getDao() . selectByPrimaryKey(id);
-////            if (rk == null) {
-////                throw new Exception("对象不存在");
-////            }
-////             if (!rk . getUserId() . equals(rk . getUserId())) {
-////                 throw new Exception("对象不存在");
-////             }
-////             if ("1" . equals(rk . getStatus())) {
-////
-////                 throw new Exception("该单据已经作废");
-////             }
-////            if (rk . getDataId() != null) {
-////                throw new Exception("当前单据是只读单据,请到关联单据修改");
-////            }
-////            rk . setBeizhu(beizhu);
-////             rk . setCustomerId(gysId);
-////                rk . setGroupId(group);
-////              rk . setSaleOperatorId(saleOperator);
-////                 rk . setUpdateOperatorId(su . getId());
-////                rk . setYwTime(DateUtil . parseDate(ywTime, "yyyy-MM-dd HH:mm:ss"));
-////               getDao() . updateByPrimaryKeySelective(rk);
-//        }
-//        if (!empty($data['delete_mx_ids'])) {
-//            throw new Exception('入库单禁止修改');
-//        }
-////            for (TbKcRkMx_Ex mx : deleteList)
-////     {
-////         TbKcRkMx mx1 = (TbKcRkMx)this.mxDao.selectByPrimaryKey(mx.getId());
-////       mx1.setId(mx.getId());
-////       mx1.setIsDelete("1");
-////       this.mxDao.updateByPrimaryKeySelective(mx1);
-////
-////       Example e = new Example(TbKcRkMd.class);
-////       e.selectProperties(new String[] { "id", "counts", "zhongliang", "kcRkTzId" });
-////       e.createCriteria().andCondition("ruku_mx_id=", mx.getId());
-////       List<TbKcRkMd> mdList = this.mdDao.selectByExample(e);
-////       TbKcRkMd md1 = (TbKcRkMd)mdList.get(0);
-////       md1.setIsDelete("1");
-////       this.mdDao.updateByPrimaryKeySelective(md1);
-////
-////       this.spotDao.deleteSpotByRkMd(md1.getId());
-////
-////       this.rkTzDaoImpl.addTzById(md1.getKcRkTzId(), md1.getCounts(), md1.getZhongliang(), zt);
-////     }
-//        if (!empty($addMxList)) {
-//            $addNumberCount = empty($data['id']) ? 0 : KcRkMx::where('kc_rk_id', $rk['id'])->max('system_number');
-//            foreach ($addMxList as $mjo) {
-//                if (!empty($mjo["rktz_id"])) {
-//                    $tz = KcRkTz::get($mjo['rktz_id']);
-//                    if (!empty($tz)) {
-//                        $addNumberCount++;
-//                        $mjo['kc_rk_id'] = $rk['id'];
-//                        $mjo['kc_rk_tz_id'] = $tz['id'];
-//                        $mjo['ruku_fangshi'] = 2;
-//                        $mjo['cache_yw_time'] = $tz['cache_ywtime'];
-//                        $mjo['cache_data_pnumber'] = $tz['cache_data_pnumber'];
-//                        $mjo['cache_data_number'] = $tz['cache_data_number'];
-//                        $mjo['cache_customer'] = $tz['cache_customer_id'];
-//                        $mjo['data_id'] = $tz['data_id'];
-//                        $mjo['pinming_id'] = $tz['pinming_id'];
-//                        $mjo['guige_id'] = $tz['guige_id'];
-//                        $mjo['caizhi_id'] = $tz['caizhi_id'];
-//                        $mjo['chandi_id'] = $tz['chandi_id'];
-//                        $mjo['jijiafangshi_id'] = $tz['jijiafangshi_id'];
-//                        $mjo['store_id'] = $tz['store_id'];
-//                        $mjo['cache_create_operator'] = $tz['cache_create_operator'];
-//                        $mjo['changdu'] = $tz['changdu'];
-//                        $mjo['houdu'] = $tz['houdu'];
-//                        $mjo['kuandu'] = $tz['kuandu'];
-//                        $mjo['lingzhi'] = $tz['lingzhi'];
-//                        $mjo['jianshu'] = $tz['jianshu'];
-//                        $mjo['counts'] = $tz['counts'];
-//                        $mjo['zhongliang'] = $tz['zhongliang'];
-//
-//                    }
-//                }
-//            }
-//        }
-//    } catch (Exception $e) {
-//        Db::rollback();
-//        return returnFail($e->getMessage());
-//    }
-//}
+
     /**
      * 库存初始化录入
-     * @param array $data
-     * @param bool $return
      * @return string|Json
      * @throws \Exception
      */
-    public function addkc($return = false)
+    public function addkc()
     {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
@@ -397,9 +235,7 @@ class Initinput extends Right
             $data['create_operator_id'] = $this->getAccountId();
             $data['companyid'] = $companyId;
             $data['system_number'] = 'KCQCYE' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
-            if (!$return) {
-                Db::startTrans();
-            }
+            Db::startTrans();
             try {
                 model("InitKc")->allowField(true)->data($data)->save();
                 $id = model("InitKc")->getLastInsID();
@@ -473,32 +309,20 @@ class Initinput extends Right
                     $spotModel->allowField(true)->save($spot);
                     $spotIds[$v['index'] ?? -1] = $spotModel->id;
                 }
-                if (!$return) {
-                    Db::commit();
-                    return returnRes(true, '', ['id' => $id]);
-                } else {
-                    return true;
-                }
+                Db::commit();
+                return returnRes(true, '', ['id' => $id]);
             } catch (\Exception $e) {
-                if ($return) {
-                    return $e->getMessage();
-                } else {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
-                }
+                Db::rollback();
+                return returnFail($e->getMessage());
             }
         }
-        if ($return) {
-            return '请求方式错误';
-        } else {
-            return returnFail('请求方式错误');
-        }
+        return returnFail('请求方式错误');
     }
 
     /**
      * 库存初始化列表
      * @return Json
-     * @return Json
+     * @throws DbException
      */
     public function kclist()
     {
@@ -521,9 +345,17 @@ class Initinput extends Right
      */
     public function kcmx($id = 0)
     {
-        $data = InitKc::with(['details' => ['specification', 'jsfs', 'storage', 'chandiData', 'caizhiData', 'pinmingData'], 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata',
-            'customData', 'jsfsData', 'pjlxData', 'storageData'])
-            ->where('companyid', $this->getCompanyId())
+        $data = InitKc::with([
+            'details' => ['specification', 'jsfs', 'storage', 'chandiData', 'caizhiData', 'pinmingData'],
+            'createoperatordata',
+            'saleoperatordata',
+            'udpateoperatordata',
+            'checkoperatordata',
+            'customData',
+            'jsfsData',
+            'pjlxData',
+            'storageData'
+        ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
         return returnRes(true, '', $data);
@@ -532,6 +364,7 @@ class Initinput extends Right
     /**
      * @param int $type 0为付款，1为收款
      * @return Json
+     * @throws DbException
      */
     public function ysfk($type = 0)
     {
@@ -552,8 +385,7 @@ class Initinput extends Right
      */
     public function ysfkmx($id = 0)
     {
-        $data = InitYsfk::with(['details', 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'
-        ])
+        $data = InitYsfk::with(['details', 'createoperatordata', 'saleoperatordata', 'udpateoperatordata', 'checkoperatordata'])
             ->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
@@ -561,12 +393,10 @@ class Initinput extends Right
     }
 
     /**
-     * @param array $data
-     * @param bool $return
-     * @return bool|string|Json
+     * @return string|Json
      * @throws Exception
      */
-    public function addysfk($data = [], $return = false)
+    public function addysfk()
     {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
@@ -581,9 +411,7 @@ class Initinput extends Right
             if ($data["type"] == "1") {
                 $data['system_number'] = 'YSZKYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
-            if (!$return) {
-                Db::startTrans();
-            }
+            Db::startTrans();
             try {
 
                 if (empty($data["id"])) {
@@ -606,31 +434,20 @@ class Initinput extends Right
                     }
 
                 }
-                if (!$return) {
-                    Db::commit();
-                    return returnRes(true, '', ['id' => $id]);
-                } else {
-                    return true;
-                }
+                Db::commit();
+                return returnRes(true, '', ['id' => $id]);
             } catch (\Exception $e) {
-                if ($return) {
-                    return $e->getMessage();
-                } else {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
-                }
+                Db::rollback();
+                return returnFail($e->getMessage());
             }
         }
-        if ($return) {
-            return '请求方式错误';
-        } else {
-            return returnFail('请求方式错误');
-        }
+        return returnFail('请求方式错误');
     }
 
     /**
      * @param int $type 0为付款，1为收款
      * @return Json
+     * @throws DbException
      */
     public function yskp($type = 0)
     {
@@ -660,13 +477,11 @@ class Initinput extends Right
     }
 
     /**
-     * @param array $data
-     * @param bool $return
      * @return bool|string|Json
      * @throws Exception
      * @throws \Exception
      */
-    public function yskpadd($data = [], $return = false)
+    public function yskpadd()
     {
         if (request()->isPost()) {
             $companyId = $this->getCompanyId();
@@ -682,9 +497,7 @@ class Initinput extends Right
                 $data['system_number'] = 'YKXXFPYEQC' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
             }
 
-            if (!$return) {
-                Db::startTrans();
-            }
+            Db::startTrans();
             try {
                 if (empty($data["id"])) {
                     model("InitYskp")->allowField(true)->isUpdate(false)->save($data);
@@ -702,26 +515,14 @@ class Initinput extends Right
                     $data['details'][$c]['yskp_id'] = $id;
                 }
                 model('InitYskpMx')->saveAll($data['details']);
-                if (!$return) {
-                    Db::commit();
-                    return returnRes(true, '', ['id' => $id]);
-                } else {
-                    return true;
-                }
+                Db::commit();
+                return returnRes(true, '', ['id' => $id]);
             } catch (\Exception $e) {
-                if ($return) {
-                    return $e->getMessage();
-                } else {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
-                }
+                Db::rollback();
+                return returnFail($e->getMessage());
             }
         }
-        if ($return) {
-            return '请求方式错误';
-        } else {
-            return returnFail('请求方式错误');
-        }
+        return returnFail('请求方式错误');
     }
 
     /**
@@ -744,7 +545,7 @@ class Initinput extends Right
             }
             $kc->status = 1;
             $kc->save();
-            (new KcRk())->cancelRuku($kc->id, 8);
+            (new KcRk())->cancelRuku($kc['id'], 8);
             Db::commit();
             return returnSuc();
         } catch (\Exception $e) {
@@ -826,7 +627,7 @@ class Initinput extends Right
         }
         Db::startTrans();
         try {
-            $ysfp = InitYskp::get($id);
+            $yskp = InitYskp::get($id);
             if (empty($yskp)) {
                 throw new Exception("对象不存在");
             }
@@ -856,18 +657,16 @@ class Initinput extends Right
         Db::startTrans();
         try {
             $yskp = InitYskp::get($id);
-            if (empty($ysfp)) {
+            if (empty($yskp)) {
                 throw new Exception("对象不存在");
             }
-            if ($ysfp["status"] == 1) {
+            if ($yskp["status"] == 1) {
                 throw new Exception("该单据已经作废");
             }
             $yskp->status = 1;
             $yskp->save();
 
-            $list = \app\admin\model\InitYkpMx::where("yskp_id", $yskp["id"])->select();
             $list = InitYskpMx::where("yskp_id", $yskp["id"])->select();
-
 
             foreach ($list as $mx) {
                 (new \app\admin\model\Inv())->deleteInv($mx["id"], 4);
@@ -888,7 +687,6 @@ class Initinput extends Right
         Db::startTrans();
         try {
             $bank = InitBank::get($id);
-//            $bank = \app\admin\model\CapitalCqk::get($id);
             if (empty($bank)) {
                 throw new Exception("对象不存在");
             }
