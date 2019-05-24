@@ -197,7 +197,7 @@ class Invxskp extends Right
      * @param int $id
      * @return Json
      */
-    public function cancle(Request $request, $id = 0)
+    public function cancel(Request $request, $id = 0)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
