@@ -17,6 +17,32 @@ class Inv extends Base
     protected $autoWriteTimestamp = true;
 
     /**
+     * @param $id
+     * @param $oldMoney
+     * @param $money
+     * @param $oldZhongliang
+     * @param $zhongliang
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    static public function tiaoMoney($id, $oldMoney, $money, $oldZhongliang, $zhongliang)
+    {
+        $money = $money == null ? 0 : $money;
+        $zhongliang = $money == null ? 0 : $zhongliang;
+        $oldMoney = $oldMoney == null ? 0 : $oldMoney;
+        $oldZhongliang = $oldZhongliang == null ? 0 : $oldZhongliang;
+        $obj = self::where("id", $id)->field("id,yhx_zhongliang,yhx_price")->find();
+        if ($money != 0) {
+            $obj["yhx_price"] = $obj["yhx_price"] + ($money - $oldMoney);
+        }
+        if ($zhongliang != 0) {
+            $obj["yhx_zhongliang"] = $obj["yhx_zhongliang"] + ($zhongliang - $oldZhongliang);
+        }
+        $obj->save();
+    }
+
+    /**
      * @param $dataId
      * @param $ywType
      * @throws DataNotFoundException
@@ -177,8 +203,7 @@ class Inv extends Base
     {
         $money = $money == null ? 0 : $money;
         $zhongliang = $money == null ? 0 : $zhongliang;
-        $inv = new self();
-        $obj = $inv::where("id", $dataId)->field("id,yhx_zhongliang,yhx_price")->find();
+        $obj = self::where("id", $dataId)->field("id,yhx_zhongliang,yhx_price")->find();
         if ($obj) {
             if ($money != 0) {
                 $fhMoney = $obj["yhx_price"] - $money;
@@ -196,35 +221,8 @@ class Inv extends Base
                     $obj["yhx_zhongliang"] = $obj["yhx_zhongliang"] - $money;
                 }
             }
-            $inv->save($obj);
+            $obj->save();
         }
-    }
-
-    /**
-     * @param $id
-     * @param $oldMoney
-     * @param $money
-     * @param $oldZhongliang
-     * @param $zhongliang
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
-     */
-    public function tiaoMoney($id, $oldMoney, $money, $oldZhongliang, $zhongliang)
-    {
-        $money = $money == null ? 0 : $money;
-        $zhongliang = $money == null ? 0 : $zhongliang;
-        $oldMoney = $oldMoney == null ? 0 : $oldMoney;
-        $oldZhongliang = $oldZhongliang == null ? 0 : $oldZhongliang;
-        $inv = new self();
-        $obj = $inv::where("id", $id)->field("id,yhx_zhongliang,yhx_price")->find();
-        if ($money != 0) {
-            $obj["yhx_price"] = $obj["yhx_price"] + ($money - $oldMoney);
-        }
-        if ($zhongliang != 0) {
-            $obj["yhx_zhongliang"] = $obj["yhx_zhongliang"] + ($zhongliang - $oldZhongliang);
-        }
-        $inv->save($obj);
     }
 
     /**
@@ -239,15 +237,14 @@ class Inv extends Base
     {
         $money = $money == null ? 0 : $money;
         $zhongliang = $money == null ? 0 : $zhongliang;
-        $inv = new self();
-        $obj = $inv::where("id", $dataId)->field("id,yhx_zhongliang,yhx_price")->find();
+        $obj = self::where("id", $dataId)->field("id,yhx_zhongliang,yhx_price")->find();
         if ($money != 0) {
             $obj["yhx_price"] = $obj["yhx_price"] + ($money);
         }
         if ($zhongliang != 0) {
             $obj["yhx_zhongliang"] = $obj["yhx_zhongliang"] + ($zhongliang);
         }
-        $inv->save($obj);
+        $obj->save();
     }
 
     /**

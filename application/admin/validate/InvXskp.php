@@ -12,7 +12,6 @@ class InvXskp extends Validate
         'money|本次开票' => 'require',
         'customer_id|客户' => 'require',
         'piaoju_id|票据类型' => 'require',
-        'mkmoney|免开发票金额' => 'require',
         'details' => 'require|min:1',
     ];
 
