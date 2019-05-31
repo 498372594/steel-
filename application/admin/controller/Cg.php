@@ -2,7 +2,7 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{CapitalFy, CgPurchase, CgPurchaseMx, CgTh, CgThMx, KcRk, KcRkTz, KcSpot, StockOut};
+use app\admin\model\{CapitalFy, CgPurchase, CgPurchaseMx, CgTh, CgThMx, KcRk, KcRkTz, KcSpot, StockOut, ViewKcSpot};
 use Exception;
 use think\{Db, Request};
 
@@ -482,4 +482,12 @@ class Cg extends Right
         }
     }
 
+    public function findCaiGouListByGysId()
+    {
+        $params = request()->param();
+        $list = ViewKcSpot::where(array("companyid"=>$this->getCompanyId()));
+       $list=$this->getsearchcondition($params,$list);
+        $list = $list->where("ruku_type in ('4','7') ")->paginate(10);
+        return returnRes(true, '', $list);
+    }
 }

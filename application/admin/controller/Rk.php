@@ -174,7 +174,7 @@ class Rk extends Right
                     ->where('companyid', $companyId)
                     ->count();
                 $data['companyid'] = $companyId;
-                $data['system_number'] = 'CKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $data['system_number'] = 'RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
                 $data['create_operator_id'] = $this->getAccountId();
                 $data['ruku_fangshi'] = 2;
                 $data['ruku_type'] = $tz["ruku_type"];

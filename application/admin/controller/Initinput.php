@@ -421,7 +421,7 @@ class Initinput extends Right
                         'guige_id' => $v['guige_id'],
                         'data_id' => $id,
                         'pinming_id' => $v['pinming_id'],
-                        'store_id' => $v['store_id'] ?? '',
+                        'store_id' => $data['store_id'] ?? '',
                         'caizhi_id' => $v['caizhi_id'] ?? '',
                         'chandi_id' => $v['chandi_id'] ?? '',
                         'jijiafangshi_id' => $v['jijiafangshi_id'],

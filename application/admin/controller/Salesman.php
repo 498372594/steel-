@@ -200,8 +200,6 @@ $days=(strtotime($params['ywsjEnd'])-strtotime($params['ywsjStart']))/3600/30;
                     }
                 }
             }
-            dump($list);
-
 
 
         } else {

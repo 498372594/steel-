@@ -357,7 +357,7 @@ class Steelmanage extends Right
             $productname = model("productname")->where("companyid", $this->getCompanyId())
                 ->where("classid", $v["id"])
                 ->field("id,name")->select();
-            $arr[$k]['productname']=$productname;
+            $arr[$k]['productname'] = $productname;
 
             if (array_key_exists('child', $v)) {
 
@@ -1070,4 +1070,13 @@ class Steelmanage extends Right
         }
     }
 
+    public function isdone(Request $request)
+    {
+        $data = $request->param();
+        $model = $data['tablename'];
+        $ids = $data["id"];
+        $where["id"] = ["in", $ids];
+      $re=model("$model")->where($where)->update(array("is_done"=>1));
+        return returnSuc($re);
+    }
 }
