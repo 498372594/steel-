@@ -6,7 +6,6 @@ use app\admin\library\tree\Tree;
 use app\admin\model\AvaWeight;
 use app\admin\model\Bank;
 use app\admin\model\BaseJiesuanqixian;
-use app\admin\model\BaseXinyongedu;
 use app\admin\model\Classname;
 use app\admin\model\Custom;
 use app\admin\model\Jianzhishu;
@@ -639,7 +638,8 @@ class Steelmanage extends Right
     public function custom()
     {
         $params = request()->param();
-        $list = Custom::where('companyid', $this->getCompanyId());
+        $list = Custom::with('cityData,provinceData')
+            ->where('companyid', $this->getCompanyId());
         if (!empty($params["other"]) && $params["other"] == 1) {
             $list = $list->where("other", $params["other"]);
         }

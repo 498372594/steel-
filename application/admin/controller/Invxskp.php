@@ -44,6 +44,7 @@ class Invxskp extends Right
                     }
 
                     if (empty($object['id'])) {
+                        $object['company_id'] = $this->getCompanyId();
                         $addList[] = $object;
                     } else {
                         $updateList[] = $object;
@@ -94,8 +95,8 @@ class Invxskp extends Right
 
             foreach ($updateList as $mjo) {
                 $hx = \app\admin\model\InvXskpHx::get($mjo['id']);
-                if (empty($hx['data_id'])) {
-                    $inv->tiaoMoney($hx['dta_id'], $hx['sum_shui_price'], $mjo['sum_shui_price'], $hx['zhongliang'], $mjo['zhongliang']);
+                if (!empty($hx['data_id'])) {
+                    \app\admin\model\Inv::tiaoMoney($hx['data_id'], $hx['sum_shui_price'], $mjo['sum_shui_price'], $hx['zhongliang'], $mjo['zhongliang']);
                 }
                 $mjo['companyid'] = $this->getCompanyId();
                 $hx->allowField(true)->save($mjo);
@@ -128,7 +129,7 @@ class Invxskp extends Right
             return returnSuc(['id' => $xskp['id']]);
         } catch (Exception $e) {
             Db::rollback();
-            return returnFail($e->getMessage());
+            return returnFail($e->getMessage() . $e->getTraceAsString());
         }
     }
 
@@ -197,7 +198,7 @@ class Invxskp extends Right
      * @param int $id
      * @return Json
      */
-    public function cancle(Request $request, $id = 0)
+    public function cancel(Request $request, $id = 0)
     {
         if (!$request->isPost()) {
             return returnFail('请求方式错误');
@@ -208,10 +209,10 @@ class Invxskp extends Right
             if (empty($sp)) {
                 throw new Exception("对象不存在");
             }
-            if ($sp->company != $this->getCompanyId()) {
+            if ($sp->company_id != $this->getCompanyId()) {
                 throw new Exception("对象不存在");
             }
-            if ($sp['status'] == 1) {
+            if ($sp['status'] == 2) {
                 throw new Exception("该单据已经作废");
             }
             if (!empty($sp['jcx_id'])) {
