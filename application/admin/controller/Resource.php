@@ -42,7 +42,7 @@ class Resource extends Right
             $list->where('counts', 'neq', 0);
         }
 
-        $list = $list->field("storage,classname,pinming,guige,caizhi,chandi,houdu,kuandu,changdu,jianshu,sum(jianshu) as total_jianshu,sum(lingzhi) as total_lingzhi,sum(counts) as total_shuliang,sum(zhongliang) as total_zhongliang,sum(lisuanzongzhong) as total_lisuanzongzhong")
+        $list = $list->field("storage,classname,pinming,guige,caizhi,chandi,houdu,kuandu,changdu,jianshu,sum(jianshu) as total_jianshu,sum(lingzhi) as total_lingzhi,sum(counts) as total_shuliang,sum(zhongliang) as total_zhongliang,sum(lisuanzongzhong) as total_lisuanzongzhon,lisuan_zhizhong")
             ->group("$juhe")
             ->paginate($pageLimit);
         return returnSuc($list);
