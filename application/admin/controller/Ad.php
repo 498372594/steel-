@@ -3,6 +3,7 @@
 namespace app\admin\controller;
 
 //use app\admin\model\{};
+use app\admin\model\AdGuige;
 use app\admin\model\Hangqingqushi;
 use app\admin\model\KcSpot;
 use Exception;
@@ -41,7 +42,7 @@ class Ad extends Right
         return returnSuc($list);
     }
     public function guige(){
-        $list = model("ad_guige")->paginate(10);
+        $list = AdGuige::with(["changjiaData"])->paginate(10);
         return returnSuc($list);
     }
 

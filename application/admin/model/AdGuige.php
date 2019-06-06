@@ -26,4 +26,9 @@ class AdGuige extends Base
     public $map = [
 
     ];
+    public function changjiaData()
+    {
+        return $this->belongsTo('ad_changjia', 'changjia_id', 'id')->cache(true, 60)
+            ->field('id,changjia')->bind(['changjia' => 'changjia']);
+    }
 }
