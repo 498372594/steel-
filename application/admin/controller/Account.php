@@ -53,7 +53,7 @@ class Account extends Right
             $params['companyid'] = $this->getCompanyId();
             unset($params['id']);
             $admin = new AdminModel($params);
-            $admin->password = md5($params['password']);
+            $admin->password = $params['password'];
             $res = $admin->allowField(true)->save();
             return returnRes($res,'账号创建失败');
         }
