@@ -31,7 +31,6 @@ class KucunCktz extends Base
         return $this->belongsTo('Jsfs', 'jijiafangshi_id', 'id')->cache(true, 60)
             ->field('id,jsfs')->bind(['jsfs_name' => 'jsfs']);
     }
-
     public function storage()
     {
         return $this->belongsTo('Storage', 'store_id', 'id')->cache(true, 60)

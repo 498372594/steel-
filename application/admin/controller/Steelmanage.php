@@ -200,6 +200,26 @@ class Steelmanage extends Right
                     $query->where('id', 'in', $ids);
                 });
                 break;
+            case 'salesman_hkxs_rule':
+                SalesEdu::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'ad_changjia':
+                SalesEdu::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'ad_chan_pin':
+                SalesEdu::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'ad_guige':
+                SalesEdu::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
             default:
                 //默认写法风险太高，理论上可以删除任何数据
                 return returnFail('参数错误');
@@ -638,7 +658,7 @@ class Steelmanage extends Right
     public function custom()
     {
         $params = request()->param();
-        $list = Custom::with('cityData,provinceData')
+        $list = Custom::with('cityData,provinceData,morenYewuyuanData')
             ->where('companyid', $this->getCompanyId());
         if (!empty($params["other"]) && $params["other"] == 1) {
             $list = $list->where("other", $params["other"]);

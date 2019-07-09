@@ -6,6 +6,7 @@ namespace app\admin\controller;
 use app\admin\model\AdGuige;
 use app\admin\model\Hangqingqushi;
 use app\admin\model\KcSpot;
+use app\admin\model\ViewAd;
 use Exception;
 use think\{Db, Request};
 
@@ -114,29 +115,36 @@ class Ad extends Right
                 $info = $file->move(ROOT_PATH . 'public' . DS . 'uploads');
                 if ($info) {
                     $ext = strtolower(pathinfo($file->getInfo('name'), PATHINFO_EXTENSION));
-                    $path = ROOT_PATH . 'public' . DS . 'uploads' . $info->getSaveName();
+                    $path =  DS . 'uploads/' . $info->getSaveName();
                     $name = $info->getFilename();
                     $attData = array(
                         'path' => $path,
                         'fileext' => $ext,
                         'create_time' => time(),
+                        'update_time' => time(),
                         'user_id' => $this->getAccountId(),
                     );
                     $result = model('Files')->save($attData);
                     // 成功上传后 获取上传信息
                     $id = model('Files')->id;
                     if ($result) {
-                        $info["data"] = array('path' => $path, 'id' => $id, 'ext' => $ext, 'name' => $name, 'success' => true);
+                        $arr=array();
+
+                       $arr =['path' => $path, 'id' => $id, 'ext' => $ext, 'name' => $name];
+                       $inf["data"]=$arr;
+                        $inf['success'] = true;
                     } else {
-                        $info['success'] = false;
-                        $info['msg'] = $file->getError();
+                        $inf['success'] = false;
+                        $inf['msg'] = $file->getError();
                     }
-                    return json($info);
+
 
                 } else {
                     // 上传失败获取错误信息
-                    echo $file->getError();
+                    $inf['success'] = false;
+                    $inf['msg'] = $file->getError();
                 }
+                return json($inf);
             }
         }
     }
@@ -156,8 +164,15 @@ class Ad extends Right
     }
 
     public function getData()
-    {
-        $list = model("view_ad")->paginate(10);
+    {   $params=request()->param();
+        $list=ViewAd::where("1=1");
+        if (!empty($params['changjia_id'])) {
+            $list->where('changjia_id', $params['changjia_id']);
+        }
+        if (!empty($params['guige_id'])) {
+            $list->where('guige_id', $params['guige_id']);
+        }
+        $list =$list->paginate(10);
         return returnSuc($list);
     }
 
@@ -168,7 +183,7 @@ class Ad extends Right
             $data['add_name'] = $this->getAccount()['name'];
             $data['add_id'] = $this->getAccountId();
             if (empty(request()->post("id"))) {
-                $result = model("AdGuige")->allowField(true)->save($data);
+                $result = model("hangqingqushi")->allowField(true)->save($data);
                 return returnRes($result, '添加失败');
             }
 
@@ -177,19 +192,18 @@ class Ad extends Right
     public function hqqs()
     {
         $params = request()->param();
-        $params['ywsjStart']="2019-6-4 12:00:00";
-        $params['ywsjEnd']="2019-6-6 12:00:00";
         if (empty($params['ywsjStart'])) {
-            return returnFail('请选择业务开始时间');
+            $params['ywsjStart']=date("Y-m")."-1 00:00:00";
+//            return returnFail('请选择业务开始时间');
         }
         if (empty($params['ywsjEnd'])) {
-            return returnFail('请选择业务结束时间');
+            $params['ywsjEnd']=date("Y-m-d")." 23:59:59";
+//            return returnFail('请选择业务结束时间');
         }
-        $res = Hangqingqushi::fieldRaw('DATE_FORMAT(create_time,\'%Y-%m-%d\') as date,shujugangpei,daigang,caogang,jiaogang,qihuo')
-            ->where('create_time', '>', date('Y-m-d', strtotime($params['ywsjStart'])))
-            ->where('create_time', '<', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')))
+        $res = Hangqingqushi::fieldRaw('DATE_FORMAT(yw_time,\'%Y-%m-%d\') as date,shujugangpei,daigang,caogang,jiaogang,qihuo')
+            ->where('yw_time', '>=', date('Y-m-d', strtotime($params['ywsjStart'])))
+            ->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')))
             ->select();
-
         $legend = [];
         $data = [];
         $legend[0] = "数据钢坯";

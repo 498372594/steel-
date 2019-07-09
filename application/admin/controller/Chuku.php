@@ -68,7 +68,7 @@ class Chuku extends Right
         if (!empty($params['weight_gt_0'])) {
             $list->where('zhongliang', '>', 0);
         }
-        $list = $list->paginate($pageLimit);
+        $list = $list->order("id desc")->paginate($pageLimit);
         return returnRes(true, '', $list);
     }
 

@@ -99,10 +99,13 @@ class Rk extends Right
             $list->where('guige', $params['guige']);
         }
         if (!empty($params['cache_customer_id'])) {
-            $list->where('cache_customer_id', $params['cache_customer_id']);
+            $list->where('cache_c ustomer_id', $params['cache_customer_id']);
         }
-        if (!empty($params['is_done'])) {
-            $list->where('is_done', $params['is_done']);
+        if ($params['is_done']==0) {
+            $list->where('is_done', 0);
+
+        }else{
+            $list->where('is_done', 1);
         }
         if (!empty($params['beizhu'])) {
             $list->where('remark', $params['remark']);

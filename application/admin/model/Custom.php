@@ -33,7 +33,11 @@ class Custom extends Base
         return $this->belongsTo('Area', 'city', 'id')->cache(true, 60)
             ->field('id,name')->bind(['city_name' => 'name']);
     }
-
+    public function morenYewuyuanData()
+    {
+        return $this->belongsTo('Admin', 'moren_yewuyuan', 'id')->cache(true, 60)
+            ->field('id,name')->bind(['morenyewuyuan' => 'name']);
+    }
     /**
      * 客户利润统计表
      * @param $params
