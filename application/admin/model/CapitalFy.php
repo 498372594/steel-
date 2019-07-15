@@ -426,9 +426,9 @@ class CapitalFy extends Base
      */
     public function deleteByDataIdAndType($dataId, $type)
     {
-        $list = self::where('data_id', $dataId)->where('fyhx_type', $type)->select();
+        $list = CapitalFyhx::where('data_id', $dataId)->where('fyhx_type', $type)->select();
         foreach ($list as $hx) {
-            $fy = CapitalFy::get($hx['cap_fy_id']);
+            $fy = self::get($hx['cap_fy_id']);
             if (!empty($fy)) {
                 if ($fy['fymx_create_type'] == 1) {
                     if ($fy['hxmoney'] != 0 || $fy['hxzhongliang'] != 0) {
