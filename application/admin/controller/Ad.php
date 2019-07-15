@@ -156,6 +156,13 @@ class Ad extends Right
             foreach ($data as $key => $datum) {
                 $guige = db("ad_guige")->where("changjia_id", $datum["id"])->select();
                 if (!empty($guige)) {
+
+                    foreach ($guige as $key1=>$item){
+                        $chanpin = db("ad_chanpin")->where("guige_id", $item["id"])->group("gongjin")->field("gongjin")->select();
+                        if(!empty($chanpin)){
+                            $guige[$key1]["chanpindetails"] = $chanpin;
+                        }
+                    }
                     $data[$key]["guigedetails"] = $guige;
                 }
             }
@@ -171,6 +178,9 @@ class Ad extends Right
         }
         if (!empty($params['guige_id'])) {
             $list->where('guige_id', $params['guige_id']);
+        }
+        if (!empty($params['gongjin'])) {
+            $list->where('gongjin', $params['gongjin']);
         }
         $list =$list->paginate(10);
         return returnSuc($list);

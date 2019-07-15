@@ -13,13 +13,13 @@ return [
     // 数据库类型
     'type'            => 'mysql',
     // 服务器地址
-    'hostname'        => '47.104.141.139',
+    'hostname'        => '47.105.160.159',
     // 数据库名
     'database'        => 'steelerp_32one_t',
     // 用户名
     'username'        => 'steelerp_32one_t',
     // 密码
-    'password'        => 'AAkZ5eWwN8',
+    'password'        => 'PYrZ4DYxT45c3Hpn',
     // 端口
     'hostport'        => '',
     // 连接dsn
