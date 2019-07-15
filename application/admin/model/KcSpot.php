@@ -151,8 +151,9 @@ class KcSpot extends Base
         if (empty($jijiafangshiId)) {
             $jijiafangshiId = $spot['jijiaffangshi_id'];
         }
-        $jjfsObj = Jsfs::get($jijiafangshiId);
-        $calSpot = self::calSpot($spot['changdu'], $spot['kuandu'], $jjfsObj['jj_type'], $spot['mizhong'], $spot['jianzhong'],
+//        $jjfsObj = Jsfs::get($jijiafangshiId);
+//        dump($jjfsObj);
+        $calSpot = self::calSpot($spot['changdu'], $spot['kuandu'],$jijiafangshiId, $spot['mizhong'], $spot['jianzhong'],
             $spot['counts'] + ($isJia ? $counts : -$counts), $spot['zhijian'],
             ($isJia ? $zhongliang : -$zhongliang) + ($spot['zhongliang']), $spot['price'], $spot['shui_price'], $shuie);
 

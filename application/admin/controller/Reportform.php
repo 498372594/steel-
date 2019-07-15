@@ -20,35 +20,7 @@ class Reportform extends Right
         $params = request()->param();
         $list = \app\admin\model\ViewCgPurchaseMx::where('companyid', $this->getCompanyId());
 
-        if (!empty($params['ywsjStart'])) {
-            $list->where('yw_time', '>=', $params['ywsjStart']);
-        }
-        if (!empty($params['ywsjEnd'])) {
-            $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
-        }
-        if (!empty($params['store_id'])) {
-            $list->where('store_id', $params['store_id']);
-        }
-        if (!empty($params['status'])) {
-            $list->where('status', $params['status']);
-        }
-
-        if (!empty($params['jijiafangshi_id'])) {
-            $list->where('jijiafangshi_id', $params['jijiafangshi_id']);
-        }
-        if (!empty($params['customer_id'])) {
-            $list->where('customer_id', $params['customer_id']);
-        }
-
-        if (!empty($params['system_number'])) {
-            $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
-        }
-        if (!empty($params['ywlx'])) {
-            $list->where('ywlx', $params['ywlx']);
-        }
-        if (!empty($params['beizhu'])) {
-            $list->where('beizhu', $params['beizhu']);
-        }
+        $list=$this->getsearchcondition($params,$list);
         $list = $list->paginate($pageLimit);
         return returnSuc($list);
     }

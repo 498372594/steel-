@@ -295,6 +295,7 @@ where
         $md->jianzhong = $jianzhong;
         $md->save();
 
+
         (new KcSpot())->adjustSpotById($spotId, false, $md['counts'], $md['zhongliang'], $md['jijiafangshi_id'], $shuie);
     }
 }

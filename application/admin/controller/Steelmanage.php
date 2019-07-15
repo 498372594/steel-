@@ -3,6 +3,9 @@
 namespace app\admin\controller;
 
 use app\admin\library\tree\Tree;
+use app\admin\model\AdChangjia;
+use app\admin\model\AdChanpin;
+use app\admin\model\AdGuige;
 use app\admin\model\AvaWeight;
 use app\admin\model\Bank;
 use app\admin\model\BaseJiesuanqixian;
@@ -23,6 +26,8 @@ use app\admin\model\Storage;
 use app\admin\model\Texture;
 use app\admin\model\Transportation;
 use app\admin\model\Unit;
+use think\Config;
+use think\Db;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\ModelNotFoundException;
 use think\db\Query;
@@ -197,6 +202,26 @@ class Steelmanage extends Right
                 break;
             case 'sales_edu':
                 SalesEdu::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'salesman_hkxs_rule':
+                SalesEdu::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'ad_changjia':
+                AdChangjia::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'ad_chanpin':
+                AdChanpin::destroy(function (Query $query) use ($ids) {
+                    $query->where('id', 'in', $ids);
+                });
+                break;
+            case 'ad_guige':
+                AdGuige::destroy(function (Query $query) use ($ids) {
                     $query->where('id', 'in', $ids);
                 });
                 break;
@@ -638,7 +663,7 @@ class Steelmanage extends Right
     public function custom()
     {
         $params = request()->param();
-        $list = Custom::with('cityData,provinceData')
+        $list = Custom::with('cityData,provinceData,morenYewuyuanData')
             ->where('companyid', $this->getCompanyId());
         if (!empty($params["other"]) && $params["other"] == 1) {
             $list = $list->where("other", $params["other"]);
@@ -1070,4 +1095,35 @@ class Steelmanage extends Right
         }
     }
 
+    public function isdone(Request $request)
+    {
+        $data = $request->param();
+        $model = $data['tablename'];
+        $ids = $data["id"];
+        $where["id"] = ["in", $ids];
+      $re=model("$model")->where($where)->update(array("is_done"=>1));
+        return returnSuc($re);
+    }
+    public function initialsetting( $re=["admin","adminloginlog","area","authgroup","authgroupaccess","authrule","role","setting","adminloginlog","ad_changjia","ad_guige"
+        ,"ad_chanpin","base_setting","capital_fk_type","capital_fx","capital_sk_type","capital_yw_type","company","dropdown","files"
+    ,"hangqingqushi","inv_ywtype","kc_ck_type","kc_rk_type","moshi_type","ruku_fangshi","tp5_jobs","tp5_test","view_ad","view_zijin_count"]){
+        $database = Config::get('database.database');
+        $prefix = Config::get('database.prefix');
+        $data = Db::query('show tables');
+        $res = [];
+        if (!empty($data)) {
+            foreach ($data as $k => $v) {
+                $res[$k] = str_replace($prefix, '', $v['Tables_in_' . $database]);
+            }
+        }
+        foreach ($res as $key=>$item){
+            if(!in_array($item,$re)){
+                db($item)->where("companyid",$this->getCompanyId())->delete();
+            }else{
+//              db($item)->where("companyid",$this->getCompanyId())->delete();
+            }
+        }
+        return returnSuc();
+
+    }
 }

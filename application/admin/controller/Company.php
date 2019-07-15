@@ -56,7 +56,8 @@ class Company extends Right
             $admin_data['department_id'] = 4;//公司管理员
             $admin_data['create_time'] = now_datetime();
             $admin_data['update_time'] = now_datetime();
-            $admin_data['name'] = $params['name'];
+            if(isset($params['name']))$admin_data['name'] = $params['name'];
+            $admin_data['password'] = md5($params['password']);
             $admin = new AdminModel($admin_data);
             $res2 = $admin->allowField(true)->save();
             if(!$res2){

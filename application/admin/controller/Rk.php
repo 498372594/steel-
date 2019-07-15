@@ -99,10 +99,13 @@ class Rk extends Right
             $list->where('guige', $params['guige']);
         }
         if (!empty($params['cache_customer_id'])) {
-            $list->where('cache_customer_id', $params['cache_customer_id']);
+            $list->where('cache_c ustomer_id', $params['cache_customer_id']);
         }
-        if (!empty($params['is_done'])) {
-            $list->where('is_done', $params['is_done']);
+        if ($params['is_done']==0) {
+            $list->where('is_done', 0);
+
+        }else{
+            $list->where('is_done', 1);
         }
         if (!empty($params['beizhu'])) {
             $list->where('remark', $params['remark']);
@@ -174,7 +177,7 @@ class Rk extends Right
                     ->where('companyid', $companyId)
                     ->count();
                 $data['companyid'] = $companyId;
-                $data['system_number'] = 'CKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+                $data['system_number'] = 'RKD' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
                 $data['create_operator_id'] = $this->getAccountId();
                 $data['ruku_fangshi'] = 2;
                 $data['ruku_type'] = $tz["ruku_type"];

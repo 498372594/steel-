@@ -110,7 +110,7 @@ class Inv extends Right
         }
         //往来单位
         if (!empty($params['customer_id'])) {
-            $list->where('gys_id', $params['customer_id']);
+            $list->where('customer_id', $params['customer_id']);
         }
         //票据类型
         if (!empty($params['piaoju_id'])) {
@@ -132,10 +132,7 @@ class Inv extends Right
         if (!empty($params['caigou_danhao'])) {
             $list->where('caigou_danhao', 'like', '%' . $params['caigou_danhao'] . '%');
         }
-        //备注
-        if (!empty($params['beizhu'])) {
-            $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
-        }
+
         $list = $list->paginate(10);
         return returnRes(true, '', $list);
     }

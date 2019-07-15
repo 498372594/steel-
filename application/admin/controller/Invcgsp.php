@@ -73,58 +73,58 @@ class Invcgsp extends Right
         return returnRes(true, '', $data);
     }
 
-    public function cgspadd($data = [], $return = false)
-    {
-        if (request()->isPost()) {
-            $companyId = $this->getCompanyId();
-            $data = request()->post();
-            $count = \app\admin\model\InvCgsp::whereTime('create_time', 'today')->where("type", $data["type"])->count();
-            $data["status"] = 0;
-            $data['create_operator_id'] = $this->getAccountId();
-            $data['companyid'] = $companyId;
-            $data['system_number'] = 'CGSP' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+//    public function cgspadd($data = [], $return = false)
+//    {
+//        if (request()->isPost()) {
+//            $companyId = $this->getCompanyId();
+//            $data = request()->post();
+//            $count = \app\admin\model\InvCgsp::whereTime('create_time', 'today')->where("type", $data["type"])->count();
+//            $data["status"] = 0;
+//            $data['create_operator_id'] = $this->getAccountId();
+//            $data['companyid'] = $companyId;
+//            $data['system_number'] = 'CGSP' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
+//
+//            if (!$return) {
+//                Db::startTrans();
+//            }
+//            try {
+//                model("InvCgsp")->allowField(true)->data($data)->save();
+//                $id = model("InvCgsp")->getLastInsID();
+//                foreach ($data["details"] as $c => $v) {
+//                    $dat['details'][$c]['id'] = $v["inv_id"];
+//                    $dat['details'][$c]['yhx_zhongliang'] = $v["yhx_zhongliang"] + $v["zhongliang"];
+//                    $dat['details'][$c]['yhx_price'] = $v["yhx_zhongliang"] + $v["sum_shui_price"];
+//                    $data['details'][$c]['companyid'] = $companyId;
+//                    $data['details'][$c]['cgsp_id'] = $id;
+//                    $data['details'][$c]['yw_type'] = 2;
+//                    $data['details'][$c]['data_id'] = $v["inv_id"];
+//                    $data['details'][$c]['system_number'] = $v["system_number"] . "1";
+//                }
+//                model('Inv')->allowField(true)->saveAll($dat['details']);
+//                model('InvCgspHx')->allowField(true)->saveAll($data['details']);
+//                if (!$return) {
+//                    Db::commit();
+//                    return returnRes(true, '', ['id' => $id]);
+//                } else {
+//                    return true;
+//                }
+//            } catch (Exception $e) {
+//                if ($return) {
+//                    return $e->getMessage();
+//                } else {
+//                    Db::rollback();
+//                    return returnFail($e->getMessage());
+//                }
+//            }
+//        }
+//        if ($return) {
+//            return '请求方式错误';
+//        } else {
+//            return returnFail('请求方式错误');
+//        }
+//    }
 
-            if (!$return) {
-                Db::startTrans();
-            }
-            try {
-                model("InvCgsp")->allowField(true)->data($data)->save();
-                $id = model("InvCgsp")->getLastInsID();
-                foreach ($data["details"] as $c => $v) {
-                    $dat['details'][$c]['id'] = $v["inv_id"];
-                    $dat['details'][$c]['yhx_zhongliang'] = $v["yhx_zhongliang"] + $v["zhongliang"];
-                    $dat['details'][$c]['yhx_price'] = $v["yhx_zhongliang"] + $v["sum_shui_price"];
-                    $data['details'][$c]['companyid'] = $companyId;
-                    $data['details'][$c]['cgsp_id'] = $id;
-                    $data['details'][$c]['yw_type'] = 2;
-                    $data['details'][$c]['data_id'] = $v["inv_id"];
-                    $data['details'][$c]['system_number'] = $v["system_number"] . "1";
-                }
-                model('Inv')->allowField(true)->saveAll($dat['details']);
-                model('InvCgspHx')->allowField(true)->saveAll($data['details']);
-                if (!$return) {
-                    Db::commit();
-                    return returnRes(true, '', ['id' => $id]);
-                } else {
-                    return true;
-                }
-            } catch (Exception $e) {
-                if ($return) {
-                    return $e->getMessage();
-                } else {
-                    Db::rollback();
-                    return returnFail($e->getMessage());
-                }
-            }
-        }
-        if ($return) {
-            return '请求方式错误';
-        } else {
-            return returnFail('请求方式错误');
-        }
-    }
-
-    public function addcgsp()
+    public function cgspadd()
     {
         if (!request()->isPost()) {
             return returnFail('请求方式错误');
@@ -134,10 +134,6 @@ class Invcgsp extends Right
         try {
             $data = request()->post();
 
-            $validate = new KcQtrk();
-            if (!$validate->check($data)) {
-                throw new Exception($validate->getError());
-            }
 
             $addList = [];
             $updateList = [];
@@ -146,7 +142,7 @@ class Invcgsp extends Right
             if (!empty($ja)) {
 
                 $num = 1;
-                $detailsValidate = new \app\admin\validate\InvCgsp();
+                $detailsValidate = new \app\admin\validate\InvCgspHx();
                 foreach ($ja as $object) {
 
                     $object['companyid'] = $companyId;
@@ -165,7 +161,8 @@ class Invcgsp extends Right
                     }
                 }
             }
-            if ($data["id"]) {
+
+            if (empty($data["id"])) {
                 $count = \app\admin\model\InvCgsp::whereTime('create_time', 'today')->where("companyid", $companyId)->count();
                 $data['system_number'] = 'CGSP' . date('Ymd') . str_pad($count + 1, 3, 0, STR_PAD_LEFT);
                 $data['create_operator_id'] = $this->getAccountId();
@@ -201,21 +198,21 @@ class Invcgsp extends Right
                     $mx->isUpdate(true)->allowField(true)->save($mjo);
                 }
             }
-            if (empty($addList)) {
+            if (!empty($addList)) {
                 foreach ($addList as $mjo) {
                     $mjo["cgsp_id"] = $cgsp["id"];
-
-                    if ($mjo["data_id"]) {
+                    if (!empty($mjo["data_id"])) {
                         $inv = \app\admin\model\Inv::where("id", $mjo["data_id"])->find();
                         $mjo["system_number"] = $inv["system_number"];
                         $mjo["yw_time"] = $inv["yw_time"];
+
                         (new \app\admin\model\Inv())->addMoney($mjo["data_id"], $mjo["sum_shui_price"], $mjo["zhongliang"]);
                     }
                     $hx = new InvCgspHx();
+
                     $hx->allowField(true)->save($mjo);
                 }
             }
-
             Db::commit();
             return returnSuc(['id' => $cgsp['id']]);
         } catch (Exception $e) {

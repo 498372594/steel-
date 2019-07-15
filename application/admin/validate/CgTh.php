@@ -16,13 +16,15 @@ class CgTh extends Validate
     protected $rule = [
         'customer_id' => 'require',
         'piaoju_id' => 'require',
+        'jiesuan_id' => 'require',
         'details' => 'require|min:1',
         'yw_time' => 'require'
     ];
 
     protected $message = [
 
-        'customer_id.require' => '供应商 不能为空',
+        'customer_id.require' => '请选择供应商',
+        'jiesuan_id.require' => '请选择结算方式',
         'details.require' => '明细至少出现一行',
         'piaoju_id.require' => '票据类型不能为空',
         'details.min' => '明细至少出现一行',

@@ -72,7 +72,7 @@ class Chuku extends Right
         if (!empty($params['weight_gt_0'])) {
             $list->where('zhongliang', '>', 0);
         }
-        $list = $list->paginate($pageLimit)->each(function ($item, $key) {
+        $list = $list->order("id desc")->paginate($pageLimit)->each(function ($item, $key) {
             switch ($item->chuku_type) {
                 case 1:
                     $item->main_data_id = KcDiaoboMx::where('id', $item->data_id)->cache(true, 60)->value('diaobo_id');
