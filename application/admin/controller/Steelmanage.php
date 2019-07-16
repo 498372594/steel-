@@ -1118,7 +1118,7 @@ class Steelmanage extends Right
         }
         foreach ($res as $key=>$item){
             if(!in_array($item,$re)){
-                db($item)->where("companyid",$this->getCompanyId())->delete();
+                db($item)->where("companyid",$this->getCompanyId())->find();
             }else{
 //              db($item)->where("companyid",$this->getCompanyId())->delete();
             }

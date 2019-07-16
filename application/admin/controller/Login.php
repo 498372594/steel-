@@ -30,7 +30,7 @@ class Login extends Base
             $account  = input("account");
             $password = input("password");
             $ret = Loader::model('User')->login($account, $password);
-            return returnRes($ret['code'] == 1,'登录失败',$ret['data']);
+            return returnRes($ret['code'] == 1,'登录失败',$ret["data"]);
         } else {
             $this->error("请求方式错误！");
         }

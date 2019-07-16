@@ -17,7 +17,7 @@ class Resource extends Right
      * @return Json
      * @throws DbException
      */
-    public function xhbj($pageLimit = 10)
+    public function xhbj($pageLimit = 10000000)
     {
         $params = request()->param();
         $list = ViewInstorageDetails::where('companyid', $this->getCompanyId());
@@ -156,7 +156,7 @@ class Resource extends Right
      * @return Json
      * @throws DbException
      */
-    public function xhzymx($pageLimit = 10)
+    public function xhzymx($pageLimit = 100000000)
     {
         $params = request()->param();
         $list = ViewSpotMx::where('companyid', $this->getCompanyId());
