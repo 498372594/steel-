@@ -2,10 +2,14 @@
 
 namespace app\admin\controller;
 
-use app\admin\model\{Jsfs,
+use app\admin\model\{CgThMx,
+    Jsfs,
+    KcDiaoboMx,
+    KcPandianMx,
     KcSpot,
     KucunCktz,
     SalesorderDetails,
+    StockOtherOutDetails,
     StockOut,
     StockOutDetail,
     StockOutMd,
@@ -68,7 +72,31 @@ class Chuku extends Right
         if (!empty($params['weight_gt_0'])) {
             $list->where('zhongliang', '>', 0);
         }
-        $list = $list->order("id desc")->paginate($pageLimit);
+        $list = $list->order("id desc")->paginate($pageLimit)->each(function ($item, $key) {
+            switch ($item->chuku_type) {
+                case 1:
+                    $item->main_data_id = KcDiaoboMx::where('id', $item->data_id)->cache(true, 60)->value('diaobo_id');
+                    break;
+                case 2:
+                    $item->main_data_id = KcPandianMx::where('id', $item->data_id)->cache(true, 60)->value('pandian_id');
+                    break;
+                case 3:
+                    $item->main_data_id = StockOtherOutDetails::where('id', $item->data_id)->cache(true, 60)->value('stock_other_out_id');
+                    break;
+                case 4:
+                    $item->main_data_id = SalesorderDetails::where('id', $item->data_id)->cache(true, 60)->value('order_id');
+                    break;
+                case 9:
+                    $item->main_data_id = KcSpot::where('id', $item->data_id)->where('status', 2)->cache(true, 60)->value('id');
+                    break;
+                case 10:
+                    $item->main_data_id = CgThMx::where('id', $item->data_id)->cache(true, 60)->value('cg_th_id');
+                    break;
+                default:
+                    $item->main_data_id = null;
+                    break;
+            }
+        });
         return returnRes(true, '', $list);
     }
 
