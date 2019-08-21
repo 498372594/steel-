@@ -1,4 +1,5 @@
 // 提示信息
+
 $(".qg-tooltip").tooltip();
 
 // 提交请求到后台
@@ -35,15 +36,42 @@ function ajaxPost(url , data , suc , err){
 }
 
 // 弹出确认信息，并更新数据
-function confirmUpdate(url , id , message){
-   // alert(111);
-    // 如果有数据
-    if(message){
-        layer.confirm(message , {btn: ['确认','取消']},function(){
-            ajaxPost(url ,{id:id},function(){
-                window.location.reload(true);
-            });
+
+function confirmUpdate(url , id=null , message){
+
+    if (id==null){
+
+        var indexd = layer.confirm(message , {btn: ['本页开单','新页面开单','取消']},function(){
+
+            console.log(data);
+
         });
+
+
+
+    }
+
+    if(message){
+
+     index=layer.confirm(message , {btn: ['确认','取消']},function(){
+            $.ajax({
+                url:url,
+                dataType:"json",
+                type:"get",
+                data:{
+                    id:id
+                },
+                success:function (data) {
+
+                   if(data.code==0){
+                       window.location.reload(true);
+                   }
+
+                }
+            })
+         layer.close(index);
+        });
+
     }else{
         ajaxPost(url ,{id:id},function(){
             window.location.reload(true);
@@ -51,16 +79,30 @@ function confirmUpdate(url , id , message){
     }
 }
 function confirmDelete(url , id ,model, message){
+
     var htm=$(event.currentTarget).parent().parent();
+
     // 如果有数据
     if(message){
+
        var index=layer.confirm(message , {btn: ['确认','取消']},function(){
-            ajaxPost(url ,{id:id,model:model},function(data){
-                htm.remove();
-            });
+             $.ajax({
+                 url:url,
+                 dataType:"json",
+                 type:"get",
+                 data:{
+                     id:id,
+                     model:model
+                 },
+                 success:function (data) {
+
+                   htm.remove()
+                 }
+             })
            layer.close(index);
         });
     }else{
+
         ajaxPost(url ,{id:id},function(){
             window.location.reload(true);
         });
@@ -78,12 +120,15 @@ function confirmUpdates(url , ids , message){
     // 如果有数据
     if(message){
         layer.confirm(message , {btn: ['确认','取消']},function(){
-            ajaxPost(url ,{ids:ids},function(){
+
+            ajaxPost(url ,{ids:ids},function(data){
+
                 window.location.reload(true);
             });
         });
     }else{
-        ajaxPost(url ,{id:id},function(){
+        ajaxPost(url ,{id:id},function(data){
+
             window.location.reload(true);
         });
     }
@@ -110,7 +155,7 @@ function downCsv(ids , message ,obj){
 }
 
 //弹出模态框
-function modal(url, title, paraHeight, paraWidth)
+function modal(url, title, message,paraHeight, paraWidth)
 {
     var width;
     if(typeof(paraWidth) == "undefined" || paraWidth == ""){
@@ -135,6 +180,7 @@ function modal(url, title, paraHeight, paraWidth)
         area: [width, height],
         content: url
     });
+
 }
 
 // 打开URL

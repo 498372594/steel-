@@ -1,0 +1,53 @@
+{include file="/common/base"}
+<div class="col-xs-12">
+    <div class="row">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/initinput/dokc')}">
+            <table class="table">
+                <tr>
+                    <td>客户</td>
+                    <td>
+                        <select name="customer_id" id="">
+                        {volist name="data" id="vo"}
+                            <option value="{$vo.id}">{$vo.custom}</option>
+                        {/volist}
+                        </select>
+                    </td>
+                </tr>
+                <input type="hidden" value="{$id}">
+                <tr>
+                    <td>系统单号</td>
+                    <td>
+                        <select name="system_number" id="">
+                            {volist name="sys" id="vo"}
+                            <option value="{$vo.system_number}">{$vo.system_number}</option>
+                            {/volist}
+                        </select>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>结算方式</td>
+                    <td>
+                        <select name="jiesuan_id" id="">
+                            {volist name="fs" id="vo"}
+                            <option value="{$vo.id}">{$vo.jiesuanfangshi}</option>
+                            {/volist}
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>公司</td>
+                    <td>
+                        <select name="companyid" id="">
+                            {volist name="company" id="vo"}
+                            <option value="{$vo.id}">{$vo.name}</option>
+                            {/volist}
+                        </select>
+                    </td>
+                </tr>
+                <tr><td><input type="submit"></td></tr>
+            </table>
+          
+        </form>
+    </div>
+</div>

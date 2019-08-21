@@ -29,8 +29,10 @@ class Account extends Right
         if(!$company_id){
             return returnFail('参数错误');
         }
-        $data = AdminModel::where(['companyid' => $company_id,'department_id' => ['in','1,2']])->order('id desc')->paginate(10);
-        return returnRes($data->toArray()['data'],'没有公司数据，请添加后重试',$data);
+        $data = AdminModel::where(['companyid' => $company_id,'department_id' => ['in','1,2']])->order('id desc')->paginate(2);
+        return $this->fetch('index',['list'=>$data]);
+//     return returnRes($data->toArray()['data'],'没有公司数据，请添加后重试',$data);
+
     }
 
     /**
@@ -57,6 +59,7 @@ class Account extends Right
             $res = $admin->allowField(true)->save();
             return returnRes($res,'账号创建失败');
         }
+       return $this->fetch('account/add');
     }
 
     /**

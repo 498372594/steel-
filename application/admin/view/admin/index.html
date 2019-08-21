@@ -1,4 +1,6 @@
-{include file="tpl/style"/}
+
+{include file="/common/base"}
+{include file="/tpl/style"/}
 <form role="form" id="searchForm" action="{:url('/admin/admin/index')}" method='post' class="form-horizontal">
     <div class="form-group">
         <div class="col-xs-12">
@@ -14,8 +16,8 @@
             </div>
             <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1 pull-right">
                 <div class="row">
-                    <!--{include file="tpl/searchBtn" /}-->
-                    <!--{include file="tpl/reloadBtn" /}-->
+                    {include file="tpl/searchBtn" /}
+                    {include file="tpl/reloadBtn" /}
                 </div>
             </div>
         </div>
@@ -50,7 +52,7 @@
                     {/notempty}
                 </td>
                 <td nowrap="nowrap">{$vo.isdisable|getDropdownList="isdisable",###}</td>
-                <td nowrap="nowrap">{$vo.createtime}</td>
+                <td nowrap="nowrap">{$vo.create_time}</td>
                 <td nowrap="nowrap">
                     <!-- 自己不能操作自己 -->
                     {if condition="($vo['id'] eq $account['id']) && (1 neq $account['id'])"}
@@ -66,7 +68,7 @@
 
                         <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/admin/edit\',[\'id\'=>$vo[\'id\']])}', '编辑','80%','50%')"></i>
                         <!--删除-->
-                        <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmUpdate('/admin/admin/delete','{$vo.id}','确定要删除吗？')"></i>
+                        <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmDelete('/admin/admin/delete','{$vo.id}','model','要删除吗？')"></i>
                     {/if}
                 </td>
             </tr>

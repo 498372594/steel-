@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+    {include file="/common/base"}
+    {include file="/tpl/style"/}
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<form action="purinfo_add"  >
+<table class="table"   >
+    <tr>
+        <td>
+           规格
+        </td>
+        <td>
+            <select name="guige_id" id="">
+            {volist name="data" id="vo"}
+
+
+            <option value="{$vo.id}">{$vo.guige}</option>
+            {/volist}
+            </select>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+           品名
+        </td>
+        <td>
+            <select name="pinming_id" id="">
+                {volist name="data" id="vo"}
+
+
+                <option value="{$vo.id}">{$vo.pinming}</option>
+                {/volist}
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>
+           计算方式:
+        </td>
+        <td>
+            <select name="jijiafangshi_id" id="">
+                {volist name="data" id="vo"}
+
+
+                <option value="{$vo.id}">{$vo.jsfs}</option>
+                {/volist}
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            运输单位:
+        </td>
+        <td>
+            <select name="chandi_id" id="">
+                {volist name="data" id="vo"}
+
+
+                <option value="{$vo.id}">{$vo.yun_shu_dan_wei}</option>
+                {/volist}
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td>
+           厂家
+        </td>
+        <td>
+            <select name="customer_id" id="">
+                {volist name="data" id="vo"}
+
+
+                <option value="{$vo.id}">{$vo.changjia}</option>
+                {/volist}
+            </select>
+        </td>
+    </tr>
+
+
+    <tr><td><input type="submit"></td></tr>
+</table>
+</form>
+</body>
+</html>

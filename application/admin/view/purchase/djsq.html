@@ -1,0 +1,139 @@
+<!--{include file="tpl/style"/}-->
+
+{include file="/common/base"}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+</head>
+<body>
+
+    <table class="table">
+        <tr>
+            <td>收付款</td>
+            <td>
+                <select name="" id="supplier_id">
+                    {volist name="data" id="vo"}
+                    <option value="{$vo.id}">{$vo.k_name}</option>
+                    {/volist}
+                </select>
+
+            </td>
+        </tr>
+        <tr>
+            <td>关联明细</td>
+            <td><input type="text" id="type"></td>
+        </tr>
+        <tr>
+            <td>费用类型</td>
+            <td><select name="" id="paymentclass">
+                {volist name="paymenttype" id="vo"}
+                <option value="{$vo.name}">{$vo.name}</option>
+                {/volist}
+            </select></td>
+        </tr>
+        <tr>
+            <td>收付款单位</td>
+            <td><select name="" id="companyid">
+                {volist name="company" id="vo"}
+                <option value="">{$vo.name}</option>
+                {/volist}
+            </select></td>
+        </tr>
+        <tr>
+            <td>计价方式</td>
+            <td> <select name="" id="jsfs">
+                {volist name="jsfs" id="vo"}
+                <option value="">{$vo.jsfs}</option>
+                {/volist}
+            </select>
+            </td>
+        </tr>
+        <tr>
+            <td>单价</td>
+            <td><input type="text" id="unit_price"></td>
+        </tr>
+        <tr>
+            <td>总金额</td>
+            <td><input type="text" id="total_price"></td>
+        </tr>
+        <tr>
+            <td>财务折扣</td>
+            <td><input type="text" id="tax"></td>
+        </tr>
+        <tr>
+            <td>实际金额</td>
+            <td><input type="text" id="price"></td>
+        </tr>
+
+        <tr>
+            <td>税率</td>
+            <td><input type="text" id="tax_rate"></td>
+        </tr>
+        <tr>
+            <td>是否含税</td>
+            <td><input type="radio" name="sl" value="是">是<input type="radio" name="sl" value="否" >否</td>
+        </tr>
+        <tr>
+            <td>备注</td>
+            <td><input type="text" id="remark"></td>
+        </tr>
+        <tr>
+            <td>状态</td>
+            <td><input type="text" id="status"></td>
+        </tr>
+        <tr>
+            <td><button type="button" class="btn btn-success">保存</button></td>
+            <td></td>
+        </tr>
+    </table>
+
+</body>
+</html>
+<script>
+    $(document).on("click",".btn",function () {
+        supplier_id=$("#supplier_id").val()
+        type=$("#type").val();
+        paymentclass=$("#paymentclass").val()
+        companyid=$("#companyid").val()
+        jsfs=$("#jsfs").val()
+        unit_price=$("#unit_price").val()
+        total_price=$("#total_price").val()
+        tax=$("#tax").val()
+        price=$("#price").val()
+        tax_rate=$("#tax_rate").val()
+        sl=$('input:radio:checked').val()
+        remark=$("#remark").val()
+        status=$("#status").val()
+        $.ajax({
+            url:"other",
+            type:"get",
+            dataType:"json",
+            data:{
+                supplier_id:supplier_id,
+                type:type,
+                paymentclass:paymentclass,
+                companyid:companyid,
+                jsfs:jsfs,
+                unit_price:unit_price,
+                total_price:total_price,
+                tax:tax,
+                price:price,
+                tax_rate:tax_rate,
+                sl:sl,
+                remark:remark,
+                status:status
+            },
+            success:function (data) {
+                if(data==1){
+                    alert('添加成功')
+                }
+            }
+        })
+    })
+</script>

@@ -3,6 +3,7 @@
     $(function () {
         /*模糊精确搜索*/
         $(".condition .btn").click(function () {
+
             $(this).siblings().removeClass("activity");
             $(this).addClass("activity");
             $(this).parent().prev().val($(this).val())

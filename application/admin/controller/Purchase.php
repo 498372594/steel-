@@ -225,6 +225,7 @@ class Purchase extends Right
             }
             $cg->isUpdate(true)->allowField(true)->save(array("status" => 1, "id" => $id));
             $mxList = \app\admin\model\CgPurchaseMx::where("purchase_id", $cg["id"])->select();
+
             if ($cg["ruku_fangshi"] == 1) {
                 KcRk::cancelRuku($cg["id"], 4);
             }
@@ -566,12 +567,15 @@ class Purchase extends Right
      */
     public function getpurchaselist($pageLimit = 10)
     {
+
         $params = request()->param();
+//         var_dump($params);die;
         $list = CgPurchase::with([
             'custom',
             'pjlxData',
             'jsfsData',
         ])->where('companyid', $this->getCompanyId());
+
         if (!empty($params['ywsjStart'])) {
             $list->where('yw_time', '>=', $params['ywsjStart']);
         }
@@ -605,10 +609,255 @@ class Purchase extends Right
         if (!empty($params['shou_huo_dan_wei'])) {
             $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);
         }
-        $list = $list->paginate($pageLimit);
-        return returnSuc($list);
+        $list = $list->paginate($pageLimit)->toArray();
+        $list=$list['data'];
+        $data=Db::table('c_salesman')->select();
+        $res=Db::table('kc_rk_type')->select();
+      $kh=Db::table('custom')->select();
+        $jsfs=Db::table('jsfs')->select();
+
+     $dat=Db::table('c_product_type')->join('c_purchase','c_product_type.id =c_purchase.c_leibie_id')->select();
+        $type=Db::table('c_product_type')->select();
+
+       return    $this->fetch('purchase/getpurchaselist',['data'=>$data,'res'=>$res,'kh'=>$kh,'jsfs'=>$jsfs,'dat'=>$dat,'type'=>$type]);
+//        return returnSuc($list);
+    }
+    function cha(){
+        $id=input("get.cont_id");
+       $content=Db::table('c_product_type')->join('c_purchase','c_product_type.id =c_purchase.c_leibie_id')->where("c_leibie_id","=","$id")->select();
+       echo json_encode($content);
+    }
+    function zt(){
+        $data=Db::table('xs')->find();
+
+        if($data['static']==0){
+
+          Db::table('xs')->where('id','=',1)->update(['static'=>1]);
+          echo 1;
+        }else{
+
+          Db::table('xs')->where('id','=',1)->update(['static'=>0]);
+          echo 2;
+        }
+
+    }
+    function pin(){
+        $pm=input("get.pm");
+        $content=Db::table('c_product_type')->join('c_purchase','c_product_type.id =c_purchase.c_leibie_id')->where("c_pinming","=","$pm")->select();
+        echo json_encode($content);
+    }
+    function shan(){
+        $id=input("get.id");
+       $res= Db::table('c_purchase')->where("id",'in',"$id")->delete();
+
+       if($res){
+           echo 1;
+       }
     }
 
+    function cg_shan(){
+
+        $id=input("get.id");
+
+        $res= Db::table('cg_purchase_mx')->where("id",'in',"$id")->delete();
+
+        if($res){
+            echo 1;
+        }
+    }
+    function cg_count(){
+        $id=input("get.id");
+
+        $res= Db::table('cg_purchase_mx')->where('id','in',"$id")->sum('cgzz');
+        $sl= Db::table('cg_purchase_mx')->where('id','in',"$id")->sum('counts');
+        echo json_encode(['cgzz'=>$res,'sl'=>$sl]);
+    }
+function cgtj(){
+    $data=Db::table("c_city")->where("pid='0'")->select();
+    return  $this->fetch('purchase/cust',['data'=>$data]);
+}
+function custadd(){
+    $data=input('get.');
+    unset($data['/admin/purchase/custadd']);
+
+   $res=Db::table('c_customer')->insert($data);
+     if($res){
+         echo 1;
+     }else{
+         echo 2;
+     }
+}
+function purchadd(){
+
+       $data=Db::table('texture')->select();
+        $cj=Db::table('ad_changjia')->select();
+        $cp=Db::table('ad_chanpin')->select();
+        $gg=Db::table('ad_guige')->select();
+    $jsfs=Db::table('jsfs')->select();
+
+        return $this->fetch('purchadd',['data'=>$data,'cj'=>$cj,'cp'=>$cp,'gg'=>$gg,'jsfs'=>$jsfs]);
+}
+function dopurchase(){
+        $data=input('get.');
+        unset($data['/admin/purchase/dopurchase']);
+
+       $res=Db::table('cg_purchase_mx')->insert($data);
+       if($res){
+           echo 1;
+       }
+
+}
+    function gb(){
+        $id=input("get.id");
+
+        $re=Db::table("c_city")->where("pid",'=',"$id")->select();
+        echo  json_encode($re);
+
+    }
+    function addall(){
+         $id=input('get.id');
+         $data=Db::table('c_product_type')->join('c_purchase','c_product_type.id =c_purchase.c_leibie_id')->where('c_purchase.id','in',"$id")->select();
+
+       $res= Db::table('c_purchase')->where('c_purchase.id','in',"$id")->sum('c_caigouzongjine');
+        $count= Db::table('c_purchase')->where('c_purchase.id','in',"$id")->sum('c_shuliang');
+        $zhong= Db::table('c_purchase')->where('c_purchase.id','in',"$id")->sum('c_caiguozongzhong');
+         echo json_encode(['data'=>$data,'sum'=>$res,'count'=>$count,'zong'=>$zhong]);
+    }
+    function xiazai(){
+
+include("Classes/PHPExcel.php");
+$exce=new \PHPExcel();
+
+$exce->setActiveSheetIndex(0)->setCellValue("A1","id")->setCellValue("B1","c_leibie_id")->setCellValue("C1","c_biaozhun")->setCellValue("D1","c_pinming")->setCellValue("F1","c_guige")->setCellValue("G1","c_caizhi")
+    ->setCellValue("H1","c_chandi")->setCellValue("I1","c_lijidanzhong")->setCellValue("J1","c_changdu")->setCellValue("K1","c_shuliangdanwei")->setCellValue("L1","c_jianshu");
+
+
+$data=Db::table('c_purchase')->select();
+
+foreach($data as $k=>$v){
+    $exce->setActiveSheetIndex(0)->setCellValue("A".($k+2),$v['id'])
+        ->setCellValue("B".($k+2),$v['c_leibie_id'])
+        ->setCellValue("C".($k+2),$v['c_biaozhun'])
+        ->setCellValue("D".($k+2),$v['c_pinming'])
+        ->setCellValue("E".($k+2),$v['c_guige'])
+        ->setCellValue("F".($k+2),$v['c_caizhi'])
+    ->setCellValue("F".($k+2),$v['c_chandi'])
+    ->setCellValue("F".($k+2),$v['c_lijidanzhong'])
+    ->setCellValue("F".($k+2),$v['c_changdu'])
+    ->setCellValue("F".($k+2),$v['c_shuliangdanwei'])
+    ->setCellValue("F".($k+2),$v['c_jianshu']);
+
+}
+
+header('Content-Disposition: attachment;filename="01simple.xls"');
+header ('Pragma: public'); // HTTP/1.0
+
+
+$objWriter=\PHPExcel_IOFactory::createWriter($exce,'Excel5');
+$objWriter->save('php://output');
+
+
+
+    }
+  function typesear(){
+        $sear=input('get.new_val');
+
+      $data=Db::table('c_product_type')->join('c_purchase','c_product_type.id =c_purchase.c_leibie_id')->where('c_purchase.c_guige|c_purchase.c_caizhi|c_purchase.c_chandi','like',"%$sear%")
+      ->select();
+
+
+        echo json_encode($data);
+
+  }
+    function shangchuan()
+    {
+        include("PHPExcel-1.8/Classes/PHPExcel/IOFactory.php");
+        $exec = \PHPExcel_IOFactory::load("01simple.xls");
+        $ex = $exec->getSheet(0);
+        $row = $ex->getHighestDataRow();
+
+        for ($i = 2; $i <= $row; $i++) {
+            $data['id'] = $ex->getCell("A" . $i)->getValue();
+            $data['c_leibie_id'] = $ex->getCell("B" . $i)->getValue();
+            $data['c_biaozhun'] = $ex->getCell("C" . $i)->getValue();
+            $data['c_pinming'] = $ex->getCell("D" . $i)->getValue();
+        Db::table('c_purchase')->insert($data);
+
+        }
+    }
+    function dadd(){
+        $data=Db::table('c_product_type')->select();
+      return  $this->fetch('purchase/doadd',['data'=>$data]);
+    }
+
+    function puradd(){
+       $data=input('get.');
+
+        unset($data['/admin/purchase/puradd']);
+      if(Db::table('c_purchase')->insert($data)){
+          echo 1;
+      } else{
+          echo 2;
+      }
+    }
+function kdbt(){
+        $data=input('get.');
+        unset($data['/admin/purchase/kdbt']);
+
+        $res=Db::table('c_kaidanbt')->insert($data);
+        if($res){
+            echo 1;
+        }else{
+            echo 2;
+        }
+}
+   function sear($pageLimit = 10){
+       $params = request()->param();
+
+       $list = CgPurchase::with([
+           'custom',
+           'pjlxData',
+           'jsfsData',
+       ])->where('companyid', $this->getCompanyId());
+
+       if (!empty($params['ywsjStart'])) {
+           $list->where('yw_time', '>=', $params['ywsjStart']);
+       }
+       if (!empty($params['ywsjEnd'])) {
+           $list->where('yw_time', '<=', date('Y-m-d', strtotime($params['ywsjEnd'] . ' +1 day')));
+       }
+       if (!empty($params['status'])) {
+           $list->where('status', $params['status']);
+       }
+       if (!empty($params['ruku_fangshi'])) {
+           $list->where('ruku_fangshi', $params['ruku_fangshi']);
+       }
+       if (!empty($params['customer_id'])) {
+           $list->where('customer_id', $params['customer_id']);
+       }
+       if (!empty($params['piaoju_id'])) {
+           $list->where('piaoju_id', $params['piaoju_id']);
+       }
+       if (!empty($params['system_number'])) {
+
+           $list->where('system_number', 'like', '%' . $params['system_number'] . '%');
+       }
+       if (!empty($params['beizhu'])) {
+           $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
+       }
+       if (!empty($params['moshi_type'])) {
+           $list->where('moshi_type', $params['moshi_type']);
+       }
+       if (!empty($params['shou_huo_dan_wei'])) {
+           $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);
+       }
+       if (!empty($params['shou_huo_dan_wei'])) {
+           $list->where('shou_huo_dan_wei', $params['shou_huo_dan_wei']);
+       }
+       $list = $list->paginate($pageLimit)->toArray();
+
+      return $list['data'][0];
+   }
     /**
      * 采购单列表返回数据
      * @return Json
@@ -616,12 +865,42 @@ class Purchase extends Right
      * @throws ModelNotFoundException
      * @throws DbException
      */
+    public function demand(){
+
+
+        return $this->fetch('demand');
+    }
+    function detai(){
+        $data=Db::table('cg_purchase')->field('*,cg_purchase_mx.id ')->
+        join('cg_purchase_mx','cg_purchase_mx.purchase_id=cg_purchase.id')
+            ->join('jsfs','cg_purchase_mx.jijiafangshi_id=jsfs.id')
+            ->join('ad_guige','cg_purchase_mx.guige_id=ad_guige.id')
+            ->join('ad_chanpin','cg_purchase_mx.pinming_id=ad_chanpin.id')
+            ->join('ad_changjia','ad_guige.changjia_id=ad_changjia.id')
+            ->join('texture','cg_purchase_mx.caizhi_id=texture.id')
+
+            ->select();
+        echo json_encode($data);
+    }
+    function updet(){
+        $id=input("get.id");
+//        echo json_encode($id);die;
+        $fd=input("get.fd");
+        $new_val=input("get.new_val");
+        if(Db::table("cg_purchase_mx")->where("id",$id)->update([$fd=>$new_val])){
+            return 1;
+        }else{
+            return 2;
+        }
+    }
     public function purchaseaddinfo()
     {
         $companyid = $this->getCompanyId();
+
         //往来单位运营商
         $data["custom"] = model("custom")->where(array("companyid" => $companyid, "issupplier" => 1))->field("id,custom")->select();
         //结算方式
+
         $data["jiesuanfangshi"] = model("jiesuanfangshi")->where("companyid", $companyid)->field("id,jiesuanfangshi")->select();
         //票据类型
         $data["pjlx"] = model("pjlx")->where("companyid", $companyid)->field("id,pjlx")->select();
@@ -636,16 +915,34 @@ class Purchase extends Right
         //计算方式
         $data["jsfs"] = model("jsfs")->where("companyid", $companyid)->field("id,jsfs")->select();
         //收入类型
+
         $data["sr_paymenttype"] = model("paymenttype")->where(array("companyid" => $companyid, "type" => 1))->field("id,name")->select();
         //支出类型
         $data["zc_paymenttype"] = model("paymenttype")->where(array("companyid" => $companyid, "type" => 2))->field("id,name")->select();
         //计算方式
+
         $data["jsfs"] = model("jsfs")->where("companyid", $companyid)->field("id,jsfs")->select();
-        $data["productlist"] = model("view_specification")->where("companyid", $companyid)->select();
 
-        return returnRes($data, "没有相关数据", $data);
+        $data["productlist"] = model("product")->where("companyid", $companyid)->select();
+         $json=json_encode($data);
+         $data=json_decode($json,1);
+
+
+    return returnRes($data, "没有相关数据", $data);
     }
+     function purinfo_add(){
+        $data=input('get.');
+        unset($data['/admin/purchase/purinfo_add']);
 
+//        $custom=$data['custom'];
+//        $jisuan=$data['jiesuanfangshi'];
+//        $pjlx=$data['pjlx'];
+//        $storage=$data['storage'];
+//        $texture=$data['storage'];
+//        $orgin=$data['originarea'];
+//        Db::insert("insert into cg_purchase(custom,jiesuanfangshi,pjlx,storage,storage,originarea)values('$custom','$jisuan','$pjlx','$storage','$texture','$orgin')");
+            Db::table('cg_purchase')->insert($data);
+     }
     /**
      * 获取大类列表
      * @return Json
@@ -668,7 +965,7 @@ class Purchase extends Right
      * @throws DbException
      * @throws ModelNotFoundException
      */
-    public function getpurchasedetail($id = 0)
+    public function getpurchasedetail($id =0)
     {
         $data = CgPurchase::with([
             'custom',
@@ -679,6 +976,8 @@ class Purchase extends Right
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
+
+
         return returnRes(true, '', $data);
     }
 
@@ -700,11 +999,79 @@ class Purchase extends Right
         $paymentclass = $paymentclass->select();
         return returnRes($paymentclass, "没有相关数据", $paymentclass);
     }
+    function detail(){
 
+        $data =  Db::table('cg_purchase_mx')->field('*,cg_purchase_mx.id as a')->
+        JOIN('productname','cg_purchase_mx.pinming_id = productname.id')
+            ->JOIN('ad_guige','cg_purchase_mx.guige_id = ad_guige.id')
+           ->JOIN('texture','cg_purchase_mx.caizhi_id = texture.id')
+            ->JOIN('originarea','cg_purchase_mx.chandi_id = originarea.id')
+            ->JOIN('jsfs','cg_purchase_mx.jijiafangshi_id=jsfs.id')
+            ->select()
+        ;
+
+
+         return $this->fetch('detail',['list'=>$data]);
+    }
+    function cgcx(){
+        $guige=input('get.guige');
+        $chandi=input('get.chandi');
+        $caizhi=input('get.caizhi');
+        $rq=input('get.rq');
+        $data =Db::table('cg_purchase_mx')->field('*,cg_purchase_mx.id as a')->
+        JOIN('productname','cg_purchase_mx.pinming_id = productname.id')
+            ->JOIN('ad_guige','cg_purchase_mx.guige_id = ad_guige.id')
+            ->JOIN('texture','cg_purchase_mx.caizhi_id = texture.id')
+            ->JOIN('originarea','cg_purchase_mx.chandi_id = originarea.id')
+            ->JOIN('jsfs','cg_purchase_mx.jijiafangshi_id=jsfs.id');
+        if(!empty($guige)){
+
+               $data->where('ad_guige.guige','like',"%$guige%");
+
+
+        }
+
+         if(!empty($chandi)){
+              $data->where('originarea.originarea','like',"%$chandi%");
+
+         }
+        if(!empty($caizhi)){
+            $data->where('texture.texturename','like',"%$caizhi%");
+
+        }
+        if(!empty($riqi)){
+            $data->where('originarea.create_time','like',"%$riqi%");
+
+        }
+         $arr=$data->select();
+         echo json_encode($arr);
+
+
+
+
+    }
+
+    function jdjg(){
+        $id=input('get.id');
+        $fd=input('get.fd');
+        if($fd==0){
+            $str='否';
+            Db::table('c_purchase')->where('id','=',"$id")->update(['static'=>1]);
+            echo json_encode(['code'=>1,'str'=>$str]);
+        }else{
+            $str='是';
+            Db::table('c_purchase')->where('id','=',"$id")->update(['static'=>0]);
+            echo json_encode(['code'=>2,'str'=>$str]);
+        }
+    }
+    function single(){
+        $dat=Db::table('c_product_type')->join('c_purchase','c_product_type.id =c_purchase.c_leibie_id')->select();
+        return $this->fetch('single',['dat'=>$dat]);
+    }
     /**
      * 根据收支分类获取收支名称
      * @return Json
-     * @throws DataNotFoundException
+     * @throws DataNotFoundExceptiontail
      * @throws ModelNotFoundException
      * @throws DbException
      */
@@ -740,7 +1107,33 @@ class Purchase extends Right
         $list = model("pjlx")->where("companyid", $this->getCompanyId())->field("id,pjlx,tax_rate")->select();
         return returnSuc($list);
     }
+    function tdmx(){
+        $dat=Db::table('c_product_type')->join('c_purchase','c_product_type.id =c_purchase.c_leibie_id')->where('c_purchase.static','=',0)->select();
+       echo json_encode($dat);
+    }
+    function djsq(){
+        $data=Db::table('c_supplier')->select();
+        $jsfs=Db::table('jsfs')->select();
+        $pjlx=Db::table('paymenttype')->select();
+        $company=Db::table('company')->select();
+        return $this->fetch('djsq',['data'=>$data,'jsfs'=>$jsfs,'paymenttype'=>$pjlx,'company'=>$company]);
+    }
+function other(){
+      $data=input("get.");
+        unset($data['/admin/purchase/other']);
+      $res=Db::table('purchase_fee')->insert($data);
+      if($res){
+          echo 1;
+      }
+}
+function getpurchase_fee(){
+       $data= Db::table('purchase_fee')->join('c_supplier','purchase_fee.supplier_id=c_supplier.id')
+           ->join('paymenttype','purchase_fee.type=paymenttype.id')
+           ->join('company','purchase_fee.companyid=company.id')
+           ->select();
 
+       echo json_encode($data);
+}
     /**
      * 获取供应商
      * @return Json
@@ -829,6 +1222,7 @@ class Purchase extends Right
     public function getproductname()
     {
         $list = model("productname")->where(array("companyid" => $this->getCompanyId()))->field("id,name")->select();
+
         return returnSuc($list);
     }
 

@@ -1,13 +1,14 @@
+{include file="/common/base"}
 <div class="col-xs-12">
     <div class="row">
-        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/steelmanagement/addclassname')}">
+        <form class="form-horizontal" role="form" id="form" action="{:url('/admin/steelmanagement/addclassnames')}">
             <div class="form-group">
                 <input type="hidden" name="id" value="{$data.id}">
                 {include file="tpl/input" results="data" name="classname" label="类别" value="classname" attr='data-rule="required;"'/}
                 {include file="tpl/input" results="data" name="sort" label="排名" value="sort" attr='data-rule="required;"'/}
             </div>
             <div class="form-group" style="margin-top: 20px;">
-                {include file="tpl/button" label="保存"/}
+                <input type="submit">
             </div>
         </form>
     </div>

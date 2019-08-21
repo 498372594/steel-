@@ -18,8 +18,10 @@ class Company extends Right
      */
     public function index()
     {
-        $data = AdminModel::where(['department_id' => 4])->with('company')->order('id desc')->paginate(10);
-        return returnRes($data->toArray()['data'],'没有公司数据，请添加后重试',$data);
+        $data = AdminModel::where(['department_id' => 4])->with('company')->order('id desc')->paginate(3);
+
+       return   $this->fetch('Company/index',['list'=>$data]);
+//        return returnRes($data->toArray()['data'],'没有公司数据，请添加后重试',$data);
     }
 
     /**

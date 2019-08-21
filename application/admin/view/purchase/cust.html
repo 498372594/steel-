@@ -1,0 +1,157 @@
+{include file="/common/base"}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+</head>
+<body>
+
+    <table class="table">
+        <tr>
+            <td>客户名称</td>
+            <td>
+                <input type="text" id="k_name">
+            </td>
+        </tr>
+        <tr>
+            <td>助记码</td>
+            <td><input type="text" id="k_mnemonic_code"></td>
+        </tr>
+        <tr>
+            <td>状态</td>
+            <td><input type="radio"  name="zt" value="0">启用<input type="radio"  name="zt" value="1">未启用</td>
+        </tr>
+        <tr>
+            <td>法人</td>
+            <td><input type="text" id="k_fr"></td>
+        </tr>
+        <tr>
+            <td>联系人</td>
+            <td><input type="text" id="k_contacts"></td>
+        </tr>
+        <tr>
+            <td>联系人电话</td>
+            <td><input type="text" id="k_contacts_num"></td>
+        </tr>
+
+        <tr>
+            <td>邮编</td>
+            <td><input type="text" id="k_zip_code"></td>
+        </tr>
+        <tr>
+            <td>地区</td>
+            <td><select name="" id="one">
+                <option value="">--请选择--</option>
+                {volist name="data" id="v"}
+                <option value="{$v.id}" >{$v.city}</option>
+                {/volist}
+            </select>
+                <select name="" id="two">
+                    <option value=""></option>
+                </select>
+                <select name="" id="three">
+                    <option value=""></option>
+                </select></td>
+        </tr>
+
+        <tr>
+            <td>详细地址</td>
+            <td><input type="text" id="k_detailed_address"></td>
+        </tr>
+        <tr>
+            <td><button type="button" class="btn btn-success">保存</button></td>
+            <td><input type="reset"></td>
+        </tr>
+
+    </table>
+
+</body>
+</html>
+<script>
+        $("#one").change(function () {
+            id=$("#one").val();
+
+            $.ajax({
+                url:"{:url('purchase/gb')}",
+                type:"get",
+                datatype:"json",
+                data:{
+                    id:id,
+                },
+                success:function (data) {
+                  json= JSON.parse(data);
+                    str='<option value="">--请选择--</option>';
+                    $.each(json,function (k,v) {
+                        str+=' <option value="'+v.id+'">'+v.city+'</option>';
+                    })
+                    $("#two").html(str);
+                }
+            })
+        })
+        $("#two").change(function () {
+            id=$("#two").val();
+
+            $.ajax({
+                url:"{:url('purchase/gb')}",
+                type:"get",
+                datatype:"json",
+                data:{
+                    id:id,
+                },
+                success:function (data) {
+                    json= JSON.parse(data);
+                    str='<option value="">--请选择--</option>';
+                    $.each(json,function (k,v) {
+                        str+=' <option value="'+v.id+'">'+v.city+'</option>';
+                    })
+                    $("#three").html(str);
+                }
+            })
+        })
+    $(document).on("click",".btn",function () {
+        k_name=$("#k_name").val()
+        k_mnemonic_code=$("#k_mnemonic_code").val()
+        k_state=$('input:radio:checked').val()
+        sheng=$("#one").children(":selected").text();
+        shi=$("#two").children(":selected").text();
+        qv=$("#three").children(":selected").text();
+
+
+
+
+        k_contacts=$("#k_contacts").val()
+        k_contacts_num=$("#k_contacts_num").val()
+        k_zip_code=$("#k_zip_code").val()
+
+        k_detailed_address=$("#k_detailed_address").val()
+        $.ajax({
+            url:"custadd",
+            type:"get",
+            dataType:"json",
+            data:{
+                k_name:k_name,
+                k_mnemonic_code:k_mnemonic_code,
+                k_state:k_state,
+
+                k_address:sheng+shi+qv,
+                k_contacts:k_contacts,
+                k_contacts_num:k_contacts_num,
+                k_zip_code:k_zip_code,
+
+                k_detailed_address:k_detailed_address
+
+            },
+            success:function (data) {
+               if(data==1){
+                   alert("入库成功");
+               }
+            }
+        })
+
+    })
+</script>

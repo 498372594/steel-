@@ -18,6 +18,7 @@ class Login extends Base
      */
     public function index()
     {
+
         return $this->fetch();
     }
 
@@ -26,14 +27,23 @@ class Login extends Base
      */
     public function login()
     {
-        if (request()->isPost()) {
+
+
+
+
             $account  = input("account");
+
             $password = input("password");
             $ret = Loader::model('User')->login($account, $password);
-            return returnRes($ret['code'] == 1,'登录失败',$ret["data"]);
-        } else {
-            $this->error("请求方式错误！");
-        }
+
+            if($ret['code'] == 1){
+                return $this->success('登陆成功','index/index');
+            }else{
+//                return returnRes($ret['code'] == 1,'登录失败',$ret["data"]);
+                return $this->error('登陆失败','index/index',$ret["data"]);
+            }
+
+
     }
 
     /**

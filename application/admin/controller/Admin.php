@@ -16,7 +16,7 @@ class Admin extends Right
             ->join("authgroupaccess a", "t.id = a.uid")
             ->join("authgroup g", "a.group_id = g.id")
             ->join('company c','c.id = t.companyid','left')
-            ->field("t.id,t.account,t.name,t.isdisable,t.createtime,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName,c.name company")
+            ->field("t.id,t.account,t.name,t.isdisable,t.create_time,CASE WHEN t.id = 1 THEN '超级管理员' ELSE g.title END groupName,c.name company")
             ->paginate($this->pageSize);
 
         $pagelist = $admins->render();
@@ -24,6 +24,7 @@ class Admin extends Right
             "admins" => $admins,
             "pagelist" => $pagelist
         ]);
+
         return $this->fetch();
     }
 
@@ -32,71 +33,10 @@ class Admin extends Right
      */
     public function add()
     {
+
         if (request()->isPost()) {
 
-            //账号
-            $account = trim(input("account"));
-            //判断此账户是否存在
-            $admin = Db::table("admin")
-                ->where("account", $account)
-                ->find();
 
-            if ($admin) {
-                return json_err(-1, "该账户已存在！");
-            }
-            $company_id = (int)input("company_id");//企业id
-            if(!$company_id){
-                return json_err(-1, "参数有误！");
-            }
-            //判断企业是否存在
-            if(!Db::table('company')->find($company_id)){
-                return json_err(-1, "企业不存在！");
-            }
-
-            $password = trim(input("password"));
-            if (empty($password)) {
-                return json_err(-1, "请填写密码！");
-            }
-            $name = trim(input("name"));
-            if (empty($name)) {
-                return json_err(-1, "请填写昵称！");
-            }
-
-            $data = [
-                "account"    => $account,
-                "password"   => md5($password),
-                "name"       => $name,
-                "isdisable"  => 2,
-                "createtime" => now_datetime(),
-                'companyid'  => $company_id
-            ];
-
-            $group_id = (int)input("group_id");
-
-            $adminRole = Db::table('authgroup')->where(['id' => $group_id,'title' => '管理员'])->find();
-            if($adminRole){
-                if(Db::table('admin')->alias('a')->where(['a.companyid' => $company_id])->join('authgroupaccess aga',"aga.uid = a.id and aga.group_id = {$group_id}")->find()){
-                    //当前企业是否存在管理员
-                    return json_err(-1, "每个企业仅能创建一个管理员！");
-                }
-            }
-            // 添加管理员
-            try {
-                Db::startTrans();
-                $result = Db::table("admin")->insert($data);
-                $ret = Db::table("authgroupaccess")->insert(["uid"=>Db::table('admin')->getLastInsID(), "group_id"=>$group_id]);
-
-                if ($result && $ret) {
-                    Db::commit();
-                    return json_suc(0, "添加成功！");
-                } else {
-                    Db::rollback();
-                    return json_err(-1, "添加失败！");
-                }
-            } catch (Exception $e) {
-                Db::rollback();
-                return json_err(-1, $e->getMessage());
-            }
         } else {
             $roles = Db::table("authgroup")->field("id,title")->select();
             $roleArr = [""=>""];
@@ -127,13 +67,81 @@ class Admin extends Right
         }
     }
 
+    function doadd(){
+        //账号
+        $account = trim(input("account"));
+        //判断此账户是否存在
+        $admin = Db::table("admin")
+            ->where("account", $account)
+            ->find();
+
+        if ($admin) {
+            return json_err(-1, "该账户已存在！");
+        }
+        $company_id = (int)input("company_id");//企业id
+        if(!$company_id){
+            return json_err(-1, "参数有误！");
+        }
+        //判断企业是否存在
+        if(!Db::table('company')->find($company_id)){
+            return json_err(-1, "企业不存在！");
+        }
+
+        $password = trim(input("password"));
+        if (empty($password)) {
+            return json_err(-1, "请填写密码！");
+        }
+        $name = trim(input("name"));
+        if (empty($name)) {
+            return json_err(-1, "请填写昵称！");
+        }
+
+        $data = [
+            "account"    => $account,
+            "password"   => md5($password),
+            "name"       => $name,
+            "isdisable"  => 2,
+            "create_time" => now_datetime(),
+            'companyid'  => $company_id
+        ];
+
+        $group_id = (int)input("group_id");
+
+        $adminRole = Db::table('authgroup')->where(['id' => $group_id,'title' => '管理员'])->find();
+        if($adminRole){
+            if(Db::table('admin')->alias('a')->where(['a.companyid' => $company_id])->join('authgroupaccess aga',"aga.uid = a.id and aga.group_id = {$group_id}")->find()){
+                //当前企业是否存在管理员
+                return json_err(-1, "每个企业仅能创建一个管理员！");
+            }
+        }
+        // 添加管理员
+        try {
+            Db::startTrans();
+            $result = Db::table("admin")->insert($data);
+            $ret = Db::table("authgroupaccess")->insert(["uid"=>Db::table('admin')->getLastInsID(), "group_id"=>$group_id]);
+
+            if ($result && $ret) {
+                Db::commit();
+                return json_suc(0, "添加成功！");
+            } else {
+                Db::rollback();
+                return json_err(-1, "添加失败！");
+            }
+        } catch (Exception $e) {
+            Db::rollback();
+            return json_err(-1, $e->getMessage());
+        }
+    }
+
     /**
      * 编辑管理员信息
      */
     public function edit()
     {
-        if (request()->isAjax()) {
+
+        if (request()->isPost()) {
             $id = (int)input("id");
+
             //账号
             $account = trim(input("account"));
             //判断此账户是否存在
@@ -227,6 +235,7 @@ class Admin extends Right
                 return json_err(-1, $e->getMessage());
             }
 
+
         } else {
             $id = (int)input("id");
             $info = Db::table("admin")->query("SELECT
@@ -267,6 +276,7 @@ class Admin extends Right
                     'companyList' => $companyArr
                 ]
             ]);
+
             return $this->fetch();
         }
     }
@@ -276,7 +286,9 @@ class Admin extends Right
      */
     public function delete()
     {
-        if (request()->isPost()) {
+
+
+
             $id = input('id');
 
             Db::startTrans();
@@ -289,7 +301,7 @@ class Admin extends Right
                 Db::rollback();
                 return json_err();
             }
-        }
+
     }
 
     /**
@@ -297,16 +309,18 @@ class Admin extends Right
      */
     public function enable()
     {
-        if (request()->isPost()) {
+
+
             $id = input('id');
 
             $ret = Db::table("admin")->where("id", $id)->update(["isdisable"=>2]);
+        $ret = Db::table("member")->where("id", $id)->update(["isdisable"=>2]);
             if (false !== $ret) {
                 return json_suc();
             } else {
                 return json_err();
             }
-        }
+
     }
 
     /**
@@ -314,16 +328,16 @@ class Admin extends Right
      */
     public function disable()
     {
-        if (request()->isPost()) {
-            $id = input('id');
 
-            $ret = Db::table("admin")->where("id", $id)->update(["isdisable"=>1]);
+            $id=input('id');
+            $ret=Db::table("admin")->where("id", $id)->update(["isdisable"=>1]);
+        $ret=Db::table("member")->where("id", $id)->update(["isdisable"=>1]);
             if (false !== $ret) {
                 return json_suc();
             } else {
                 return json_err();
             }
-        }
+
     }
     /**
      * 首页快捷单设置

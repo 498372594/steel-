@@ -19,6 +19,7 @@ class Member extends Right
             "isdisable" => getDropdownList("isdisable"),
             "pageSize"  => getDropdownList("pageSize"),
         ]);
+
     }
 
     /**
@@ -28,6 +29,7 @@ class Member extends Right
     {
         if ($data['parent']) {
             $parentInfo = Db::table("member")->where("account", $data['parent'])->find();
+
             if (!$parentInfo) {
                 throw new Exception("推荐人不存在！");
             }
@@ -54,10 +56,11 @@ class Member extends Right
 
         $data = Db::table("member m")
             ->field("m.id,m.nickname,m.account,p.account parent")
-            ->join("member p", "m.parentId=p.id")
+            ->join("member p", "m.companyid=p.id")
             ->where("m.id", $id)
             ->find();
         $this->assign("data", $data);
+
     }
 
     /**

@@ -33,6 +33,7 @@ class Instorage extends Right
             $list->where('beizhu', 'like', '%' . $params['beizhu'] . '%');
         }
         $list=$list->paginate(10);
+
         return returnSuc($list);
     }
 
@@ -43,6 +44,7 @@ class Instorage extends Right
     public function instorageorder(){
         $instorage_id=request()->param("id");
         $list = model("ViewInstorageOrder")->where("instorage_id",$instorage_id)->paginate(10);
+
         return returnSuc($list);
     }
 
@@ -66,6 +68,7 @@ class Instorage extends Right
     public function waitinstorage(){
         $params = request()->param();
         $list = \app\admin\model\Purchasedetails::where(array("companyid"=>$this->getCompanyId(),"is_finished"=>1));
+
         if (!empty($params['time_start'])) {
             $list->where('create_time', '>=', $params['time_start']);
         }
@@ -91,7 +94,8 @@ class Instorage extends Right
         if (!empty($params['specification'])) {
             $list->where('remark', 'like', '%' . $params['specification'] . '%');
         }
-        $list = $list->paginate(10);
+        $list = $list->paginate(4);
+
         return returnSuc($list);
     }
 
@@ -99,6 +103,7 @@ class Instorage extends Right
      * @return \think\response\Json
      */
     public function instorage(){
+
         if(request()->isPost()){
             $count = \app\admin\model\Instoragelist::whereTime('create_time', 'today')->count();
             //生成入库单列表
@@ -165,6 +170,7 @@ class Instorage extends Right
                 ->group("productname,specification,width,length,houdu_name,texture,originarea,jianzhishu,")
                 ->where("storage_id",$storage_id)
                 ->paginate(10);
+
             return returnSuc($list);
         }
         public function checkstorage(){
@@ -196,6 +202,7 @@ class Instorage extends Right
         public function checkstoragedetails(){
             $check_id=request()->param();
             $list=model("checkstoragedetail")->where(array("companyid"=>$this->getCompanyId(),"check_id"=>$check_id))->paginate(10);
+
             return returnSuc($list);
         }
 
@@ -273,6 +280,7 @@ class Instorage extends Right
                 $where['productname_id']=array('like','%'. $productname_id.'%');
             }
             $list=model("InstorageDetails")->where($where)->paginate(10);
+
             return returnSuc($list);
         }
 

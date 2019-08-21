@@ -1,0 +1,264 @@
+<!--{include file="tpl/style"/}-->
+
+{include file="/common/base"}
+<button class="yc">显示|隐藏</button><button id="sc">删除</button><button class="mx">退单明细</button>
+<button class="shenqing">费用登记申请</button><span id="tj"></span>
+<div>
+             <a href="javascript:;" onclick="enterFullScreen()">进入全屏</a>
+             &nbsp;
+             <a href="javascript:;" onclick="exitFullScreen()">退出全屏</a>
+         </div>
+<div class="row" style="width: 33px;height: 33px;">
+    {include file='tpl/addBtn' url="/admin/purchase/djsq" height="80%" width="30%"/}
+
+</div>
+<div class="table-responsive" style="clear: both">
+    <table class="table table-striped">
+        <thead id="xs">
+        <tr>
+            <th nowrap="nowrap">id</th>
+            <th nowrap="nowrap"></th>
+            <th nowrap="nowrap">是否退款</th>
+            <th nowrap="nowrap">类别</th>
+            <th nowrap="nowrap">标准</th>
+            <th nowrap="nowrap">品名</th>
+            <th nowrap="nowrap">规格</th>
+            <th nowrap="nowrap">材质</th>
+            <th nowrap="nowrap">产地</th>
+            <th nowrap="nowrap">理计单重（吨）</th>
+            <th nowrap="nowrap">长度（米）</th>
+            <th nowrap="nowrap">数量单位</th>
+            <th nowrap="nowrap">包装数</th>
+
+        </tr>
+        </thead>
+        <tbody id="tt">
+        {volist name="dat" id="vo"}
+        <tr class="sc" id="{$vo.id}">
+            <td nowrap="nowrap" class="tt" value="{$vo.id}">{$vo.id}</td>
+            <td nowrap="nowrap"><input type="checkbox" name="dx" value="{$vo.id}"></td>
+         <td nowrap="nowrap" id="zt" fd="{$vo.static}" c_id="{$vo.id}">
+              <?php if($vo['static']==0){?>
+                是
+                <?php }else{?>
+              否
+                <?php }?>
+            </td>
+
+            <td nowrap="nowrap">{$vo.t_name}</td>
+            <td nowrap="nowrap">{$vo.c_biaozhun}</td>
+            <td nowrap="nowrap">{$vo.c_pinming}</td>
+            <td nowrap="nowrap">{$vo.c_guige}</td>
+            <td nowrap="nowrap">{$vo.c_caizhi}</td>
+            <td nowrap="nowrap">{$vo.c_chandi}</td>
+            <td nowrap="nowrap">{$vo.c_lijidanzhong}</td>
+            <td nowrap="nowrap">{$vo.c_changdu}</td>
+            <td nowrap="nowrap">{$vo.c_shuliangdanwei}</td>
+
+
+            <td nowrap="nowrap">{$vo.c_jianshu}</td>
+
+
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+
+</div>
+<script>
+    $(document).on("click",".shenqing",function () {
+        str='';
+        str+='   <tr>\n' +
+            '            <th nowrap="nowrap">id</th>\n' +
+            '            <th nowrap="nowrap"></th>\n' +
+            '            <th nowrap="nowrap">收付款</th>\n' +
+            '            <th nowrap="nowrap">关联明细</th>\n' +
+            '            <th nowrap="nowrap">费用类型</th>\n' +
+            '            <th nowrap="nowrap">首付款单位</th>\n' +
+            '            <th nowrap="nowrap">计价方式</th>\n' +
+            '            <th nowrap="nowrap">单价</th>\n' +
+            '            <th nowrap="nowrap">总金额</th>\n' +
+            '            <th nowrap="nowrap">财务折扣</th>\n' +
+            '            <th nowrap="nowrap">实际金额</th>\n' +
+            '            <th nowrap="nowrap">税率</th>\n' +
+
+            '            <th nowrap="nowrap">是否含税</th>\n' +
+            '            <th nowrap="nowrap">备注</th>\n' +
+            '            <th nowrap="nowrap">状态</th>\n' +
+            '\n' +
+            '        </tr>';
+           $.ajax({
+               url:"getpurchase_fee",
+               type:"get",
+               dataType:"json",
+               success:function (data) {
+                   console.log(data)
+                     st='';
+                     $.each(data,function (k,v) {
+                             st+='<tr>'
+                         st+='<td>'+v.id+'</td>'
+                         st+='<td><input type="checkbox"></td>'
+                         st+='<td>'+v.k_name+'</td>'
+                         st+='<td>'+v.type+'</td>'
+                         st+='<td>'+v.paymentclass+'</td>'
+                         st+='<td>'+v.name+'</td>'
+                         st+='<td>'+v.jsfs+'</td>'
+                         st+='<td>'+v.unit_price+'</td>'
+                         st+='<td>'+v.total_price+'</td>'
+                         st+='<td>'+v.tax+'</td>'
+                         st+='<td>'+v.price+'</td>'
+                         st+='<td>'+v.tax_rate+'</td>'
+                         st+='<td>'+v.sl+'</td>'
+                         st+='<td>'+v.remark+'</td>'
+                         st+='<td>'+v.status+'</td>'
+
+                         st+='</tr>'
+                     })
+                   $("#tt").html(st);
+               }
+           })
+
+       $("#xs").html(str)
+
+
+    })
+
+    function enterFullScreen() {
+        var de = document.documentElement;
+        if (de.requestFullscreen) {
+                         de.requestFullscreen();
+                     } else if (de.mozRequestFullScreen) {
+                         de.mozRequestFullScreen();
+                     } else if (de.webkitRequestFullScreen) {
+                         de.webkitRequestFullScreen();
+                     }
+             }
+         //退出全屏
+         function exitFullScreen() {
+                 var de = document;
+                 if (de.exitFullscreen) {
+                        de.exitFullscreen();
+                    } else if (de.mozCancelFullScreen) {
+                        de.mozCancelFullScreen();
+                    } else if (de.webkitCancelFullScreen) {
+                        de.webkitCancelFullScreen();
+                    }
+            }
+    $(document).on("click",".mx",function () {
+          $.ajax({
+              url:"tdmx",
+              type:"get",
+              dataType:"json",
+              success:function (data) {
+                  console.log(data)
+                 str='';
+                 $.each(data,function (k,v) {
+
+                      str+=' <tr class="sc" id="'+v.id+'">'
+                         str+= '<td nowrap="nowrap" class="tt" value="'+v.id+'">'+v.id+'</td>'
+                               str+='<td nowrap="nowrap"><input type="checkbox" name="dx" value="'+v.id+'"></td>'
+                          if(v.static==0){
+                              str+='<td nowrap="nowrap" id="zt" fd="'+v.static+'" c_id="'+v.id+'">是</td>'
+
+                          }
+
+                               str+='<td nowrap="nowrap">'+v.t_name+'</td>'
+                               str+='<td nowrap="nowrap">'+v.c_biaozhun+'</td>'
+                               str+='<td nowrap="nowrap">'+v.c_pinming+'</td>'
+                               str+='<td nowrap="nowrap">'+v.c_guige+'</td>'
+                               str+='<td nowrap="nowrap">'+v.c_caizhi+'</td>'
+                               str+='<td nowrap="nowrap">'+v.c_chandi+'</td>'
+                           str+=' <td nowrap="nowrap">'+v.c_lijidanzhong+'</td>'
+                           str+='<td nowrap="nowrap">'+v.c_changdu+'</td>'
+                           str+='<td nowrap="nowrap">'+v.c_shuliangdanwei+'</td>'
+
+
+                       str+=' <td nowrap="nowrap">'+v.c_jianshu+'</td>'
+                               str+='</tr>';
+                 })
+                  $("#tt").html(str);
+              }
+
+          })
+    })
+    $(document).on("click","#sc",function () {
+        arr=document.getElementsByName('dx');
+
+
+        str="";
+
+        for(i=0;i<arr.length;i++){
+            if(arr[i].checked==true){
+                str+=","+arr[i].value;
+            }
+
+        }id=str.substr(1);
+        $.ajax({
+            url:"{:url('purchase/shan')}",
+            type:"get",
+            datatype:"json",
+            data:{
+                id:id,
+            },
+            success:function (data) {
+                if(data==1){
+                    alert("删除成功")
+                    location.href='';
+                }
+            }
+        })
+    })
+    $(document).on("click",".yc",function () {
+        $.ajax({
+            url:"zt",
+            success:function (data) {
+                if(data==1){
+                    $("#xs").html('');
+                }else{
+                    str='';
+                    str+=' <tr>\n' +
+                        '            <th nowrap="nowrap">id</th>\n' +
+                        '            <th nowrap="nowrap"></th>\n' +
+                        '            <th nowrap="nowrap">是否退款</th>\n' +
+                        '            <th nowrap="nowrap">类别</th>\n' +
+                        '            <th nowrap="nowrap">标准</th>\n' +
+                        '            <th nowrap="nowrap">品名</th>\n' +
+                        '            <th nowrap="nowrap">规格</th>\n' +
+                        '            <th nowrap="nowrap">材质</th>\n' +
+                        '            <th nowrap="nowrap">产地</th>\n' +
+                        '            <th nowrap="nowrap">理计单重（吨）</th>\n' +
+                        '            <th nowrap="nowrap">长度（米）</th>\n' +
+                        '            <th nowrap="nowrap">数量单位</th>\n' +
+                        '            <th nowrap="nowrap">包装数</th>\n' +
+                        '\n' +
+                        '        </tr>'
+                    $("#xs").html(str);
+                }
+            }
+        })
+    })
+    $(document).on("click","#zt",function () {
+        fd=$(this).attr('fd');
+        c_id=$(this).attr('c_id');
+        that=$(this)
+        $.ajax({
+            url:"jdjg",
+            type:"get",
+            dataType:"json",
+            data:{
+                fd:fd,
+                id:c_id
+            },
+            success:function (data) {
+                if(data.code==1){
+                    that.text(data.str);
+                    that.attr('fd',1);
+                }else{
+                    that.text(data.str)
+                    that.attr('fd',0);
+                }
+            }
+        })
+    })
+</script>
+

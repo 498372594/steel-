@@ -1,0 +1,433 @@
+{include file="/common/base"}
+{include file="/tpl/style"/}
+
+
+<button type="button" class="  btn-success bc" id="bc">保存</button>  <button class=" btn-success bc" data-toggle="tooltip" data-placement="top" title="启用" onclick="confirmUpdate('/admin/admin/enable',id=null,'确定要新建开单吗？')">新建开单</button><br>
+供应商：<select name="" id="c_kehu_id">
+    {volist name="kh" id="vo"}   <option value="{$vo.id}">{$vo.custom}</option>{/volist}</select><span style="color: red">*</span>
+
+
+开单日期: <input type="date" id="c_kaidan_time">业务员：<select name="" id="c_yewuuyuan_id">
+    {volist name="data" id="vo"}   <option value="{$vo.id}">{$vo.y_name}</option>{/volist}</select>入库方式：<select id="c_rukufs">
+    {volist name="res" id="vo"}   <option value="{$vo.id}">{$vo.name}</option>{/volist}</select>
+车船好：<input type="text" id="c_chechuanhao"><br>税率：<input type="text" id="c_shuilv">是否含税： <select name="" id="c_ynhanshui">
+    <option value="1">Y</option> <option value="2">N</option></select>
+是否二次结算:<select name="" id="c_ercijiesuan">
+   <option value="1">是</option> <option value="2">否</option></select>
+结算方式:<select name="" id="jsfs">
+    {volist name="jsfs" id="vo"}  <option value="{$vo.id}">{$vo.jsfs}</option> {/volist}</select>
+是否显示到财务付款<select name="" id="c_caiwuxianshi">
+   <option value="1">是</option> <option value="2">否</option></select>
+采购类型<select name="" id="c_caigouleix">
+   <option value="1">外采</option> <option value="2">厂家直采</option></select>备注: <input type="text" id="c_beizhu"><div class="row" style="width: 33px;height: 33px;">
+    {include file='tpl/addBtn' url="/admin/purchase/cgtj" height="80%" width="30%"/}
+
+</div>
+<form role="form" id="searchForm" action="{:url('/admin/company/index')}" method='post' class="form-horizontal">
+    <div class="form-group">
+        <div class="col-xs-12">
+            <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1 pull-left">
+
+            </div>
+            <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1">
+                <div class="row">
+                    <span></span>
+                </div>
+            </div>
+            <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1 pull-right">
+                <div class="row">
+                    {include file="tpl/searchBtn" /}
+                    {include file="tpl/reloadBtn" /}
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<span style="float: right;padding-right: 50px;">订单总额: <b class="je" style="color: red"></b>采购数量:<b class="sl" style="color: red"></b>
+    </b>总重量:<b class="zl" style="color: red"></b></span>
+<div class="table-responsive" style="clear: both">
+    <button class="yc">显示|隐藏</button>
+    <table class="table table-bordered table-hover" >
+        <thead id="xs">
+        <tr>
+            <th nowrap="nowrap">id</th>
+            <th nowrap="nowrap"></th>
+            <th nowrap="nowrap">类别</th>
+            <th nowrap="nowrap">标准</th>
+            <th nowrap="nowrap">品名</th>
+            <th nowrap="nowrap">规格</th>
+            <th nowrap="nowrap">材质</th>
+            <th nowrap="nowrap">产地</th>
+            <th nowrap="nowrap">理计单重（吨）</th>
+            <th nowrap="nowrap">长度（米）</th>
+            <th nowrap="nowrap">数量单位</th>
+            <th nowrap="nowrap">包装数</th>
+            <th nowrap="nowrap">数量</th>
+            <th nowrap="nowrap">采购单价</th>
+
+
+        </tr>
+        </thead>
+        <tbody id="tq">
+
+        </tbody>
+    </table>
+
+</div>
+<div style="float: left">
+<a href="javascript:;" onclick="enterFullScreen()">进入全屏</a>
+&nbsp;
+<a href="javascript:;" onclick="exitFullScreen()">退出全屏</a>
+</div>
+<div class="row" style="width: 33px;height: 33px;padding-top: 33px">
+    {include file='tpl/addBtn' url="/admin/purchase/dadd" height="80%" width="30%"/}
+
+</div>
+<button class="orde" style="float: left" >加入订单</button>
+<div style="background: #ccc;width:100%;height: 30px;padding-left: 15px; " >
+    钢品库：<select name="" id="cx">
+    {volist name="type" id="vo"}  <option value="{$vo.id}">{$vo.t_name}</option>  {/volist}
+
+</select>
+    <a href="xiazai"><button >excel下载</button></a>
+<a href="shangchuan"><button >excel上传</button></a>
+
+
+品名：<select name="" id="pm">
+     <option value="品名">品名</option>
+    <option value="钢筋">钢筋</option>
+    <option value="GB2342">GB2310</option>
+    <option value="35q">35q</option>
+
+</select>
+<input type="text" id="sear"  placeholder="请输入规格/材质/产地等关键字">
+<button id="sc">删除</button><div>
+
+    </div>
+
+</div>
+
+<div class="table-responsive" style="clear: both">
+    <table class="table table-striped" style="border: solid 1px #add9c0;"  >
+        <thead>
+        <tr>
+            <th nowrap="nowrap">id</th>
+            <th nowrap="nowrap"></th>
+            <th nowrap="nowrap">类别</th>
+            <th nowrap="nowrap">标准</th>
+            <th nowrap="nowrap">品名</th>
+            <th nowrap="nowrap">规格</th>
+            <th nowrap="nowrap">材质</th>
+            <th nowrap="nowrap">产地</th>
+            <th nowrap="nowrap">理计单重（吨）</th>
+            <th nowrap="nowrap">长度（米）</th>
+            <th nowrap="nowrap">数量单位</th>
+            <th nowrap="nowrap">包装数</th>
+
+        </tr>
+        </thead>
+        <tbody id="tt">
+        {volist name="dat" id="vo"}
+        <tr class="sc" id="{$vo.id}">
+            <td nowrap="nowrap" class="tt" value="{$vo.id}">{$vo.id}</td>
+            <td nowrap="nowrap"><input type="checkbox" name="dx" value="{$vo.id}"></td>
+         <td nowrap="nowrap">{$vo.t_name}</td>
+            <td nowrap="nowrap">{$vo.c_biaozhun}</td>
+            <td nowrap="nowrap">{$vo.c_pinming}</td>
+            <td nowrap="nowrap">{$vo.c_guige}</td>
+            <td nowrap="nowrap">{$vo.c_caizhi}</td>
+            <td nowrap="nowrap">{$vo.c_chandi}</td>
+            <td nowrap="nowrap">{$vo.c_lijidanzhong}</td>
+            <td nowrap="nowrap">{$vo.c_changdu}</td>
+            <td nowrap="nowrap">{$vo.c_shuliangdanwei}</td>
+
+
+            <td nowrap="nowrap">{$vo.c_jianshu}</td>
+
+
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+
+</div>
+<script>
+    $(document).on("blur","#sear",function () {
+           new_val=$(this).val()
+
+           $.ajax({
+               url:"typesear",
+               type:"get",
+               dataType:"json",
+               data:{
+                   new_val:new_val
+               },
+               success:function (data) {
+                   console.log(data)
+                   str='';
+                   $.each(data,function (k,v) {
+                       str+='<tr>'
+                       str+='<td nowrap="nowrap"class="new_id" >'+v.id+'</td>'
+                       str+='<td nowrap="nowrap"><input type="checkbox" name="dx" value="'+v.id+'"></td>'
+                       str+='<td nowrap="nowrap">'+v.t_name+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_biaozhun+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_pinming+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_guige+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_caizhi+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_chandi+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_lijidanzhong+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_changdu+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_shuliangdanwei+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_jianshu+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_shuliang+'</td>'
+                       str+='<td nowrap="nowrap">'+v.c_caigoudanjia+'</td>'
+
+                       str+='</tr>'
+                   })
+                   $("#tt").html(str)
+               }
+           })
+    })
+    function enterFullScreen() {
+        var de = document.documentElement;
+        if (de.requestFullscreen) {
+            de.requestFullscreen();
+        } else if (de.mozRequestFullScreen) {
+            de.mozRequestFullScreen();
+        } else if (de.webkitRequestFullScreen) {
+            de.webkitRequestFullScreen();
+        }
+    }
+    //退出全屏
+    function exitFullScreen() {
+        var de = document;
+        if (de.exitFullscreen) {
+            de.exitFullscreen();
+        } else if (de.mozCancelFullScreen) {
+            de.mozCancelFullScreen();
+        } else if (de.webkitCancelFullScreen) {
+            de.webkitCancelFullScreen();
+        }
+    }
+    $(document).on("click",".yc",function () {
+            $.ajax({
+                url:"zt",
+                success:function (data) {
+                if(data==1){
+                    $("#xs").html('');
+                }else{
+                    str='';
+                    str+=' <tr>\n' +
+                        '            <th nowrap="nowrap">id</th>\n' +
+                        '            <th nowrap="nowrap"></th>\n' +
+                        '            <th nowrap="nowrap">类别</th>\n' +
+                        '            <th nowrap="nowrap">标准</th>\n' +
+                        '            <th nowrap="nowrap">品名</th>\n' +
+                        '            <th nowrap="nowrap">规格</th>\n' +
+                        '            <th nowrap="nowrap">材质</th>\n' +
+                        '            <th nowrap="nowrap">产地</th>\n' +
+                        '            <th nowrap="nowrap">理计单重（吨）</th>\n' +
+                        '            <th nowrap="nowrap">长度（米）</th>\n' +
+                        '            <th nowrap="nowrap">数量单位</th>\n' +
+                        '            <th nowrap="nowrap">包装数</th>\n' +
+                        '            <th nowrap="nowrap">数量</th>\n' +
+                        '            <th nowrap="nowrap">采购单价</th>\n' +
+                        '\n' +
+                        '\n' +
+                        '        </tr>'
+                    $("#xs").html(str);
+                }
+                }
+            })
+    })
+    $(document).on("change","#pm",function () {
+        pm=$(this).val();
+        $.ajax({
+            url:"pin",
+            type:"get",
+            dataType:"json",
+            data:{
+                pm:pm
+            },
+            success:function (data) {
+
+                str='';
+                $.each(data,function (k,v) {
+                    str+='<tr>'
+                    str+='<td nowrap="nowrap"class="new_id" >'+v.id+'</td>'
+                    str+='<td nowrap="nowrap"><input type="checkbox" name="dx" value="'+v.id+'"></td>'
+                    str+='<td nowrap="nowrap">'+v.t_name+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_biaozhun+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_pinming+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_guige+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_caizhi+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_chandi+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_lijidanzhong+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_changdu+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_shuliangdanwei+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_jianshu+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_shuliang+'</td>'
+                    str+='<td nowrap="nowrap">'+v.c_caigoudanjia+'</td>'
+
+                    str+='</tr>'
+                })
+                $("#tt").html(str)
+            }
+        })
+    })
+$(document).on("change","#cx",function () {
+     cont=$(this).val();
+    $.ajax({
+        url:"cha",
+        type:"get",
+        dataType:"json",
+        data:{
+            cont_id:cont
+        },
+        success:function (data) {
+
+            str='';
+            $.each(data,function (k,v) {
+                str+='<tr>'
+                str+='<td nowrap="nowrap"class="new_id" >'+v.id+'</td>'
+                str+='<td nowrap="nowrap"><input type="checkbox" name="dx" value="'+v.id+'"></td>'
+                str+='<td nowrap="nowrap">'+v.t_name+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_biaozhun+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_pinming+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_guige+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_caizhi+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_chandi+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_lijidanzhong+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_changdu+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_shuliangdanwei+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_jianshu+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_shuliang+'</td>'
+                str+='<td nowrap="nowrap">'+v.c_caigoudanjia+'</td>'
+
+                str+='</tr>'
+            })
+            $("#tt").html(str)
+        }
+    })
+})
+    $(document).on("click","#bc",function () {
+        c_kehu_id= $("#c_kehu_id").val();
+        c_kaidan_time=$("#c_kaidan_time").val();
+        c_yewuuyuan_id=$("#c_yewuuyuan_id").val();
+        c_rukufs=$("#c_rukufs").val();
+        c_chechuanhao=$("#c_chechuanhao").val();
+        c_shuilv=$("#c_shuilv").val();
+        c_ynhanshui=$("#c_ynhanshui").val();
+        c_ercijiesuan=$("#c_ercijiesuan").val()
+        c_caiwuxianshi=$("#c_caiwuxianshi").val()
+        c_caigouleix=$("#c_caigouleix").val()
+        c_beizhu=$("#c_beizhu").val()
+    jsfs=$("#jsfs").val()
+        $.ajax({
+            url:"kdbt",
+            type:"get",
+            dataType:"json",
+            data:{
+                c_kehu_id:c_kehu_id,
+                c_kaidan_time:c_kaidan_time,
+                c_yewuuyuan_id:c_yewuuyuan_id,
+                c_rukufs:c_rukufs,
+                c_chechuanhao:c_chechuanhao,
+                c_shuilv:c_shuilv,
+                c_ynhanshui:c_ynhanshui,
+                c_ercijiesuan:c_ercijiesuan,
+                c_caiwuxianshi:c_caiwuxianshi,
+                c_caigouleix:c_caigouleix,
+                c_beizhu:c_beizhu,
+                c_jisuanfangshi:jsfs
+            },
+            success:function (data) {
+                if(data==1){
+                    alert("入库成功");
+
+                }
+            }
+        })
+
+    })
+$(document).on("click","#sc",function () {
+    arr=document.getElementsByName('dx');
+
+
+    str="";
+
+    for(i=0;i<arr.length;i++){
+        if(arr[i].checked==true){
+            str+=","+arr[i].value;
+        }
+
+    }id=str.substr(1);
+    $.ajax({
+        url:"{:url('purchase/shan')}",
+        type:"get",
+        datatype:"json",
+        data:{
+            id:id,
+        },
+        success:function (data) {
+          if(data==1){
+              alert("删除成功")
+              location.href='';
+          }
+        }
+    })
+})
+$(document).on("click",".orde",function () {
+    arr=document.getElementsByName('dx');
+
+
+    str="";
+
+    for(i=0;i<arr.length;i++){
+        if(arr[i].checked==true){
+            str+=","+arr[i].value;
+        }
+
+    }id=str.substr(1);
+
+    $.ajax({
+        url:"{:url('purchase/addall')}",
+        type:"get",
+        datatype:"json",
+        data:{
+            id:id,
+        },
+        success:function (data) {
+
+           json=JSON.parse(data);
+
+           str='';
+           $.each(json.data,function (k,v) {
+                  str+='<tr>'
+               str+='<td nowrap="nowrap"class="new_id" >'+v.id+'</td>'
+               str+='<td nowrap="nowrap"><input type="checkbox" name="dx" value="'+v.id+'"></td>'
+               str+='<td nowrap="nowrap">'+v.t_name+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_biaozhun+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_pinming+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_guige+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_caizhi+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_chandi+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_lijidanzhong+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_changdu+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_shuliangdanwei+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_jianshu+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_shuliang+'</td>'
+               str+='<td nowrap="nowrap">'+v.c_caigoudanjia+'</td>'
+
+               str+='</tr>'
+               $("#"+v.id).remove()
+           })
+            $(".je").text(json.sum)
+            $(".sl").text(json.count)
+            $(".zl").text(json.zong)
+            $("#tq").append(str)
+        }
+    })
+
+})
+</script>

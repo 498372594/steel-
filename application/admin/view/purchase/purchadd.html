@@ -1,0 +1,141 @@
+{include file="/common/base"}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+</head>
+<body>
+
+<table class="table">
+    <tr>
+        <td>品名</td>
+        <td>
+            <select name="" id="pinming_id">
+                {volist name="cp" id="vo"}
+                <option value="{$vo.id}">{$vo.pinming}</option>
+                {/volist}
+            </select>
+
+
+
+        </td>
+    </tr>
+    <tr>
+        <td>规格</td>
+        <td> <select name="" id="guige_id">
+            {volist name="gg" id="vo"}
+            <option value="{$vo.id}">{$vo.guige}</option>
+            {/volist}
+        </select></td>
+    </tr>
+    <tr>
+        <td>材质</td>
+        <td> <select name="" id="caizhi_id">
+            {volist name="data" id="vo"}
+            <option value="{$vo.id}">{$vo.texturename}</option>
+            {/volist}
+        </select></td>
+    </tr>
+    <tr>
+        <td>产地</td>
+        <td><input type="text" id="chandi_id"></td>
+    </tr>
+
+    <tr>
+        <td>库位</td>
+        <td><input type="text" id="kw"></td>
+    </tr>
+
+    <tr>
+        <td>长度</td>
+        <td><input type="text" id="changdu"></td>
+    </tr>
+
+
+    <tr>
+        <td>数量</td>
+        <td><input type="text" id="counts"></td>
+    </tr>
+    <tr>
+        <td>计价方式</td>
+        <td> <select name="" id="jijiafangshi">
+            {volist name="jsfs" id="vo"}
+            <option value="{$vo.id}">{$vo.jsfs}</option>
+            {/volist}
+        </select></td>
+    </tr>
+
+    <tr>
+        <td>采购总重</td>
+        <td><input type="text" id="cgzz"></td>
+    </tr>
+
+    <tr>
+        <td>实际入库总重</td>
+        <td><input type="text" id="nowzz"></td>
+    </tr>
+    <tr>
+        <td>采购单价/吨</td>
+        <td><input type="text" id="cg_dun"></td>
+    </tr>
+    <tr>
+        <td>采购单价/件</td>
+        <td><input type="text" id="jianzhong"></td>
+    </tr>
+    <tr>
+        <td><button type="button" class="btn btn-success">保存</button></td>
+        <td><input type="reset"></td>
+    </tr>
+
+</table>
+
+</body>
+</html>
+<script>
+    $(document).on("click",".btn",function () {
+        pinming_id=$("#pinming_id").val()
+
+        guige_id=$("#guige_id").val()
+        caizhi_id=$("#caizhi_id").val()
+        chandi_id=$("#chandi_id").val()
+        kw=$("#kw").val()
+        changdu=$("#changdu").val()
+        counts=$("#counts").val()
+        jijiafangshi=$("#jijiafangshi").val();
+        cgzz=$("#cgzz").val()
+        nowzz=$("#nowzz").val()
+        cg_dun=$("#cg_dun").val()
+        jianzhong=$("#jianzhong").val()
+        $.ajax({
+             url:"dopurchase",
+            type:"get",
+            dataType:"json",
+            data:{
+                pinming_id:pinming_id,
+                guige_id:guige_id,
+                caizhi_id:caizhi_id,
+                chandi_id:chandi_id,
+                kw:kw,
+                changdu:changdu,
+                counts:counts,
+                jijiafangshi_id:jijiafangshi,
+                cgzz:cgzz,
+                nowzz:nowzz,
+                cg_dun:cg_dun,
+                jianzhong:jianzhong
+            },
+            success:function (data) {
+                if(data==1){
+                    alert("入库成功");
+                    location.href=''
+                }
+            }
+        })
+
+    })
+</script>

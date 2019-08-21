@@ -1,3 +1,4 @@
+{include file="/common/base"}
 {include file="tpl/style"/}
 <form role="form" id="searchForm" action="{:url('/admin/member/index')}" method='post' class="form-horizontal">
     <div class="form-group">
@@ -48,14 +49,14 @@
                 <td nowrap="nowrap">
                     <!-- 启用、禁用 -->
                     {eq name="vo.isdisable" value="1"}
-                        <i class="fa fa-play qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="启用" onclick="confirmUpdate('/admin/member/enable','{$vo.id}','确定要启用吗？')"></i>
+                    <i class="fa fa-play qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="启用" onclick="confirmUpdate('/admin/admin/enable','{$vo.id}','确定要启用吗？')"></i>
                     {else/}
-                        <i class="fa fa-stop qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="禁用" onclick="confirmUpdate('/admin/member/disable','{$vo.id}','确定要禁用吗？')"></i>
+                    <i class="fa fa-stop qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="禁用" onclick="confirmUpdate('/admin/admin/disable','{$vo.id}','确定要禁用吗？')"></i>
                     {/eq}
                     <!--编辑资料-->
                     <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal('{:url(\'/admin/member/edit\',[\'id\'=>$vo[\'id\']])}', '编辑','80%','50%')"></i>
                     <!--删除-->
-                    <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmUpdate('/admin/member/delete','{$vo.id}','确定要删除吗？')"></i>
+                    <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmDelete('/admin/member/delete','{$vo.id}','model','确定要删除吗？')"></i>
                 </td>
             </tr>
         {/volist}

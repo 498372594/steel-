@@ -609,6 +609,15 @@ class Salesorder extends Right
         $params = $request->param();
         $model = new \app\admin\model\SalesorderDetails();
         $data = $model->getList($params, $pageLimit, $this->getCompanyId());
+
+
+        return returnSuc($data);
+    }
+    public function gettotal(){
+        $model = new \app\admin\model\SalesorderDetails();
+        $data["total_count"]=$model->where("companyid",$this->getCompanyId())->sum("count");
+        $data["total_total_money"]=$model->where("companyid",$this->getCompanyId())->sum("total_fee");
+        $data["total_weight"]=$model->where("companyid",$this->getCompanyId())->sum("weight");
         return returnSuc($data);
     }
 

@@ -54,6 +54,7 @@ class Initinput extends Right
             }
             $model = new Purchasedetails();
             $res = $model->allowField(true)->saveAll($purchasedetails);
+
             return returnRes($res, '失败');
         }
         return returnFail('请求方式错误');
@@ -202,6 +203,7 @@ class Initinput extends Right
         $list = InitYsfk::where(array("companyid" => $this->getCompanyId(), "type" => 0));
         $list = $this->getinitsearch($params, $list);
         $list = $list->paginate(10);
+
         return returnRes(true, '', $list);
     }
 
@@ -331,8 +333,30 @@ class Initinput extends Right
             ->where('companyid', $this->getCompanyId());
 
         $list = $this->getsearchcondition($params, $list);
-        $list = $list->paginate(10);
-        return returnRes(true, '', $list);
+        $list = $list->paginate(10)->toArray();
+        $res=Db::table('init_kc')->join('company','company.id=init_kc.companyid')->join('jiesuanfangshi','init_kc.jiesuan_id=jiesuanfangshi.id')->join('custom','custom.id=init_kc.customer_id')->select();
+
+
+      return $this->fetch('kclist',['list'=>$res]);
+    }
+    function kcadd(){
+        $data=Db::table('custom')->select();
+        $company=Db::table('company')->select();
+        $fs=Db::table('jiesuanfangshi')->select();
+        $id=input('get.id');
+
+        $sys=Db::table('cg_purchase')->select();
+        return $this->fetch('kcadd',['data'=>$data,'company'=>$company,'fs'=>$fs,'sys'=>$sys,'id'=>$id]);
+    }
+    function dokc(){
+        $id=input('get.id');
+
+       $data=input('get.');
+       unset($data['/admin/initinput/dokc_html']);
+       $res=Db::table('init_kc')->insert($data);
+       if($res){
+           return returnRes(true,'添加成功');
+       }
     }
 
     /**
@@ -358,6 +382,7 @@ class Initinput extends Right
         ])->where('companyid', $this->getCompanyId())
             ->where('id', $id)
             ->find();
+
         return returnRes(true, '', $data);
     }
 
@@ -567,14 +592,14 @@ class Initinput extends Right
         try {
             $ysfk = InitYsfk::get($id);
             if (empty($ysfk)) {
-                throw new Exception("对象不存在");
+                     throw new Exception("对象不存在");
             }
             if ($ysfk["status"] == 1) {
                 throw new Exception("该单据已经作废");
             }
             $ysfk->status = 1;
             $ysfk->save();
-            $list = InitYsfkMx::where("ysfk_id", $ysfk["id"])->select();
+            $list = InitYsfkMx::where("ysfk_id",$ysfk["id"])->select();
 
             foreach ($list as $mx) {
                 (new \app\admin\model\CapitalHk())->deleteHk($mx["id"], 26);

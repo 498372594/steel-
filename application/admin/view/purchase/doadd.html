@@ -1,0 +1,114 @@
+<!--{include file="tpl/style"/}-->
+
+{include file="/common/base"}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+</head>
+<body>
+<form action="">
+    <table class="table">
+        <tr>
+            <td>类别</td>
+            <td>
+                <select name="" id="c_leibie_id">
+                    {volist name="data" id="vo"}
+                    <option value="{$vo.id}">
+                       {$vo.t_name}
+                    </option>
+                    {/volist}
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>标准</td>
+            <td><input type="text" id="c_biaozhun"></td>
+        </tr>
+        <tr>
+            <td>品名</td>
+            <td><input type="text" id="c_pinming"></td>
+        </tr>
+        <tr>
+            <td>规格</td>
+            <td><input type="text" id="guige"></td>
+        </tr>
+        <tr>
+            <td>材质</td>
+            <td><input type="text" id="c_caizhi"></td>
+        </tr>
+        <tr>
+            <td>产地</td>
+            <td><input type="text" id="c_chandi"></td>
+        </tr>
+        <tr>
+            <td>理计单量</td>
+            <td><input type="text" id="c_lijidanzhong"></td>
+        </tr>
+        <tr>
+            <td>长度</td>
+            <td><input type="text" id="c_changdu"></td>
+        </tr>
+        <tr>
+            <td>数量单位</td>
+            <td><input type="text" id="c_shuliang"></td>
+        </tr>
+
+        <tr>
+            <td>包装数</td>
+            <td><input type="text" id="c_jianshu"></td>
+        </tr>
+        <tr>
+            <td><button type="button" class="btn btn-success">保存</button></td>
+            <td></td>
+        </tr>
+
+    </table>
+</form>
+</body>
+</html>
+<script>
+    $(document).on("click",'.btn',function () {
+        c_leibie_id=$("#c_leibie_id").val()
+        c_biaozhun=$("#c_biaozhun").val()
+        c_pinming=$("#c_pinming").val()
+        guige=$("#guige").val()
+        c_caizhi=$("#c_caizhi").val()
+        c_chandi=$("#c_chandi").val()
+        c_lijidanzhong=$("#c_lijidanzhong").val();
+        c_changdu=$("#c_changdu").val()
+        c_shuliang=$("#c_shuliang").val()
+        c_jianshu=$("#c_jianshu").val()
+         $.ajax({
+             url:"puradd",
+             type:"get",
+             dataType:"json",
+             data:{
+                 c_leibie_id:c_leibie_id,
+                 c_biaozhun:c_biaozhun,
+                 c_pinming:c_pinming,
+                 c_guige:guige,
+                 c_caizhi:c_caizhi,
+                 c_chandi:c_chandi,
+                 c_lijidanzhong:c_lijidanzhong,
+                 c_changdu:c_changdu,
+                 c_shuliang:c_shuliang,
+                 c_jianshu:c_jianshu
+             },
+             success:function (data) {
+               if(data==1){
+                   alert("入库成功");
+               }
+             }
+         })
+
+
+
+
+    })
+</script>

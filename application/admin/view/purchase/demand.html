@@ -1,0 +1,291 @@
+{include file="/common/base"}
+
+
+<!--{include file="tpl/style"/}-->
+{include file="/common/base"}
+<form role="form" id="searchForm" action="{:url('/admin/company/index')}" method='post' class="form-horizontal">
+    <div class="form-group">
+
+            <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1">
+                <div class="row">
+                    <span></span>
+                </div>
+            </div>
+            <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1 pull-right">
+                <div class="row">
+                    <!--{include file="tpl/searchBtn" /}-->
+                    <!--{include file="tpl/reloadBtn" /}-->
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<a href="javascript:;" onclick="enterFullScreen()">进入全屏</a>
+<a href="javascript:;" onclick="exitFullScreen()">退出全屏</a>
+<b style="float: right">縂重量：<span id="zl" style="color: red;"></span></b>
+<b style="float: right">數量：<span id="shu" style="color: red;"></span></b>
+
+<div class="row" style="width: 33px;height: 33px;padding-top: 33px">
+    {include file='tpl/addBtn' url="/admin/purchase/purchadd" height="80%" width="30%"/}
+
+</div>
+<div class="mx" style="border: 1px solid #ccc;background: #ccc;width: 80px;height:30px;">订单明细</div>
+<div style="width: 100%;height: 30px;background: #c1c1c1">
+<b id="shan">删除</b>
+<b class="yc">显示|隐藏</b>
+
+</div>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead id="xs">
+        <tr>
+            <th nowrap="nowrap">id</th>
+            <th nowrap="nowrap"></th>
+            <th nowrap="nowrap">品名</th>
+            <th nowrap="nowrap">规格</th>
+            <th nowrap="nowrap">材质</th>
+            <th nowrap="nowrap">产地</th>
+            <th nowrap="nowrap">卡号</th>
+            <th nowrap="nowrap">库位</th>
+            <th nowrap="nowrap">长度</th>
+
+
+            <th nowrap="nowrap">数量</th>
+
+
+            <th nowrap="nowrap">计价方式</th>
+            <th nowrap="nowrap">采购总重</th>
+            <th nowrap="nowrap">实际入库总重</th>
+            <th nowrap="nowrap">采购单价/吨</th>
+            <th nowrap="nowrap">采购单价/件</th>
+        </tr>
+        </thead>
+        <tbody id="tq">
+
+
+        </tbody>
+    </table>
+
+</div>
+<script>
+    $(document).on("click",".yc",function () {
+        $.ajax({
+            url:"zt",
+            success:function (data) {
+                if(data==1){
+                    $("#xs").html('');
+                }else{
+                    str='';
+                    str+=' <tr>\n' +
+                        '            <th nowrap="nowrap">id</th>\n' +
+                        '            <th nowrap="nowrap"></th>\n' +
+                        '            <th nowrap="nowrap">品名</th>\n' +
+                        '            <th nowrap="nowrap">规格</th>\n' +
+                        '            <th nowrap="nowrap">材质</th>\n' +
+                        '            <th nowrap="nowrap">产地</th>\n' +
+                        '            <th nowrap="nowrap">卡号</th>\n' +
+                        '            <th nowrap="nowrap">库位</th>\n' +
+                        '            <th nowrap="nowrap">长度</th>\n' +
+                        '\n' +
+                        '\n' +
+                        '            <th nowrap="nowrap">数量</th>\n' +
+                        '\n' +
+                        '\n' +
+                        '            <th nowrap="nowrap">计价方式</th>\n' +
+                        '            <th nowrap="nowrap">采购总重</th>\n' +
+                        '            <th nowrap="nowrap">实际入库总重</th>\n' +
+                        '            <th nowrap="nowrap">采购单价/吨</th>\n' +
+                        '            <th nowrap="nowrap">采购单价/件</th>\n' +
+                        '        </tr>'
+                    $("#xs").html(str);
+                }
+            }
+        })
+    })
+    $(document).on("click",".clic",function () {
+        arr=document.getElementsByName('dx');
+
+
+        str="";
+
+        for(i=0;i<arr.length;i++){
+            if(arr[i].checked==true){
+                str+=","+arr[i].value;
+            }
+
+        }id=str.substr(1);
+
+        $.ajax({
+            url:"{:url('purchase/cg_count')}",
+            type:"get",
+            datatype:"json",
+            data:{
+                id:id,
+            },
+            success:function (data) {
+               json=JSON.parse(data)
+
+                $("#zl").html(json.cgzz+'噸')
+                $("#shu").html(json.sl)
+            }
+        })
+    })
+    $(document).on("click","#shan",function () {
+        arr=document.getElementsByName('dx');
+
+
+        str="";
+
+        for(i=0;i<arr.length;i++){
+            if(arr[i].checked==true){
+                str+=","+arr[i].value;
+            }
+
+        }id=str.substr(1);
+
+        $.ajax({
+            url:"{:url('purchase/cg_shan')}",
+            type:"get",
+            datatype:"json",
+            data:{
+                id:id,
+            },
+            success:function (data) {
+                console.log(data)
+                if(data==1){
+                    alert("删除成功")
+                    location.href='';
+                }
+            }
+        })
+    })
+    function enterFullScreen() {
+        var de = document.documentElement;
+        if (de.requestFullscreen) {
+            de.requestFullscreen();
+        } else if (de.mozRequestFullScreen) {
+            de.mozRequestFullScreen();
+        } else if (de.webkitRequestFullScreen) {
+            de.webkitRequestFullScreen();
+        }
+    }
+    //退出全屏
+    function exitFullScreen() {
+        var de = document;
+        if (de.exitFullscreen) {
+            de.exitFullscreen();
+        } else if (de.mozCancelFullScreen) {
+            de.mozCancelFullScreen();
+        } else if (de.webkitCancelFullScreen) {
+            de.webkitCancelFullScreen();
+        }
+    }
+    $(document).on("click",".mx",function () {
+
+            $.ajax({
+                url:"detai",
+                type:"get",
+                dataType:"json",
+                success:function (data) {
+
+                   str='';
+                   $.each(data,function (k,v) {
+                       str+=' <tr class="updet" id="'+v.id+'">\n' +
+                           '            <td nowrap="nowrap">'+v.id+'</td>\n' +
+                           '<td nowrap="nowrap"><input type="checkbox" class="clic" name="dx" value="'+v.id+'"></td>\n' +
+                           '            <td nowrap="nowrap">'+v.pinming+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.guige+'</td>\n' +
+                           '\n' +
+                           '            <td nowrap="nowrap">'+v.texturename+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.chandi+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.card+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.kw+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.changdu+'</td>\n' +
+                           '\n' +
+                           '            <td nowrap="nowrap" style="color: red;"  fd="counts" >'+v.counts+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.jsfs+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.cgzz+'</td>\n' +
+                           '            <td nowrap="nowrap" style="color: red" fd="nowzz">'+v.nowzz+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.cg_dun+'</td>\n' +
+                           '\n' +
+                           '            <td nowrap="nowrap">'+v.jianzhong+'</td>\n' +
+                           '\n' +
+                           '\n' +
+                           '        </tr>'
+                   })
+                    $("#tq").html(str)
+                }
+            })
+    })
+    $(document).on("dblclick","td",function () {
+         id=$(this).parents('tr').attr('id');
+        fd=$(this).attr('fd');
+        old_val=$(this).text();
+        obj=$(this);
+        if(fd==undefined){
+            alert("不能修改")
+            return;
+        }else{
+            $(this).html('<input type="text" class="ds" value="'+old_val+'">');
+            $(".ds").blur(function () {
+                new_val=$(this).val();
+                $.ajax({
+                    url:"{:url('purchase/updet')}",
+                    type:"get",
+                    datatype:"json",
+                    data:{
+                        id:id,
+                        fd:fd,
+                        new_val:new_val,
+                    },
+                    success:function (data) {
+                                    console.log(data)
+                        if(data==1){
+                            obj.html(new_val);
+                        }else{
+                            obj.html(old_val);
+                        }
+                    }
+                })
+            })
+        }
+
+    })
+    // $(document).on("click",":button",function () {
+    //     num=$("#num").val();
+    //
+    //     $.ajax({
+    //         url:"sear",
+    //         type:"get",
+    //         dataType:"json",
+    //        data:{
+    //            system_number:num
+    //        },
+    //         success:function (data) {
+    //             console.log(data)
+    //             str='';
+    //             str+='<tr>'
+    //             str+='<td>'+data.id+'</td>'
+    //             str+='<td>'+data.system_number+'</td>'
+    //             str+='<td>'+data.custom_name+'</td>'
+    //             str+='<td>'+data.shou_huo_dan_wei+'</td>'
+    //             str+='<td>'+data.yun_shu_dan_wei+'</td>'
+    //             str+='<td>'+data.group_id+'</td>'
+    //             str+='<td>'+data.sale_operate_id+'</td>'
+    //             if (data.status==0){
+    //                 str+='<td>'+'已保存'+'</td>'
+    //             } else{
+    //                 str+='<td>'+'未保存'+'</td>'
+    //             }
+    //             str+='<td>'+data.beizhu+'</td>'
+    //             str+='<td>'+data.create_time+'</td>'
+    //             str+='<td>'+data.update_time+'</td>'
+    //             str+='<td nowrap="nowrap"> <i class="fa fa-trash-o qg-tooltip qg-op-btn" data-toggle="tooltip" data-placement="top" title="删除" onclick="confirmDelete({:url(\'/admin/member/delete\',[\'id\'=>'+data.id+'])})"></i> <i class="fa fa-edit qg-op-btn qg-tooltip" data-toggle="tooltip" data-placement="top" title="编辑" onclick="modal({:url(\'/admin/member/edit\',[\'id\'=>'+data.id+'], \'编辑\',\'80%\',\'50%\')})"></i>' +
+    //                 '</td>'
+    //             str+='</tr>'
+    //
+    //             $("#tq").html(str);
+    //         }
+    //     })
+    // })
+</script>

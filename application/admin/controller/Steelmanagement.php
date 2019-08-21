@@ -25,30 +25,7 @@ class Steelmanagement extends Right
 
     public function addproductname()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['name'] = request()->post("name");
-                $data['sort'] = request()->post("sort");
-                $data['zjm'] = request()->post("zjm");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("productname")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['name'] = request()->post("name");
-                $data['sort'] = request()->post("sort");
-                $data['zjm'] = request()->post("zjm");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("productname")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("productname")->where("id", $id)->find();
@@ -58,9 +35,33 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
     }
 
+  public function addproductnames(){
+      if (empty(request()->get("id"))) {
+          $data['name'] = request()->get("name");
+          $data['sort'] = request()->get("sort");
+          $data['zjm'] = request()->get("zjm");
+          $data['companyid'] = $this->getCompanyId();
+          $data['add_name'] = $this->getAccount()['name'];
+          $data['add_id'] = $this->getAccountId();
+          $result = model("productname")->save($data);
+      } else {
+          $id = request()->get("id");
+          $data['name'] = request()->get("name");
+          $data['sort'] = request()->get("sort");
+          $data['zjm'] = request()->get("zjm");
+          $data['add_name'] = $this->getAccount()['name'];
+          $data['add_id'] = $this->getAccountId();
+          $result = model("productname")->where("id", $id)->update($data);
+      }
+      if ($result) {
+          return json_suc();
+      } else {
+          return json_err();
+      }
+  }
     public function deleteproductname()
     {
         $pk = model("productname")->getPk();
@@ -79,33 +80,35 @@ class Steelmanagement extends Right
         $this->assign("list", $list);
         return view();
     }
+   public function addtextures(){
 
+           if (empty(request()->get("id"))) {
+               $data['texturename'] = request()->get("texturename");
+               $data['sort'] = request()->get("sort");
+               $data['zjm'] = request()->get("zjm");
+               $data['companyid'] = $this->getCompanyId();
+               $data['add_name'] = $this->getAccount()['name'];
+               $data['add_id'] = $this->getAccountId();
+               $result = model("texture")->save($data);
+           } else {
+               $id = request()->get("id");
+               $data['texturename'] = request()->get("texturename");
+               $data['sort'] = request()->get("sort");
+               $data['zjm'] = request()->get("zjm");
+               $data['add_name'] = $this->getAccount()['name'];
+               $data['add_id'] = $this->getAccountId();
+               $result = model("texture")->where("id", $id)->update($data);
+           }
+           if ($result) {
+               return json_suc();
+           } else {
+               return json_err();
+           }
+
+   }
     public function addtexture()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['texturename'] = request()->post("texturename");
-                $data['sort'] = request()->post("sort");
-                $data['zjm'] = request()->post("zjm");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("texture")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['texturename'] = request()->post("texturename");
-                $data['sort'] = request()->post("sort");
-                $data['zjm'] = request()->post("zjm");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("texture")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("texture")->where("id", $id)->find();
@@ -115,7 +118,7 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
     }
 
     public function deletetexture()
@@ -193,31 +196,34 @@ class Steelmanagement extends Right
         $this->assign("list", $list);
         return view();
     }
+public function addspecifications(){
 
+    if (request()->get()) {
+        if (empty(request()->post("id"))) {
+            $data['specification'] = request()->get("specification");
+            $data['sort'] = request()->get("sort");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
+            $result = model("specification")->save($data);
+        } else {
+            $id = request()->get("id");
+            $data['specification'] = request()->get("specification");
+            $data['sort'] = request()->get("sort");
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
+            $result = model("specification")->where("id", $id)->update($data);
+        }
+        if ($result) {
+            return json_suc();
+        } else {
+            return json_err();
+        }
+    }
+}
     public function addspecification()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['specification'] = request()->post("specification");
-                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("specification")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['specification'] = request()->post("specification");
-                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("specification")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("specification")->where("id", $id)->find();
@@ -227,7 +233,7 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
     }
 
     public function deletespecification()
@@ -251,36 +257,7 @@ class Steelmanagement extends Right
 
     public function addstorage()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['storage'] = request()->post("storage");
-                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("storage")->save($data);
-                $data['address'] = request()->post("address");
-                $data['contacts'] = request()->post("contacts");
-                $data['phone'] = request()->post("phone");
-                $data['fax'] = request()->post("fax");
-            } else {
-                $id = request()->post("id");
-                $data['storage'] = request()->post("storage");
-                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $data['address'] = request()->post("address");
-                $data['contacts'] = request()->post("contacts");
-                $data['phone'] = request()->post("phone");
-                $data['fax'] = request()->post("fax");
-                $result = model("storage")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("storage")->where("id", $id)->find();
@@ -290,7 +267,7 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
     }
 
     public function deletestorage()
@@ -311,21 +288,19 @@ class Steelmanagement extends Right
         $this->assign("list", $list);
         return view();
     }
+    public function addunits(){
 
-    public function addunit()
-    {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['unit'] = request()->post("unit");
-                $data['sort'] = request()->post("sort");
+            if (empty(request()->get("id"))) {
+                $data['unit'] = request()->get("unit");
+                $data['sort'] = request()->get("sort");
                 $data['companyid'] = $this->getCompanyId();
                 $data['add_name'] = $this->getAccount()['name'];
                 $data['add_id'] = $this->getAccountId();
                 $result = model("unit")->save($data);
             } else {
-                $id = request()->post("id");
-                $data['unit'] = request()->post("unit");
-                $data['sort'] = request()->post("sort");
+                $id = request()->get("id");
+                $data['unit'] = request()->get("unit");
+                $data['sort'] = request()->get("sort");
                 $data['add_name'] = $this->getAccount()['name'];
                 $data['add_id'] = $this->getAccountId();
                 $result = model("unit")->where("id", $id)->update($data);
@@ -335,7 +310,11 @@ class Steelmanagement extends Right
             } else {
                 return json_err();
             }
-        } else {
+
+    }
+    public function addunit()
+    {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("unit")->where("id", $id)->find();
@@ -345,7 +324,7 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
     }
 
     public function deleteunit()
@@ -366,32 +345,38 @@ class Steelmanagement extends Right
         $this->assign("list", $list);
         return view();
     }
+ public function addclassnames(){
+     $data=request()->get();
+     if (empty(request()->get("id"))) {
 
+//                $data['classname'] = request()->post("classname");
+//                $data['sort'] = request()->post("sort");
+         $data['companyid'] = $this->getCompanyId();
+         $data['add_name'] = $this->getAccount()['name'];
+
+         $data['add_id'] = $this->getAccountId();
+         unset($data['/admin/steelmanagement/addclassnames_html']);
+
+         $result = model("classname")->save($data);
+
+
+     } else {
+         $id = request()->get("id");
+//                $data['classname'] = request()->post("classname");
+//                $data['sort'] = request()->post("sort");
+         $data['add_name'] = $this->getAccount()['name'];
+         $data['add_id'] = $this->getAccountId();
+         $result = model("classname")->where("id", $id)->update($data);
+     }
+     if ($result) {
+         return json_suc();
+     } else {
+         return json_err();
+     }
+ }
     public function addclassname()
     {
-        if (request()->post()) {
-            $data=request()->post();
-            if (empty(request()->post("id"))) {
-//                $data['classname'] = request()->post("classname");
-//                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("classname")->save($data);
-            } else {
-                $id = request()->post("id");
-//                $data['classname'] = request()->post("classname");
-//                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("classname")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("classname")->where("id", $id)->find();
@@ -401,7 +386,7 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
     }
 
     public function deleteclassname()
@@ -428,80 +413,8 @@ class Steelmanagement extends Right
 
     public function addproduct()
     {
-        if (request()->post()) {
-//            dump(request()->post());die;
-            if (empty(request()->post("id"))) {
-                $data['classid'] = request()->post("classid");
-                $data['productname'] = request()->post("productname");
-                if (!model("productname")->where("name", $data['productname'])->find()) {
-                    $class['name'] = $data['productname'];
-                    $class['zjm'] = request()->post("zjm");
-                    $class['companyid'] = $this->getCompanyId();
-                    $class['add_name'] = $this->getAccount()['name'];
-                    $class['add_id'] = $this->getAccountId();
-                    model("productname")->save($class);
-                }
-                $data['texture'] = request()->post("texture");
-                if (!model("texture")->where("texturename", $data['texture'])->find()) {
-                    $texture['texturename'] = $data['texture'];
-                    $texture['companyid'] = $this->getCompanyId();
-                    $texture['add_name'] = $this->getAccount()['name'];
-                    $texture['add_id'] = $this->getAccountId();
-                    model("texture")->save($texture);
-                }
-                $data['originarea'] = request()->post("originarea");
-                if (!model("originarea")->where("originarea", $data['originarea'])->find()) {
-                    $orginarea['originarea'] = $data['originarea'];
-                    $orginarea['companyid'] = $this->getCompanyId();
-                    $orginarea['add_name'] = $this->getAccount()['name'];
-                    $orginarea['add_id'] = $this->getAccountId();
-                    model("originarea")->save($orginarea);
-                }
-                $data['specification'] = request()->post("specification");
-                if (!model("specification")->where("specification", $data['specification'])->find()) {
-                    $specification['specification'] = $data['specification'];
-                    $specification['companyid'] = $this->getCompanyId();
-                    $specification['add_name'] = $this->getAccount()['name'];
-                    $specification['add_id'] = $this->getAccountId();
-                    model("specification")->save($specification);
-                }
-                $data['piece_weight'] = request()->post("piece_weight");
-                $data['length'] = request()->post("length");
-                $data['width'] = request()->post("width");
-                $data['unit'] = request()->post("unit");
-                $data['number_alarm_val'] = request()->post("number_alarm_val");
-                $data['weight_alarm_val'] = request()->post("weight_alarm_val");
-                $data['pack_no'] = request()->post("pack_no");
-                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("product")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['classid'] = request()->post("classid");
-                $data['productname'] = request()->post("productname");
-                $data['texture'] = request()->post("texture");
-                $data['originarea'] = request()->post("originarea");
-                $data['specification'] = request()->post("specification");
-                $data['piece_weight'] = request()->post("piece_weight");
-                $data['length'] = request()->post("length");
-                $data['width'] = request()->post("width");
-                $data['number_alarm_val'] = request()->post("number_alarm_val");
-                $data['weight_alarm_val'] = request()->post("weight_alarm_val");
-                $data['unit'] = request()->post("unit");
-                $data['pack_no'] = request()->post("pack_no");
-                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("product")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
+
             $id = request()->param("id");
             $classlist = model("classname")->where("companyid", $this->getCompanyId())->field("id,classname")->select();
             $classArr = ["" => ""];
@@ -525,30 +438,102 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
-    }
 
+    }
+   public function addproducte(){
+       if (empty(request()->get("id"))) {
+
+           $data['classid'] = request()->get("classid");
+           $data['productname'] = request()->get("productname");
+           if (!model("productname")->where("name", $data['productname'])->find()) {
+               $class['name'] = $data['productname'];
+               $class['zjm'] = request()->get("zjm");
+               $class['companyid'] = $this->getCompanyId();
+               $class['add_name'] = $this->getAccount()['name'];
+               $class['add_id'] = $this->getAccountId();
+               model("productname")->save($class);
+           }
+           $data['texture'] = request()->get("texture");
+           if (!model("texture")->where("texturename", $data['texture'])->find()) {
+               $texture['texturename'] = $data['texture'];
+               $texture['companyid'] = $this->getCompanyId();
+               $texture['add_name'] = $this->getAccount()['name'];
+               $texture['add_id'] = $this->getAccountId();
+               model("texture")->save($texture);
+           }
+           $data['originarea'] = request()->get("originarea");
+           if (!model("originarea")->where("originarea", $data['originarea'])->find()) {
+               $orginarea['originarea'] = $data['originarea'];
+               $orginarea['companyid'] = $this->getCompanyId();
+               $orginarea['add_name'] = $this->getAccount()['name'];
+               $orginarea['add_id'] = $this->getAccountId();
+               model("originarea")->save($orginarea);
+           }
+           $data['specification'] = request()->get("specification");
+           if (!model("specification")->where("specification", $data['specification'])->find()) {
+               $specification['specification'] = $data['specification'];
+               $specification['companyid'] = $this->getCompanyId();
+               $specification['add_name'] = $this->getAccount()['name'];
+               $specification['add_id'] = $this->getAccountId();
+               model("specification")->save($specification);
+           }
+           $data['piece_weight'] = request()->get("piece_weight");
+           $data['length'] = request()->get("length");
+           $data['width'] = request()->get("width");
+           $data['unit'] = request()->get("unit");
+           $data['number_alarm_val'] = request()->get("number_alarm_val");
+           $data['weight_alarm_val'] = request()->get("weight_alarm_val");
+           $data['pack_no'] = request()->get("pack_no");
+           $data['sort'] = request()->get("sort");
+           $data['companyid'] = $this->getCompanyId();
+           $data['add_name'] = $this->getAccount()['name'];
+           $data['add_id'] = $this->getAccountId();
+           $result = model("product")->save($data);
+       } else {
+           $id = request()->get("id");
+           $data['classid'] = request()->get("classid");
+           $data['productname'] = request()->get("productname");
+           $data['texture'] = request()->get("texture");
+           $data['originarea'] = request()->get("originarea");
+           $data['specification'] = request()->get("specification");
+           $data['piece_weight'] = request()->get("piece_weight");
+           $data['length'] = request()->get("length");
+           $data['width'] = request()->get("width");
+           $data['number_alarm_val'] = request()->get("number_alarm_val");
+           $data['weight_alarm_val'] = request()->get("weight_alarm_val");
+           $data['unit'] = request()->get("unit");
+           $data['pack_no'] = request()->get("pack_no");
+           $data['sort'] = request()->get("sort");
+           $data['add_name'] = $this->getAccount()['name'];
+           $data['add_id'] = $this->getAccountId();
+           $result = model("product")->where("id", $id)->update($data);
+       }
+       if ($result) {
+           return json_suc();
+       } else {
+           return json_err();
+       }
+       //
+   }
     public function jsfs()
     {
         $list = model("jsfs")->where("companyid", $this->getCompanyId())->select();
         $this->assign("list", $list);
         return view();
     }
+    public function addjsfsd(){
 
-    public function addjsfs()
-    {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['jsfs'] = request()->post("jsfs");
-                $data['jjlx'] = request()->post("jjlx");
+            if (empty(request()->get("id"))) {
+                $data['jsfs'] = request()->get("jsfs");
+                $data['jj_type'] = request()->get("jjlx");
                 $data['companyid'] = $this->getCompanyId();
                 $data['add_name'] = $this->getAccount()['name'];
                 $data['add_id'] = $this->getAccountId();
                 $result = model("jsfs")->save($data);
             } else {
-                $id = request()->post("id");
-                $data['jsfs'] = request()->post("jsfs");
-                $data['sort'] = request()->post("sort");
+                $id = request()->get("id");
+                $data['jsfs'] = request()->get("jsfs");
+                $data['sort'] = request()->get("sort");
                 $data['add_name'] = $this->getAccount()['name'];
                 $data['add_id'] = $this->getAccountId();
                 $result = model("jsfs")->where("id", $id)->update($data);
@@ -558,7 +543,11 @@ class Steelmanagement extends Right
             } else {
                 return json_err();
             }
-        } else {
+
+    }
+    public function addjsfs()
+    {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("jsfs")->where("id", $id)->find();
@@ -568,7 +557,7 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
     }
 
     public function deletejsfs()
@@ -714,39 +703,41 @@ class Steelmanagement extends Right
     public function financeset(){
         return view();
     }
+   public function addbanks(){
 
+           if (empty(request()->get("id"))) {
+               $data['zjm'] = request()->get("zjm");
+               $data['name'] = request()->get("name");
+               $data['banktype_id'] = request()->get("banktype_id");
+               $data['kaihuhang'] = request()->get("kaihuhang");
+               $data['bank'] = request()->get("bank");
+               $data['sort'] = request()->get("sort");
+               $data['companyid'] = $this->getCompanyId();
+               $data['add_name'] = $this->getAccount()['name'];
+               $data['add_id'] = $this->getAccountId();
+               $result = model("bank")->save($data);
+           } else {
+               $id = request()->get("id");
+               $data['zjm'] = request()->get("zjm");
+               $data['name'] = request()->get("name");
+               $data['banktype_id'] = request()->get("banktype_id");
+               $data['kaihuhang'] = request()->get("kaihuhang");
+               $data['bank'] = request()->get("bank");
+               $data['sort'] = request()->get("sort");
+               $data['add_name'] = $this->getAccount()['name'];
+               $data['add_id'] = $this->getAccountId();
+               $result = model("bank")->where("id", $id)->update($data);
+           }
+           if ($result) {
+               return json_suc();
+           } else {
+               return json_err();
+           }
+
+   }
     public function addbank()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['zjm'] = request()->post("zjm");
-                $data['name'] = request()->post("name");
-                $data['banktype_id'] = request()->post("banktype_id");
-                $data['kaihuhang'] = request()->post("kaihuhang");
-                $data['bank'] = request()->post("bank");
-                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("bank")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['zjm'] = request()->post("zjm");
-                $data['name'] = request()->post("name");
-                $data['banktype_id'] = request()->post("banktype_id");
-                $data['kaihuhang'] = request()->post("kaihuhang");
-                $data['bank'] = request()->post("bank");
-                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("bank")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("bank")->where("id", $id)->find();
@@ -757,7 +748,7 @@ class Steelmanagement extends Right
 //            $this->assign("type", $type);
             $this->assign("data", $info);
             return view();
-        }
+
     }
 
     public function delete()
@@ -777,44 +768,45 @@ class Steelmanagement extends Right
         $this->assign("list", $list);
         return view("$model");
     }
+    public function addfaxis(){
+        if (empty(request()->get("id"))) {
+            $data['fxfs'] = request()->get("fxfs");
+            $data['fxdx'] = request()->get("fxdx");
+            $data['fxgz'] = request()->get("fxgz");
+            $data['fxxz'] = request()->get("fxxz");
+            $data['qjts'] = request()->get("qjts");
+            $data['jsgs'] = request()->get("jsgs");
+            $data['zjts'] = request()->get("zjts");
+            $data['description'] = request()->get("description");
+            $data['sort'] = request()->get("sort");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
+            $result = model("faxi")->save($data);
+        } else {
+            $id = request()->get("id");
+            $data['fxfs'] = request()->get("fxfs");
+            $data['fxdx'] = request()->get("fxdx");
+            $data['fxgz'] = request()->get("fxgz");
+            $data['fxxz'] = request()->get("fxxz");
+            $data['qjts'] = request()->get("qjts");
+            $data['jsgs'] = request()->get("jsgs");
+            $data['zjts'] = request()->get("zjts");
+            $data['description'] = request()->get("description");
+            $data['sort'] = request()->get("sort");
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
+            $result = model("faxi")->where("id", $id)->update($data);
+        }
+        if ($result) {
+            return json_suc();
+        } else {
+            return json_err();
+        }
+    }
     public function addfaxi()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['fxfs'] = request()->post("fxfs");
-                $data['fxdx'] = request()->post("fxdx");
-                $data['fxgz'] = request()->post("fxgz");
-                $data['fxxz'] = request()->post("fxxz");
-                $data['qjts'] = request()->post("qjts");
-                $data['jsgs'] = request()->post("jsgs");
-                $data['zjts'] = request()->post("zjts");
-                $data['description'] = request()->post("description");
-                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("faxi")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['fxfs'] = request()->post("fxfs");
-                $data['fxdx'] = request()->post("fxdx");
-                $data['fxgz'] = request()->post("fxgz");
-                $data['fxxz'] = request()->post("fxxz");
-                $data['qjts'] = request()->post("qjts");
-                $data['jsgs'] = request()->post("jsgs");
-                $data['zjts'] = request()->post("zjts");
-                $data['description'] = request()->post("description");
-                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("faxi")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("faxi")->where("id", $id)->find();
@@ -824,7 +816,7 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
     }
     public function addsalesmansetting()
     {
@@ -871,30 +863,31 @@ class Steelmanagement extends Right
             return view();
         }
     }
+    public function addjiesuanfangshid(){
+        if (empty(request()->get("id"))) {
+            $data['jiesuanfangshi'] = request()->get("jiesuanfangshi");
+            $data['sort'] = request()->get("sort");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
+            $result = model("jiesuanfangshi")->save($data);
+        } else {
+            $id = request()->get("id");
+            $data['jiesuanfangshi'] = request()->get("jiesuanfangshi");
+            $data['sort'] = request()->get("sort");
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
+            $result = model("jiesuanfangshi")->where("id", $id)->update($data);
+        }
+        if ($result) {
+            return json_suc();
+        } else {
+            return json_err();
+        }
+    }
     public function addjiesuanfangshi()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['jiesuanfangshi'] = request()->post("jiesuanfangshi");
-                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("jiesuanfangshi")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['jiesuanfangshi'] = request()->post("jiesuanfangshi");
-                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("jiesuanfangshi")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("jiesuanfangshi")->where("id", $id)->find();
@@ -904,36 +897,39 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
-        }
+
+    }
+   public function addpjlxs(){
+
+           if (empty(request()->get("id"))) {
+               $data['pjlx'] = request()->get("pjlx");
+               $data['tax_rate'] = request()->get("tax_rate");
+               $data['second_name'] = request()->get("second_name");
+               $data['sort'] = request()->get("sort");
+               $data['companyid'] = $this->getCompanyId();
+               $data['add_name'] = $this->getAccount()['name'];
+               $data['add_id'] = $this->getAccountId();
+               $result = model("pjlx")->save($data);
+           } else {
+               $id = request()->get("id");
+               $data['pjlx'] = request()->get("pjlx");
+               $data['tax_rate'] = request()->get("tax_rate");
+               $data['second_name'] = request()->get("second_name");
+               $data['sort'] = request()->get("sort");
+               $data['add_name'] = $this->getAccount()['name'];
+               $data['add_id'] = $this->getAccountId();
+               $result = model("pjlx")->where("id", $id)->update($data);
+           }
+           if ($result) {
+               return json_suc();
+           } else {
+               return json_err();
+
+       }
     }
     public function addpjlx()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['pjlx'] = request()->post("pjlx");
-                $data['tax_rate'] = request()->post("tax_rate");
-                $data['second_name'] = request()->post("second_name");
-                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("pjlx")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['pjlx'] = request()->post("pjlx");
-                $data['tax_rate'] = request()->post("tax_rate");
-                $data['second_name'] = request()->post("second_name");
-                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("pjlx")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             if ($id) {
                 $info = model("pjlx")->where("id", $id)->find();
@@ -942,43 +938,44 @@ class Steelmanagement extends Right
             }
             $this->assign("data", $info);
             return view();
+
+    }
+    public function addpaymenttypes(){
+        if (empty(request()->get("id"))) {
+            $data['name'] = request()->get("name");
+            $data['type'] =request()->get("type1");
+            $data['class'] = request()->get("class");
+            if(!model("paymentclass")->where("name",$data['class'])->find()){
+                $data1['name']=$data['class'];
+                $data1['companyid'] = $this->getCompanyId();
+                $data1['add_name'] = $this->getAccount()['name'];
+                $data1['add_id'] = $this->getAccountId();
+                model("paymentclass")->save($data1);
+            }
+            $data['sort'] = request()->get("sort");
+            $data['companyid'] = $this->getCompanyId();
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
+            $result = model("paymenttype")->save($data);
+        } else {
+            $id = request()->get("id");
+            $data['name'] = request()->get("name");
+            $data['type'] = request()->get("type");
+            $data['class'] = request()->get("class");
+            $data['sort'] = request()->get("sort");
+            $data['add_name'] = $this->getAccount()['name'];
+            $data['add_id'] = $this->getAccountId();
+            $result = model("paymenttype")->where("id", $id)->update($data);
+        }
+        if ($result) {
+            return json_suc();
+        } else {
+            return json_err();
         }
     }
     public function addpaymenttype()
     {
-        if (request()->post()) {
-            if (empty(request()->post("id"))) {
-                $data['name'] = request()->post("name");
-                $data['type'] =request()->post("type1");
-                $data['class'] = request()->post("class");
-                if(!model("paymentclass")->where("name",$data['class'])->find()){
-                    $data1['name']=$data['class'];
-                    $data1['companyid'] = $this->getCompanyId();
-                    $data1['add_name'] = $this->getAccount()['name'];
-                    $data1['add_id'] = $this->getAccountId();
-                    model("paymentclass")->save($data1);
-                }
-                $data['sort'] = request()->post("sort");
-                $data['companyid'] = $this->getCompanyId();
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("paymenttype")->save($data);
-            } else {
-                $id = request()->post("id");
-                $data['name'] = request()->post("name");
-                $data['type'] = request()->post("type");
-                $data['class'] = request()->post("class");
-                $data['sort'] = request()->post("sort");
-                $data['add_name'] = $this->getAccount()['name'];
-                $data['add_id'] = $this->getAccountId();
-                $result = model("paymenttype")->where("id", $id)->update($data);
-            }
-            if ($result) {
-                return json_suc();
-            } else {
-                return json_err();
-            }
-        } else {
+
             $id = request()->param("id");
             $type = request()->param("type");
             if ($id) {
@@ -989,7 +986,7 @@ class Steelmanagement extends Right
             $this->assign("data", $info);
             $this->assign("type", $type);
             return view();
-        }
+
     }
     public function paymenttype(){
         $type=request()->param("type");
