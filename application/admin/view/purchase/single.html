@@ -18,7 +18,11 @@
         <tr>
             <th nowrap="nowrap">id</th>
             <th nowrap="nowrap"></th>
+
+                       <th nowrap="nowrap">出单单号</th>
+                      <th nowrap="nowrap">开单日期</th>
             <th nowrap="nowrap">是否退款</th>
+
             <th nowrap="nowrap">类别</th>
             <th nowrap="nowrap">标准</th>
             <th nowrap="nowrap">品名</th>
@@ -37,6 +41,8 @@
         <tr class="sc" id="{$vo.id}">
             <td nowrap="nowrap" class="tt" value="{$vo.id}">{$vo.id}</td>
             <td nowrap="nowrap"><input type="checkbox" name="dx" value="{$vo.id}"></td>
+           <td nowrap="nowrap">{$vo.system_number}</td>
+          <td nowrap="nowrap">{$vo.create_time}</td>
          <td nowrap="nowrap" id="zt" fd="{$vo.static}" c_id="{$vo.id}">
               <?php if($vo['static']==0){?>
                 是
@@ -157,6 +163,8 @@
                       str+=' <tr class="sc" id="'+v.id+'">'
                          str+= '<td nowrap="nowrap" class="tt" value="'+v.id+'">'+v.id+'</td>'
                                str+='<td nowrap="nowrap"><input type="checkbox" name="dx" value="'+v.id+'"></td>'
+                     str+='<td nowrap="nowrap">'+v.system_number+'</td>'
+                     str+='<td nowrap="nowrap">'+v.create_time+'</td>'
                           if(v.static==0){
                               str+='<td nowrap="nowrap" id="zt" fd="'+v.static+'" c_id="'+v.id+'">是</td>'
 
@@ -219,6 +227,7 @@
                     str+=' <tr>\n' +
                         '            <th nowrap="nowrap">id</th>\n' +
                         '            <th nowrap="nowrap"></th>\n' +
+
                         '            <th nowrap="nowrap">是否退款</th>\n' +
                         '            <th nowrap="nowrap">类别</th>\n' +
                         '            <th nowrap="nowrap">标准</th>\n' +
