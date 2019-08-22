@@ -1,6 +1,6 @@
 {include file="/common/base"}
 
-<html lang="en">
+ <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -12,6 +12,24 @@
 <body>
 
 <table class="table">
+    <tr>
+        <td>采购单号</td>
+        <td>
+            <input type="text" id="system_number">
+        </td>
+    </tr>
+    <tr>
+        <td>业务员</td>
+        <td>
+            <select name="" id="sale_operate_id">
+                {volist name="ywy" id="vo"}
+                <option value="{$vo.id}">
+                    {$vo.y_name}
+                </option>
+                {/volist}
+            </select>
+        </td>
+    </tr>
     <tr>
         <td>品名</td>
         <td>
@@ -99,7 +117,8 @@
 <script>
     $(document).on("click",".btn",function () {
         pinming_id=$("#pinming_id").val()
-
+        system_number=$("#system_number").val()
+        sale_operate_id=$("#sale_operate_id").val()
         guige_id=$("#guige_id").val()
         caizhi_id=$("#caizhi_id").val()
         chandi_id=$("#chandi_id").val()
@@ -116,6 +135,8 @@
             type:"get",
             dataType:"json",
             data:{
+                system_number: system_number,
+                sale_operate_id:sale_operate_id,
                 pinming_id:pinming_id,
                 guige_id:guige_id,
                 caizhi_id:caizhi_id,

@@ -3,34 +3,24 @@
 
 <!--{include file="tpl/style"/}-->
 {include file="/common/base"}
-<form role="form" id="searchForm" action="{:url('/admin/company/index')}" method='post' class="form-horizontal">
-    <div class="form-group">
+<td><button type="button" class="btn cgsear btn-success">查询</button></td>
+<div style="padding-left: 10px;margin-top: 13px"> 业务员：<input type="text" id="ywy"> 采购单号： <input type="text" id="cgdh"> 订单状态: <input type="text" id="status" >
+规格: <input type="text" id="guige"> </div>  <div style="margin-top: 13px;padding-left: 13px">材质： &nbsp;&nbsp;&nbsp;<input type="text" id="cz"> &nbsp;&nbsp;&nbsp;&nbsp;
+    产地： <input type="text" id="place"> 卡号： <input type="text" id="card"></div>
 
-            <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1">
-                <div class="row">
-                    <span></span>
-                </div>
-            </div>
-            <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1 pull-right">
-                <div class="row">
-                    <!--{include file="tpl/searchBtn" /}-->
-                    <!--{include file="tpl/reloadBtn" /}-->
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-<a href="javascript:;" onclick="enterFullScreen()">进入全屏</a>
-<a href="javascript:;" onclick="exitFullScreen()">退出全屏</a>
+
+
 <b style="float: right">縂重量：<span id="zl" style="color: red;"></span></b>
 <b style="float: right">數量：<span id="shu" style="color: red;"></span></b>
-
-<div class="row" style="width: 33px;height: 33px;padding-top: 33px">
-    {include file='tpl/addBtn' url="/admin/purchase/purchadd" height="80%" width="30%"/}
-
+<div class="row" style="width: 23px;height: 23px;padding-top: 33px">
+    {include file='tpl/addBtn' url="/admin/purchase/purchadd" height="20%" width="30%"/}
 </div>
-<div class="mx" style="border: 1px solid #ccc;background: #ccc;width: 80px;height:30px;">订单明细</div>
-<div style="width: 100%;height: 30px;background: #c1c1c1">
+<div class="mx" style="border: 1px solid #c1c1c1;background: #ccc;width: 80px;height:30px;">订单明细</div>
+<div style="float: right">
+<a href="javascript:;" onclick="enterFullScreen()">进入全屏</a>
+<a href="javascript:;" onclick="exitFullScreen()">退出全屏</a>
+</div>
+<div style="width: 100%;height: 30px;background: #c1c1c1;border: 1px">
 <b id="shan">删除</b>
 <b class="yc">显示|隐藏</b>
 
@@ -41,6 +31,9 @@
         <tr>
             <th nowrap="nowrap">id</th>
             <th nowrap="nowrap"></th>
+                 <th nowrap="nowrap">订单编号</th>
+            <th nowrap="nowrap">业务员</th>
+            <th nowrap="nowrap">订单状态</th>
             <th nowrap="nowrap">品名</th>
             <th nowrap="nowrap">规格</th>
             <th nowrap="nowrap">材质</th>
@@ -68,6 +61,65 @@
 
 </div>
 <script>
+    $(document).on("click",".cgsear",function () {
+            ywy=$("#ywy").val()
+        cgdh=$("#cgdh").val()
+        status=$("#status").val()
+        place=$("#place").val()
+        card=$("#card").val()
+        guige=$("#guige").val()
+        cz=$("#cz").val();
+           $.ajax({
+               url:"searall",
+               type:"get",
+               dataType:"json",
+               data:{
+                   ywy:ywy,
+                   cgdh:cgdh,
+                   status:status,
+                   place:place,
+                   card:card,
+                   guige:guige,
+                   cz:cz
+               },
+               success:function (data) {
+                   str='';
+                   $.each(data,function (k,v) {
+                       if(v.status==0){
+                           st='已审核'
+                       }else{
+                           st='已入库'
+                       }
+                       str+=' <tr class="updet" id="'+v.id+'">\n' +
+                           '            <td nowrap="nowrap">'+v.id+'</td>\n' +
+                           '<td nowrap="nowrap"><input type="checkbox" class="clic" name="dx" value="'+v.id+'"></td>\n' +
+                           '            <td nowrap="nowrap">'+v.system_number+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.y_name+'</td>\n' +
+                           '            <td nowrap="nowrap">'+st+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.pinming+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.guige+'</td>\n' +
+                           '\n' +
+                           '            <td nowrap="nowrap">'+v.texturename+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.chandi+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.card+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.kw+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.changdu+'</td>\n' +
+                           '\n' +
+                           '            <td nowrap="nowrap" style="color: red;"  fd="counts" >'+v.counts+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.jsfs+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.cgzz+'</td>\n' +
+                           '            <td nowrap="nowrap" style="color: red" fd="nowzz">'+v.nowzz+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.cg_dun+'</td>\n' +
+                           '\n' +
+                           '            <td nowrap="nowrap">'+v.jianzhong+'</td>\n' +
+                           '\n' +
+                           '\n' +
+                           '        </tr>'
+                   })
+                   $("#tq").html(str)
+               }
+           })
+    })
     $(document).on("click",".yc",function () {
         $.ajax({
             url:"zt",
@@ -79,6 +131,7 @@
                     str+=' <tr>\n' +
                         '            <th nowrap="nowrap">id</th>\n' +
                         '            <th nowrap="nowrap"></th>\n' +
+
                         '            <th nowrap="nowrap">品名</th>\n' +
                         '            <th nowrap="nowrap">规格</th>\n' +
                         '            <th nowrap="nowrap">材质</th>\n' +
@@ -187,12 +240,20 @@
                 type:"get",
                 dataType:"json",
                 success:function (data) {
-
+                    console.log(data)
                    str='';
                    $.each(data,function (k,v) {
+                        if(v.status==0){
+                            st='已审核'
+                        }else{
+                            st='已入库'
+                        }
                        str+=' <tr class="updet" id="'+v.id+'">\n' +
                            '            <td nowrap="nowrap">'+v.id+'</td>\n' +
                            '<td nowrap="nowrap"><input type="checkbox" class="clic" name="dx" value="'+v.id+'"></td>\n' +
+                           '            <td nowrap="nowrap">'+v.system_number+'</td>\n' +
+                           '            <td nowrap="nowrap">'+v.y_name+'</td>\n' +
+                           '            <td nowrap="nowrap">'+st+'</td>\n' +
                            '            <td nowrap="nowrap">'+v.pinming+'</td>\n' +
                            '            <td nowrap="nowrap">'+v.guige+'</td>\n' +
                            '\n' +

@@ -695,8 +695,10 @@ function purchadd(){
         $cp=Db::table('ad_chanpin')->select();
         $gg=Db::table('ad_guige')->select();
     $jsfs=Db::table('jsfs')->select();
+    $ywy=Db::table('c_salesman')->select();
+    $dat=Db::table('cg_purchase')->select();
 
-        return $this->fetch('purchadd',['data'=>$data,'cj'=>$cj,'cp'=>$cp,'gg'=>$gg,'jsfs'=>$jsfs]);
+        return $this->fetch('purchadd',['data'=>$data,'cj'=>$cj,'cp'=>$cp,'gg'=>$gg,'jsfs'=>$jsfs,'ywy'=>$ywy,'dat'=>$dat]);
 }
 function dopurchase(){
         $data=input('get.');
@@ -788,7 +790,9 @@ $objWriter->save('php://output');
     }
     function dadd(){
         $data=Db::table('c_product_type')->select();
-      return  $this->fetch('purchase/doadd',['data'=>$data]);
+        $ywy=Db::table('c_salesman')->select();
+
+      return  $this->fetch('purchase/doadd',['data'=>$data,'ywy'=>$ywy]);
     }
 
     function puradd(){
@@ -874,16 +878,57 @@ function kdbt(){
     function cs(){
 
     }
-    function detai(){
-
-        $data=Db::table('cg_purchase')->field('*,cg_purchase_mx.id ')->
+    function searall(){
+        $ywy=input('get.ywy');
+        $cgdh=input("get.cgdh");
+        $status=input('get.status');
+        $place=input('get.place');
+        $card=input('get.card');
+        $guige=input('get.guige');
+        $cz=input('get.cz');
+        $data=Db::table('cg_purchase')->field('*,cg_purchase.id ')->
         join('cg_purchase_mx','cg_purchase_mx.purchase_id=cg_purchase.id')
             ->join('jsfs','cg_purchase_mx.jijiafangshi_id=jsfs.id')
             ->join('ad_guige','cg_purchase_mx.guige_id=ad_guige.id')
             ->join('ad_chanpin','cg_purchase_mx.pinming_id=ad_chanpin.id')
             ->join('ad_changjia','ad_guige.changjia_id=ad_changjia.id')
             ->join('texture','cg_purchase_mx.caizhi_id=texture.id')
+            ->join('c_salesman','cg_purchase.sale_operate_id=c_salesman.id');
+        if(!empty($ywy)){
+          $data->where('c_salesman.y_name','like',"$ywy");
+        }
+        if(!empty($cgdh)){
+           $data->where('cg_purchase.system_number','like',"$cgdh");
+        }
+        if(!empty($status)){
+          $data->where('cg_purchase.status','like',"$status");
+        }
+        if(!empty($place)){
+           $data->where('cg_purchase.chandi','like',"$place");
+        }
+        if(!empty($card)){
+          $data->where('cg_purchase.card','like',"$card");
+        }
+        if(!empty($guige)){
+            $data->where('ad_guige.guige','like',"$guige");
+        }
+        if(!empty($cz)){
+            $data->where('texture.texturename','like',"$cz");
+        }
+        $resu=$data->select();
 
+        echo json_encode($resu);
+    }
+    function detai(){
+
+        $data=Db::table('cg_purchase')->field('*,cg_purchase.id ')->
+        join('cg_purchase_mx','cg_purchase_mx.purchase_id=cg_purchase.id')
+            ->join('jsfs','cg_purchase_mx.jijiafangshi_id=jsfs.id')
+            ->join('ad_guige','cg_purchase_mx.guige_id=ad_guige.id')
+            ->join('ad_chanpin','cg_purchase_mx.pinming_id=ad_chanpin.id')
+            ->join('ad_changjia','ad_guige.changjia_id=ad_changjia.id')
+            ->join('texture','cg_purchase_mx.caizhi_id=texture.id')
+            ->join('c_salesman','cg_purchase.sale_operate_id=c_salesman.id')
             ->select();
         echo json_encode($data);
     }
@@ -1019,7 +1064,7 @@ function kdbt(){
         $guige=input('get.guige');
         $chandi=input('get.chandi');
         $caizhi=input('get.caizhi');
-        $rq=input('get.rq');
+
         $data =Db::table('cg_purchase_mx')->field('*,cg_purchase_mx.id as a')->
         JOIN('productname','cg_purchase_mx.pinming_id = productname.id')
             ->JOIN('ad_guige','cg_purchase_mx.guige_id = ad_guige.id')
@@ -1027,10 +1072,7 @@ function kdbt(){
             ->JOIN('originarea','cg_purchase_mx.chandi_id = originarea.id')
             ->JOIN('jsfs','cg_purchase_mx.jijiafangshi_id=jsfs.id');
         if(!empty($guige)){
-
                $data->where('ad_guige.guige','like',"%$guige%");
-
-
         }
 
          if(!empty($chandi)){
@@ -1057,11 +1099,11 @@ function kdbt(){
         $id=input('get.id');
         $fd=input('get.fd');
         if($fd==0){
-            $str='否';
+            $str='已入库';
             Db::table('c_purchase')->where('id','=',"$id")->update(['static'=>1]);
             echo json_encode(['code'=>1,'str'=>$str]);
         }else{
-            $str='是';
+            $str='已审核';
             Db::table('c_purchase')->where('id','=',"$id")->update(['static'=>0]);
             echo json_encode(['code'=>2,'str'=>$str]);
         }
@@ -1112,7 +1154,7 @@ function kdbt(){
         return returnSuc($list);
     }
     function tdmx(){
-        $dat=Db::table('c_purchase')->field('*,c_purchase.id')->join('stock_out','c_purchase.system_id=stock_out.id')->join('c_product_type','c_product_type.id =c_purchase.c_leibie_id')->where('c_purchase.static','=',0)->select();
+        $dat=Db::table('c_purchase')->field('*,c_purchase.id')->join('stock_out','c_purchase.system_id=stock_out.id')->join('c_product_type','c_product_type.id =c_purchase.c_leibie_id')->where('c_purchase.static','=',1)->select();
        echo json_encode($dat);
     }
     function djsq(){
@@ -1124,7 +1166,7 @@ function kdbt(){
     }
 function other(){
       $data=input("get.");
-        unset($data['/admin/purchase/other']);
+      unset($data['/admin/purchase/other']);
       $res=Db::table('purchase_fee')->insert($data);
       if($res){
           echo 1;

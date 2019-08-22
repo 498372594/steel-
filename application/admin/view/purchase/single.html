@@ -1,7 +1,7 @@
 <!--{include file="tpl/style"/}-->
 
 {include file="/common/base"}
-<button class="yc">显示|隐藏</button><button id="sc">删除</button><button class="mx">退单明细</button>
+<button class="yc">显示|隐藏</button><button id="sc">删除</button><button class="mx">已入库明细</button>
 <button class="shenqing">费用登记申请</button><span id="tj"></span>
 <div>
              <a href="javascript:;" onclick="enterFullScreen()">进入全屏</a>
@@ -21,7 +21,7 @@
 
                        <th nowrap="nowrap">出单单号</th>
                       <th nowrap="nowrap">开单日期</th>
-            <th nowrap="nowrap">是否退款</th>
+            <th nowrap="nowrap">订单状态</th>
 
             <th nowrap="nowrap">类别</th>
             <th nowrap="nowrap">标准</th>
@@ -43,11 +43,11 @@
             <td nowrap="nowrap"><input type="checkbox" name="dx" value="{$vo.id}"></td>
            <td nowrap="nowrap">{$vo.system_number}</td>
           <td nowrap="nowrap">{$vo.create_time}</td>
-         <td nowrap="nowrap" id="zt" fd="{$vo.static}" c_id="{$vo.id}">
+         <td nowrap="nowrap" style="color: red" id="zt" fd="{$vo.static}" c_id="{$vo.id}">
               <?php if($vo['static']==0){?>
-                是
+               已审核
                 <?php }else{?>
-              否
+              已入库
                 <?php }?>
             </td>
 
@@ -156,7 +156,7 @@
               type:"get",
               dataType:"json",
               success:function (data) {
-                  console.log(data)
+
                  str='';
                  $.each(data,function (k,v) {
 
@@ -166,8 +166,10 @@
                      str+='<td nowrap="nowrap">'+v.system_number+'</td>'
                      str+='<td nowrap="nowrap">'+v.create_time+'</td>'
                           if(v.static==0){
-                              str+='<td nowrap="nowrap" id="zt" fd="'+v.static+'" c_id="'+v.id+'">是</td>'
+                              str+='<td nowrap="nowrap" id="zt" fd="'+v.static+'" c_id="'+v.id+'">已审核</td>'
 
+                          }else{
+                              str+='<td nowrap="nowrap" id="zt" fd="'+v.static+'" c_id="'+v.id+'">已入库</td>'
                           }
 
                                str+='<td nowrap="nowrap">'+v.t_name+'</td>'
@@ -210,7 +212,7 @@
             },
             success:function (data) {
                 if(data==1){
-                    alert("删除成功")
+                    confirm('确定删除选中的数据吗?')
                     location.href='';
                 }
             }

@@ -4,22 +4,26 @@
 
 <button type="button" class="  btn-success bc" id="bc">保存</button>  <button class=" btn-success bc" data-toggle="tooltip" data-placement="top" title="启用" onclick="confirmUpdate('/admin/admin/enable',id=null,'确定要新建开单吗？')">新建开单</button><br>
 供应商：<select name="" id="c_kehu_id">
-    {volist name="kh" id="vo"}   <option value="{$vo.id}">{$vo.custom}</option>{/volist}</select><span style="color: red">*</span>
+    {volist name="kh" id="vo"}   <option value="{$vo.id}">{$vo.custom}</option>{/volist}</select>&nbsp;<span style="color: red">*</span>
 
 
-开单日期: <input type="date" id="c_kaidan_time">业务员：<select name="" id="c_yewuuyuan_id">
-    {volist name="data" id="vo"}   <option value="{$vo.id}">{$vo.y_name}</option>{/volist}</select>入库方式：<select id="c_rukufs">
+开单日期: <input type="date" id="c_kaidan_time">&nbsp;&nbsp;&nbsp;业务员：<select name="" id="c_yewuuyuan_id">
+    {volist name="data" id="vo"}   <option value="{$vo.id}">{$vo.y_name}</option>{/volist}</select>&nbsp;&nbsp;&nbsp;入库方式：<select id="c_rukufs">
     {volist name="res" id="vo"}   <option value="{$vo.id}">{$vo.name}</option>{/volist}</select>
-车船好：<input type="text" id="c_chechuanhao"><br>税率：<input type="text" id="c_shuilv">是否含税： <select name="" id="c_ynhanshui">
+车船好：<input type="text" id="c_chechuanhao">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;税率：<input type="text" id="c_shuilv">
+<br><br>是否含税： <select name="" id="c_ynhanshui">
     <option value="1">Y</option> <option value="2">N</option></select>
+&nbsp;&nbsp;&nbsp;&nbsp;
 是否二次结算:<select name="" id="c_ercijiesuan">
-   <option value="1">是</option> <option value="2">否</option></select>
+   <option value="1">是</option> <option value="2">否</option></select>&nbsp;&nbsp;&nbsp;&nbsp;
 结算方式:<select name="" id="jsfs">
     {volist name="jsfs" id="vo"}  <option value="{$vo.id}">{$vo.jsfs}</option> {/volist}</select>
+&nbsp;&nbsp;&nbsp;&nbsp;
 是否显示到财务付款<select name="" id="c_caiwuxianshi">
    <option value="1">是</option> <option value="2">否</option></select>
+&nbsp;&nbsp;&nbsp;&nbsp;
 采购类型<select name="" id="c_caigouleix">
-   <option value="1">外采</option> <option value="2">厂家直采</option></select>备注: <input type="text" id="c_beizhu"><div class="row" style="width: 33px;height: 33px;">
+   <option value="1">外采</option> <option value="2">厂家直采</option></select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;备注: <input type="text" id="c_beizhu"><div class="row" style="width: 33px;height: 33px;">
     {include file='tpl/addBtn' url="/admin/purchase/cgtj" height="80%" width="30%"/}
 
 </div>
@@ -74,7 +78,7 @@
     </table>
 
 </div>
-<div style="float: left">
+<div style="float: right">
 <a href="javascript:;" onclick="enterFullScreen()">进入全屏</a>
 &nbsp;
 <a href="javascript:;" onclick="exitFullScreen()">退出全屏</a>
@@ -89,8 +93,8 @@
     {volist name="type" id="vo"}  <option value="{$vo.id}">{$vo.t_name}</option>  {/volist}
 
 </select>
-    <a href="xiazai"><button >excel下载</button></a>
-<a href="shangchuan"><button >excel上传</button></a>
+    <a href="xiazai"><button class="btn-danger" >excel下载</button></a>
+<a href="shangchuan"><button class="btn-danger">excel上传</button></a>
 
 
 品名：<select name="" id="pm">
@@ -128,10 +132,10 @@
         </thead>
         <tbody id="tt">
         {volist name="dat" id="vo"}
-        <tr class="sc" id="{$vo.id}">
+            <tr class="sc" id="{$vo.id}">
             <td nowrap="nowrap" class="tt" value="{$vo.id}">{$vo.id}</td>
             <td nowrap="nowrap"><input type="checkbox" name="dx" value="{$vo.id}"></td>
-         <td nowrap="nowrap">{$vo.t_name}</td>
+            <td nowrap="nowrap">{$vo.t_name}</td>
             <td nowrap="nowrap">{$vo.c_biaozhun}</td>
             <td nowrap="nowrap">{$vo.c_pinming}</td>
             <td nowrap="nowrap">{$vo.c_guige}</td>
@@ -140,8 +144,6 @@
             <td nowrap="nowrap">{$vo.c_lijidanzhong}</td>
             <td nowrap="nowrap">{$vo.c_changdu}</td>
             <td nowrap="nowrap">{$vo.c_shuliangdanwei}</td>
-
-
             <td nowrap="nowrap">{$vo.c_jianshu}</td>
 
 
